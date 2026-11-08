@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 const WIDTHS = [320, 390, 768, 1440] as const;
 
@@ -104,4 +106,77 @@ test("dom ids are unique", async ({ page }) => {
   const ids = await page.locator("[id]").evaluateAll(elements => elements.map(element => element.id));
   expect(ids.length).toBeGreaterThan(3);
   expect(new Set(ids).size).toBe(ids.length);
+});
+
+for (const width of WIDTHS) {
+  test(`built CSS works without JavaScript at ${width}px`, async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    await page.route("**/dist/*.css", async route => {
+      const name = new URL(route.request().url()).pathname.split("/").pop();
+      if (name !== "styles.css" && name !== "tokens.css") throw new Error("Unexpected stylesheet");
+      await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", name)) });
+    });
+    await page.goto("/static.html");
+    await expect(page.getByRole("heading", { name: "Repositories" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    expect(await token(page, "--ui-surface")).not.toBe("");
+    const panel = page.locator(".ui-panel");
+    expect(await panel.evaluate(element => getComputedStyle(element).display)).toBe("flex");
+    await page.getByRole("searchbox", { name: "Search" }).focus();
+    expect(await page.getByRole("searchbox").evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe("none");
+    await context.close();
+  });
+}
+
+test("uncontrolled panel controls toggle and Escape closes expansion", async ({ page }) => {
+  await page.goto("/");
+  const panel = page.locator("#local");
+  await expect(page.locator("#locked").getByRole("button", { name: "Expand Locked" })).toBeDisabled();
+  await expect(page.locator("#locked").getByRole("button", { name: "Hide Locked" })).toBeDisabled();
+  await panel.getByRole("button", { name: "Hide Local" }).click();
+  await expect(panel.getByText("Local content")).toHaveCount(0);
+  await panel.getByRole("button", { name: "Show Local" }).click();
+  await expect(panel.getByText("Local content")).toBeVisible();
+  await panel.getByRole("button", { name: "Expand Local" }).click();
+  await expect(panel).toHaveClass(/ui-panel-expanded/u);
+  await panel.getByRole("button", { name: "Panel details" }).click();
+  await expect(page.getByRole("dialog", { name: "Trace" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(panel).toHaveClass(/ui-panel-expanded/u);
+  await page.keyboard.press("Escape");
+  await expect(panel).not.toHaveClass(/ui-panel-expanded/u);
+});
+
+test("modal names itself, closes on Escape, and restores focus", async ({ page }) => {
+  await page.goto("/");
+  const trigger = page.getByRole("button", { name: "Open modal" });
+  await expect(trigger).toHaveAttribute("name", "operation");
+  await expect(trigger).toHaveAttribute("data-fixture", "open");
+  await trigger.click();
+  await expect(page.getByRole("dialog", { name: "Trace" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("keyboard focus is visible on search and buttons", async ({ page }) => {
+  await page.goto("/");
+  for (const element of [page.getByRole("searchbox", { name: "Search" }), page.getByRole("button", { name: "Open modal" })]) {
+    await element.focus();
+    expect(await element.evaluate(node => getComputedStyle(node).outlineStyle)).not.toBe("none");
+  }
+});
+
+
+test("built module exports the public runtime surface", async ({ page }) => {
+  await page.goto("/");
+  const modulePath = `/@fs${resolve("dist/index.js")}`;
+  const names = await page.evaluate(async path => Object.keys(await import(path)).sort(), modulePath);
+  expect(names).toEqual(["Badge", "Button", "CollapsiblePanel", "EmptyState", "ErrorState", "Icon", "IconButton", "Meter", "Modal", "Notice", "PageHeader", "Pagination", "Panel", "Segmented", "Shell", "SideNav", "Skeleton", "groupId"].sort());
 });

@@ -25,6 +25,7 @@ export type IconName = keyof typeof paths;
 export interface IconProps {
   readonly name: IconName;
   readonly size?: number | undefined;
+  readonly label?: string | undefined;
   readonly class?: string | undefined;
 }
 
@@ -40,7 +41,9 @@ export function Icon(props: IconProps): JSX.Element {
       stroke-width="1.8"
       stroke-linecap="round"
       stroke-linejoin="round"
-      aria-hidden="true"
+      role={props.label === undefined ? undefined : "img"}
+      aria-label={props.label}
+      aria-hidden={props.label === undefined ? "true" : undefined}
     >
       <For each={paths[props.name]}>{(path) => <path d={path} />}</For>
     </svg>

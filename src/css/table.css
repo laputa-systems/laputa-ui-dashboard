@@ -10,4 +10,5 @@
 .ui-table-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-sm) var(--ui-space-md); padding: var(--ui-space-md) var(--ui-inset); border-bottom: 1px solid var(--ui-line); }
 .ui-search { display: flex; align-items: center; gap: var(--ui-space-sm); color: var(--ui-muted); width: 260px; max-width: 100%; }
 .ui-search input { outline: 0; flex: 1; min-width: 0; color: var(--ui-text); border: 0; background: transparent; font-family: inherit; font-size: inherit; }
+.ui-search input:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-search input::placeholder { color: var(--ui-muted); }

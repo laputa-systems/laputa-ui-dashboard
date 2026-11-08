@@ -18,7 +18,7 @@ import {
   Segmented,
   Shell,
   Skeleton
-} from "../src/index";
+} from "../dist/index.js";
 
 function Fixture() {
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<string>>(new Set());
@@ -49,12 +49,14 @@ function Fixture() {
         <CollapsiblePanel id="memory" title="Memory" collapsible collapsed={collapsed().has("memory")} onToggleCollapsed={toggle("memory")}>
           <Skeleton rows={2} chart />
         </CollapsiblePanel>
+        <CollapsiblePanel id="locked" title="Locked" expandable expanded={false} collapsible collapsed={false}>Locked content</CollapsiblePanel>
+        <CollapsiblePanel id="local" title={<h2>Local</h2>} label="Local" expandable collapsible>Local content <Button onClick={() => setModal(true)}>Panel details</Button></CollapsiblePanel>
         <Panel id="plain" title="Plain" meta={<span>meta</span>}>
           <Notice tone="warn">Check configuration <span class="ui-sr-only" data-testid="sr-only">hidden label</span></Notice>
         </Panel>
         <Panel id="flush" title="Flush" flush>
           <div class="ui-table-toolbar">
-            <div class="ui-search"><Icon name="search" /><input placeholder="Search" /></div>
+            <div class="ui-search"><Icon name="search" /><input type="search" aria-label="Search" placeholder="Search" /></div>
           </div>
           <div class="ui-table-scroll">
             <table class="ui-data-table">
@@ -66,7 +68,7 @@ function Fixture() {
         </Panel>
         <EmptyState title="No records" detail="Try a wider range" action={<Button>Reset</Button>} />
         <ErrorState title="Failed" detail="Network timeout" retry={() => {}} />
-        <div><Button onClick={() => setModal(true)}>Open modal</Button></div>
+        <div><Button onClick={() => setModal(true)} name="operation" value="open" data-fixture="open">Open modal</Button></div>
       </div>
       </div>
       <Show when={modal()}>

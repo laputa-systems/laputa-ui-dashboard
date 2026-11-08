@@ -5,6 +5,8 @@ components that render the same markup. Stats uses the Solid components in its d
 Niceforge uses them in its CI workbench and serves the CSS alone to its server-rendered forge
 pages, which ship no JavaScript.
 
+See the [component reference](docs/components.md) and [usage patterns](docs/patterns.md). The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted.
+
 ## Installation
 
 The package is published to the stuff npm registry. Route the scope there in `.npmrc`:

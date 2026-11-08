@@ -55,7 +55,9 @@ describe("packed artifact contract", () => {
       "Meter",
       "PageHeader",
       "Icon",
-      "Shell"
+      "Shell",
+      "SideNav",
+      "groupId"
     ];
 
     for (const name of expectedExports) {

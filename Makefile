@@ -29,6 +29,7 @@ typecheck: node-ready
 	pnpm run typecheck
 
 test: work-ready build
+	pnpm exec tsrs -p tests/tsconfig.json
 	TMPDIR='$(CURDIR)/.work/tmp' pnpm run test
 
 test-browser: work-ready build

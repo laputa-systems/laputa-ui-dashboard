@@ -7,6 +7,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  IconButton,
   Meter,
   Modal,
   Notice,
@@ -55,6 +56,20 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain("ui-btn-small");
     expect(html).toContain("disabled");
     expect(html).toContain("Click");
+  });
+
+  it("forwards native button attributes and exposes meaningful icon names", () => {
+    const html = renderToString(() => <>
+      <Button name="action" value="save" form="editor" aria-describedby="hint">Save</Button>
+      <IconButton ariaLabel="Refresh" name="action" value="refresh"><Icon name="refresh" /></IconButton>
+      <Icon name="check" label="Complete" />
+    </>);
+    expect(html).toContain('name="action"');
+    expect(html).toContain('form="editor"');
+    expect(html).toContain('aria-describedby="hint"');
+    expect(html).toContain('aria-label="Refresh"');
+    expect(html).toContain('aria-label="Complete"');
+    expect(html).toContain('role="img"');
   });
 
   it("renders Panel with title and meta", () => {

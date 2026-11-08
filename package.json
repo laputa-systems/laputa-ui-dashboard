@@ -23,7 +23,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "docs"
   ],
   "scripts": {
     "build": "rm -rf dist && vite build && tsrs -p tsconfig.json && node scripts/build-css.mjs",

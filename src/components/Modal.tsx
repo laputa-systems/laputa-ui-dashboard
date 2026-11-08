@@ -1,4 +1,4 @@
-import { Show, type ParentProps } from "solid-js";
+import { onCleanup, Show, type ParentProps } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Icon } from "./Icon";
 
@@ -13,10 +13,14 @@ export interface ModalProps extends ParentProps {
 }
 
 export function Modal(props: ModalProps): JSX.Element {
+  let frame: number | undefined;
+  let disposed = false;
+  onCleanup(() => { disposed = true; if (frame !== undefined) cancelAnimationFrame(frame); });
   const open = (dialog: HTMLDialogElement) => {
     const show = () => {
+      if (disposed) return;
       if (!dialog.isConnected) {
-        requestAnimationFrame(show);
+        frame = requestAnimationFrame(show);
         return;
       }
       if (!dialog.open) dialog.showModal();
