@@ -24,6 +24,13 @@ function Fixture() {
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<string>>(new Set());
   const [range, setRange] = createSignal<"1h" | "24h">("1h");
   const [modal, setModal] = createSignal(false);
+  const [modalCloses, setModalCloses] = createSignal(0);
+  const [localToggles, setLocalToggles] = createSignal(0);
+  const [initialCollapsed, setInitialCollapsed] = createSignal(true);
+  const [expandedToggles, setExpandedToggles] = createSignal(0);
+  const [controlled, setControlled] = createSignal(false);
+  const [controlledToggles, setControlledToggles] = createSignal(0);
+  const [initialExpanded, setInitialExpanded] = createSignal(false);
   const toggle = (id: string) => () => {
     const next = new Set(collapsed());
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -50,6 +57,16 @@ function Fixture() {
           <Skeleton rows={2} chart />
         </CollapsiblePanel>
         <CollapsiblePanel id="locked" title="Locked" expandable expanded={false} collapsible collapsed={false}>Locked content</CollapsiblePanel>
+        <div>
+          <Button onClick={() => setInitialExpanded(true)}>Mount expanded</Button>
+          <Button onClick={() => setInitialCollapsed(false)}>Change default</Button>
+          <Button onClick={() => setControlled(value => !value)}>Change controlled state</Button>
+          <output data-testid="panel-counts">{localToggles()}:{expandedToggles()}:{controlledToggles()}</output>
+          <output data-testid="modal-closes">{modalCloses()}</output>
+        </div>
+        <Show when={initialExpanded()}><CollapsiblePanel id="initial-expanded" title="Initially expanded" expandable defaultExpanded onToggleExpanded={() => setExpandedToggles(n => n + 1)}>Expanded content</CollapsiblePanel></Show>
+        <CollapsiblePanel id="initial-collapsed" title="Initially collapsed" collapsible defaultCollapsed={initialCollapsed()} onToggleCollapsed={() => setLocalToggles(n => n + 1)}>Initially hidden</CollapsiblePanel>
+        <CollapsiblePanel id="controlled" title="Controlled" collapsible collapsed={controlled()} onToggleCollapsed={() => setControlledToggles(n => n + 1)}>Controlled content</CollapsiblePanel>
         <CollapsiblePanel id="local" title={<h2>Local</h2>} label="Local" expandable collapsible>Local content <Button onClick={() => setModal(true)}>Panel details</Button></CollapsiblePanel>
         <Panel id="plain" title="Plain" meta={<span>meta</span>}>
           <Notice tone="warn">Check configuration <span class="ui-sr-only" data-testid="sr-only">hidden label</span></Notice>
@@ -72,7 +89,7 @@ function Fixture() {
       </div>
       </div>
       <Show when={modal()}>
-        <Modal title="Trace" label="Trace" onBack={() => {}} onClose={() => setModal(false)}>
+        <Modal title="Trace" label="Trace" onBack={() => {}} onClose={() => { setModalCloses(n => n + 1); setModal(false); }}>
           <p>Body</p>
         </Modal>
       </Show>

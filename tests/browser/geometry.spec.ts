@@ -180,3 +180,60 @@ test("built module exports the public runtime surface", async ({ page }) => {
   const names = await page.evaluate(async path => Object.keys(await import(path)).sort(), modulePath);
   expect(names).toEqual(["Badge", "Button", "CollapsiblePanel", "EmptyState", "ErrorState", "Icon", "IconButton", "Meter", "Modal", "Notice", "PageHeader", "Pagination", "Panel", "Segmented", "Shell", "SideNav", "Skeleton", "groupId"].sort());
 });
+
+
+test("initial local state and notifications remain predictable across repeated toggles", async ({ page }) => {
+  await page.goto("/");
+  const collapsed = page.locator("#initial-collapsed");
+  await expect(collapsed.getByText("Initially hidden")).toHaveCount(0);
+  await page.getByRole("button", { name: "Change default" }).click();
+  await expect(collapsed.getByText("Initially hidden")).toHaveCount(0);
+  await expect(page.getByTestId("panel-counts")).toHaveText("0:0:0");
+  for (let count = 1; count <= 4; count++) {
+    await collapsed.getByRole("button", { name: count % 2 ? "Show Initially collapsed" : "Hide Initially collapsed" }).click();
+    await expect(page.getByTestId("panel-counts")).toHaveText(`${count}:0:0`);
+  }
+  await page.getByRole("button", { name: "Mount expanded" }).click();
+  const expanded = page.locator("#initial-expanded");
+  await expect(expanded).toHaveClass(/ui-panel-expanded/u);
+  await page.getByRole("button", { name: "Close expanded panel" }).click({ position: { x: 5, y: 5 } });
+  await expect(expanded).not.toHaveClass(/ui-panel-expanded/u);
+  await expect(page.getByTestId("panel-counts")).toHaveText("4:1:0");
+  await expanded.getByRole("button", { name: "Expand Initially expanded" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("panel-counts")).toHaveText("4:3:0");
+});
+
+test("controlled state follows the parent and callbacks only notify", async ({ page }) => {
+  await page.goto("/");
+  const panel = page.locator("#controlled");
+  await panel.getByRole("button", { name: "Hide Controlled" }).click();
+  await expect(panel.getByText("Controlled content")).toBeVisible();
+  await expect(page.getByTestId("panel-counts")).toHaveText("0:0:1");
+  await page.getByRole("button", { name: "Change controlled state" }).click();
+  await expect(panel.getByText("Controlled content")).toHaveCount(0);
+  await expect(page.getByTestId("panel-counts")).toHaveText("0:0:1");
+  await panel.getByRole("button", { name: "Show Controlled" }).click();
+  await expect(panel.getByText("Controlled content")).toHaveCount(0);
+  await expect(page.getByTestId("panel-counts")).toHaveText("0:0:2");
+  await page.getByRole("button", { name: "Change controlled state" }).click();
+  await expect(panel.getByText("Controlled content")).toBeVisible();
+});
+
+test("modal close, Escape and backdrop each notify exactly once", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const trigger = page.getByRole("button", { name: "Open modal" });
+  await trigger.click();
+  await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("modal-closes")).toHaveText("1");
+  await trigger.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("modal-closes")).toHaveText("2");
+  await trigger.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.mouse.click(2, 2);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByTestId("modal-closes")).toHaveText("3");
+});

@@ -10,6 +10,8 @@ type ButtonNativeForm = Assert<Includes<ButtonProps["form"], string>>;
 type ButtonVariants = Assert<Excludes<ButtonProps["variant"], "primary">>;
 type IconButtonNeedsName = Assert<Excludes<IconButtonProps, { children: null }>>;
 type IconLabel = Assert<Includes<IconProps["label"], string>>;
+type PanelInitial = Assert<Includes<CollapsiblePanelProps["defaultExpanded"], boolean>>;
+type PanelInitiallyCollapsed = Assert<Includes<CollapsiblePanelProps["defaultCollapsed"], boolean>>;
 type PanelLabel = Assert<Includes<CollapsiblePanelProps["label"], string>>;
 
-export type TypeChecks = ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel;
+export type TypeChecks = ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel | PanelInitial | PanelInitiallyCollapsed;

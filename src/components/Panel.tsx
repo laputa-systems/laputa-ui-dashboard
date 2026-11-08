@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show, type ParentProps } from "solid-js";
+import { createEffect, createSignal, Show, untrack, type ParentProps } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Icon } from "./Icon";
 
@@ -46,15 +46,17 @@ export interface CollapsiblePanelProps extends ParentProps {
   readonly label?: string | undefined;
   readonly expandable?: boolean | undefined;
   readonly expanded?: boolean | undefined;
+  readonly defaultExpanded?: boolean | undefined;
   readonly onToggleExpanded?: (() => void) | undefined;
   readonly collapsible?: boolean | undefined;
   readonly collapsed?: boolean | undefined;
+  readonly defaultCollapsed?: boolean | undefined;
   readonly onToggleCollapsed?: (() => void) | undefined;
 }
 
 export function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
-  const [localExpanded, setLocalExpanded] = createSignal(false);
-  const [localCollapsed, setLocalCollapsed] = createSignal(false);
+  const [localExpanded, setLocalExpanded] = createSignal(untrack(() => props.defaultExpanded ?? false));
+  const [localCollapsed, setLocalCollapsed] = createSignal(untrack(() => props.defaultCollapsed ?? false));
   const [slotHeight, setSlotHeight] = createSignal(0);
   let section: HTMLElement | undefined;
 
