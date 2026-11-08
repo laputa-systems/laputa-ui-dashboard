@@ -1,0 +1,13 @@
+.ui-modal { width: min(1120px, 94vw); max-height: 88vh; padding: 0; border: 0; border-radius: var(--ui-radius-xl); background: var(--ui-surface); color: var(--ui-text); font-family: var(--ui-font); box-shadow: var(--ui-shadow-modal); overflow: hidden; }
+.ui-modal.ui-modal-compact { width: min(440px, 94vw); }
+.ui-modal[open] { display: flex; flex-direction: column; }
+.ui-modal::backdrop { background: var(--ui-scrim); backdrop-filter: var(--ui-scrim-filter); }
+.ui-modal-head { display: flex; align-items: center; gap: var(--ui-space-md); min-height: var(--ui-head-height); padding: var(--ui-space-sm) var(--ui-inset); border-bottom: 1px solid var(--ui-line); }
+.ui-modal-title { flex: 1; min-width: 0; margin: 0; font-size: var(--ui-fs-title); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-tracking-tight); overflow-wrap: anywhere; }
+.ui-modal-back { gap: var(--ui-space-xs); }
+.ui-modal-close { font-size: 18px; line-height: 1; border: 0; background: transparent; cursor: pointer; color: var(--ui-muted); padding: 0 var(--ui-space-xs); }
+.ui-modal-close:hover { color: var(--ui-text); }
+.ui-modal-body { min-height: 0; padding: var(--ui-inset); overflow-y: auto; }
+@media (--ui-narrow-sm) {
+  .ui-modal { width: 100vw; max-width: 100vw; max-height: 100dvh; height: 100dvh; border-radius: 0; }
+}

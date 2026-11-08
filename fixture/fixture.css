@@ -1,0 +1,3 @@
+body { margin: 0; }
+.fixture-page { display: grid; gap: var(--ui-space-lg); }
+.fixture-column { display: grid; gap: var(--ui-space-md); }

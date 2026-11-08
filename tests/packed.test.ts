@@ -18,7 +18,7 @@ describe("packed artifact contract", () => {
       const data = JSON.parse(output.slice(jsonStart, jsonEnd)) as Record<string, { filename: string; files: readonly { path: string }[] }>;
       const tarballInfo = data["@laputa-systems/ui-dashboard"] ?? Object.values(data)[0];
       assert.ok(tarballInfo !== undefined, "Expected tarball info in json output");
-      assert.equal(tarballInfo.filename, "laputa-systems-ui-dashboard-0.4.0.tgz");
+      assert.equal(tarballInfo.filename, "laputa-systems-ui-dashboard-0.5.0.tgz");
 
       const paths = tarballInfo.files.map(f => f.path);
       assert.ok(paths.includes("package.json"), "Missing package.json");
@@ -106,21 +106,29 @@ describe("packed artifact contract", () => {
     assert.match(styles, /\.ui-side-nav a\[aria-current\]/u);
   });
 
-  it("overrides every color token in the dark scheme and keeps light unchanged", () => {
+  it("declares one light token set and no dark scheme", () => {
     const tokens = readFileSync(resolve(distDir, "tokens.css"), "utf8");
-    const darkStart = tokens.indexOf("@media (prefers-color-scheme: dark)");
-    assert.ok(darkStart > 0, "Missing dark scheme block");
-    assert.match(tokens, /color-scheme: light dark;/u);
-    const light = tokens.slice(0, darkStart);
-    const dark = tokens.slice(darkStart);
-    const isColor = (value: string): boolean => /^(#|rgb)/u.test(value);
-    const lightColors = [...light.matchAll(/(--ui-[\w-]+):\s*([^;]+);/gu)]
-      .filter(match => isColor(match[2] ?? ""))
-      .map(match => match[1] ?? "");
-    assert.ok(lightColors.length > 20);
-    for (const name of lightColors) {
-      assert.match(dark, new RegExp(`${name}:`, "u"), `Dark scheme is missing ${name}`);
-    }
+    const styles = readFileSync(resolve(distDir, "styles.css"), "utf8");
+    assert.match(tokens, /color-scheme: light;/u);
+    assert.doesNotMatch(tokens + styles, /prefers-color-scheme/u);
+    const names = [...tokens.matchAll(/(--ui-[\w-]+):/gu)].map(match => match[1]);
+    assert.equal(new Set(names).size, names.length, "a token is defined twice");
+  });
+
+  it("ships styles.css as one file whose only import is tokens.css", () => {
+    const styles = readFileSync(resolve(distDir, "styles.css"), "utf8");
+    assert.deepEqual([...styles.matchAll(/@import\s+"([^"]+)"/gu)].map(match => match[1]), ["./tokens.css"]);
+    assert.doesNotMatch(styles, /@custom-media|@media \(--/u);
+    assert.match(styles, /\.ui-sr-only \{/u);
+  });
+
+  it("references only tokens it defines", () => {
+    const tokens = readFileSync(resolve(distDir, "tokens.css"), "utf8");
+    const styles = readFileSync(resolve(distDir, "styles.css"), "utf8");
+    const defined = new Set([...tokens.matchAll(/(--ui-[\w-]+):/gu)].map(match => match[1]));
+    const local = new Set([...styles.matchAll(/(--ui-[\w-]+):/gu)].map(match => match[1]));
+    const used = new Set([...(tokens + styles).matchAll(/var\((--ui-[\w-]+)/gu)].map(match => match[1]));
+    assert.deepEqual([...used].filter(name => !defined.has(name) && !local.has(name)), []);
   });
 
   it("declares solid-js and @solidjs/web as optional peers", () => {

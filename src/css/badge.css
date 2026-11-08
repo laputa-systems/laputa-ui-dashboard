@@ -1,0 +1,8 @@
+.ui-badge { display: inline-flex; align-items: center; gap: var(--ui-space-sm); min-height: var(--ui-control-sm); padding: 0 var(--ui-space-sm); font-family: var(--ui-font); font-size: var(--ui-fs-meta); border-radius: var(--ui-radius-pill); box-shadow: var(--ui-outline); color: var(--ui-text-2); background: var(--ui-surface); white-space: nowrap; }
+.ui-badge-dot { width: var(--ui-dot-sm); height: var(--ui-dot-sm); border-radius: 50%; background: currentColor; flex: none; }
+.ui-badge-ok { color: var(--ui-ok); }
+.ui-badge-warn { color: var(--ui-warn); }
+.ui-badge-bad { color: var(--ui-bad); }
+.ui-badge-neutral { color: var(--ui-muted); }
+.ui-badge-info { color: var(--ui-accent); }
+.ui-badge-accent { color: var(--ui-accent); }

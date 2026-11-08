@@ -5,5 +5,6 @@ export default defineConfig({
   plugins: [solid()],
   test: {
     environment: "node",
+    include: ["tests/*.test.{ts,tsx}"],
   },
 });

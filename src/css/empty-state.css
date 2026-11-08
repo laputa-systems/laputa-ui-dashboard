@@ -1,0 +1,6 @@
+.ui-empty-state { display: grid; justify-items: center; gap: var(--ui-space-sm); padding: var(--ui-space-3xl) var(--ui-space-lg); text-align: center; font-family: var(--ui-font); }
+.ui-empty-icon { color: var(--ui-muted); }
+.ui-empty-body { display: grid; justify-items: center; gap: var(--ui-space-lg); }
+.ui-empty-text { display: grid; justify-items: center; gap: var(--ui-space-xs); }
+.ui-empty-title { margin: 0; font-weight: var(--ui-weight-medium); font-size: var(--ui-fs-body); color: var(--ui-text); }
+.ui-empty-detail { margin: 0; color: var(--ui-muted); font-size: var(--ui-fs-meta); }

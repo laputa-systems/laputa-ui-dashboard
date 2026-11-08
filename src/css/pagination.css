@@ -1,0 +1,7 @@
+.ui-pagination { display: flex; align-items: center; justify-content: space-between; padding: var(--ui-space-md) var(--ui-inset); border-top: 1px solid var(--ui-line); color: var(--ui-muted); font-size: var(--ui-fs-meta); font-family: var(--ui-font); }
+.ui-pagination strong { color: var(--ui-text); font-weight: 450; }
+.ui-pagination-actions { display: flex; align-items: center; gap: var(--ui-space-sm); }
+@media (--ui-narrow-md) {
+  .ui-pagination { flex-wrap: wrap; justify-content: center; gap: var(--ui-space-sm); }
+  .ui-pagination-actions { width: 100%; justify-content: space-between; }
+}

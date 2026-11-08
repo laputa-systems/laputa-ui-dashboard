@@ -1,6 +1,6 @@
 {
   "name": "@laputa-systems/ui-dashboard",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Compact, editorial dashboard design system: CSS tokens and styles with optional Solid primitives",
   "license": "UNLICENSED",
   "repository": {
@@ -26,10 +26,11 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rm -rf dist && vite build && tsrs -p tsconfig.json && cp src/tokens.css src/styles.css dist/",
+    "build": "rm -rf dist && vite build && tsrs -p tsconfig.json && node scripts/build-css.mjs",
     "typecheck": "tsrs -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "prepack": "pnpm run build"
+    "prepack": "pnpm run build",
+    "test:browser": "playwright test"
   },
   "peerDependencies": {
     "@solidjs/web": ">=2.0.0-rc.18",
@@ -44,6 +45,7 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@solidjs/vite-plugin": "3.0.0-next.54",
     "@solidjs/web": "2.0.0-rc.20",
     "solid-js": "2.0.0-rc.20",

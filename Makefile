@@ -4,7 +4,7 @@ STUFF ?= stuff
 PACK_DIR := $(CURDIR)/.work/tmp/pack
 TARBALL = $(PACK_DIR)/laputa-systems-ui-dashboard-$$(jaq -r .version package.json).tgz
 
-.PHONY: work-ready node-ready install build typecheck test check pack publish-dry-run publish
+.PHONY: work-ready node-ready install build typecheck test test-browser check pack publish-dry-run publish
 
 work-ready:
 	@set -eu; \
@@ -31,7 +31,10 @@ typecheck: node-ready
 test: work-ready build
 	TMPDIR='$(CURDIR)/.work/tmp' pnpm run test
 
-check: typecheck test
+test-browser: work-ready build
+	TMPDIR='$(CURDIR)/.work/tmp' pnpm exec playwright test
+
+check: typecheck test test-browser
 
 pack: work-ready node-ready
 	rm -rf '$(PACK_DIR)' && mkdir -p '$(PACK_DIR)'

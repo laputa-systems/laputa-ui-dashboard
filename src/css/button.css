@@ -1,0 +1,8 @@
+.ui-btn { display: inline-flex; align-items: center; justify-content: center; min-height: var(--ui-control); padding: 0 var(--ui-space-md); border-radius: var(--ui-radius-md); font-family: var(--ui-font); font-size: var(--ui-fs-meta); box-shadow: var(--ui-outline); background: var(--ui-surface); color: var(--ui-text); border: 0; cursor: pointer; text-decoration: none; user-select: none; }
+.ui-btn:not(:disabled):hover { background: var(--ui-hover); }
+.ui-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ui-btn-small { min-height: var(--ui-control-sm); padding: 0 var(--ui-space-sm); font-size: var(--ui-fs-label); }
+.ui-btn-icon { width: var(--ui-control); padding: 0; }
+.ui-icon-btn { width: var(--ui-control); height: var(--ui-control); border-radius: var(--ui-radius-md); display: grid; place-items: center; color: var(--ui-muted); background: transparent; border: 0; cursor: pointer; padding: 0; }
+.ui-icon-btn:not(:disabled):hover { background: var(--ui-hover); color: var(--ui-text); }
+.ui-icon-btn:disabled { opacity: .4; cursor: not-allowed; }

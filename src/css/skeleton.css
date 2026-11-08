@@ -1,0 +1,8 @@
+.ui-skeleton { display: grid; gap: var(--ui-space-md); }
+.ui-skeleton-line, .ui-skeleton-chart { display: block; background: var(--ui-hover); animation: ui-pulse 2.4s ease-in-out infinite; }
+.ui-skeleton-line { height: var(--ui-space-md); border-radius: var(--ui-radius-sm); }
+.ui-skeleton-chart { height: 140px; border-radius: var(--ui-radius-md); }
+@keyframes ui-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}

@@ -1,0 +1,6 @@
+@custom-media --ui-narrow-xs (max-width: 375px);
+@custom-media --ui-narrow-sm (max-width: 600px);
+@custom-media --ui-narrow-md (max-width: 640px);
+@custom-media --ui-narrow-lg (max-width: 720px);
+@custom-media --ui-narrow-xl (max-width: 1000px);
+@custom-media --ui-can-hover (hover: hover);

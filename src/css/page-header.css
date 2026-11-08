@@ -1,0 +1,3 @@
+.ui-page-header { display: flex; align-items: center; gap: var(--ui-space-md); flex-wrap: wrap; font-family: var(--ui-font); }
+.ui-page-header h1 { font-size: var(--ui-fs-page); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-tracking-tighter); margin: 0; color: var(--ui-text); }
+.ui-page-mark { display: inline-flex; align-items: center; }

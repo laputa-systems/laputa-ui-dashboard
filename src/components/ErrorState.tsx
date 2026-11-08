@@ -32,7 +32,7 @@ export function ErrorState(props: ErrorStateProps): JSX.Element {
         {props.detail === undefined ? null : <p class="ui-error-detail">{props.detail}</p>}
       </div>
       {props.retry === undefined ? null : (
-        <button class="ui-btn ui-btn-small" type="button" onClick={props.retry}>
+        <button class="ui-btn ui-btn-small ui-error-retry" type="button" onClick={props.retry}>
           {props.retryLabel ?? "Retry"}
         </button>
       )}

@@ -23,9 +23,13 @@ export function EmptyState(props: EmptyStateProps): JSX.Element {
   return (
     <div class={classes()}>
       {icon === null ? null : <span class="ui-empty-icon">{icon}</span>}
-      <p class="ui-empty-title">{props.title}</p>
-      {props.detail === undefined ? null : <p class="ui-empty-detail">{props.detail}</p>}
-      {props.action === undefined ? null : <div class="ui-empty-action">{props.action}</div>}
+      <div class="ui-empty-body">
+        <div class="ui-empty-text">
+          <p class="ui-empty-title">{props.title}</p>
+          {props.detail === undefined ? null : <p class="ui-empty-detail">{props.detail}</p>}
+        </div>
+        {props.action}
+      </div>
     </div>
   );
 }

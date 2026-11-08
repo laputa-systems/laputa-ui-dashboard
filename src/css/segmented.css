@@ -1,0 +1,5 @@
+.ui-segmented { display: inline-flex; padding: var(--ui-space-2xs); border-radius: var(--ui-radius-lg); background: var(--ui-hover); font-family: var(--ui-font); }
+.ui-segmented.ui-segmented-pending { opacity: .7; }
+.ui-segment { display: inline-flex; align-items: center; min-height: var(--ui-control-sm); padding: 0 var(--ui-space-sm); border-radius: var(--ui-radius-md); color: var(--ui-muted); font-size: var(--ui-fs-meta); border: 0; background: transparent; cursor: pointer; user-select: none; }
+.ui-segment:hover { color: var(--ui-text); }
+.ui-segment[aria-pressed="true"] { color: var(--ui-text); background: var(--ui-surface); box-shadow: var(--ui-outline); }

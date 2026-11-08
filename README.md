@@ -68,15 +68,29 @@ const tokens = fileURLToPath(import.meta.resolve("@laputa-systems/ui-dashboard/t
 
 ## Tokens
 
-All tokens are `--ui-*` custom properties on `:root`: color (`bg`, `surface`, `text`, `text-2`,
-`muted`, `line`, `line-strong`, `hover`, `accent`, `good`/`ok`, `serious`/`warn`,
-`critical`/`bad`, tinted backgrounds `accent-soft`, `ok-soft`, `warn-soft` and `bad-soft`,
-`viz-*`, `s0` to `s7`), type (`font`, `mono`, `fs-*`), spacing (`space-*`),
-sizes (`control*`, `row-height*`, `side-width`, `side-link-height`), radius, shadow and z-index.
+All tokens are `--ui-*` custom properties on `:root`, each defined once in `tokens.css`:
+color (`bg`, `surface`, `text`, `text-2`, `muted`, `line`, `line-strong`, `hover`, `accent`,
+`good`/`ok`, `serious`/`warn`, `critical`/`bad`, tinted backgrounds `accent-soft`, `ok-soft`,
+`warn-soft` and `bad-soft`, the `scrim` behind modals and expanded panels, `viz-blue`,
+`viz-ghost`, and the series colors `s0` to `s4`), type (`font`, `mono`, `fs-*`, `weight-*`,
+`tracking-*`), spacing (`space-*`, `inset`), sizes (`control*`, `head-height`, `icon-size`,
+`row-height`, `dot*`, `side-*`), radius, shadow and z-index.
 
-`tokens.css` declares `color-scheme: light dark`. The light values are the defaults, and a
-`@media (prefers-color-scheme: dark)` block overrides every color token and the shadows.
-There is no manual theme switch, so no JavaScript is needed.
+There is one light scheme. `tokens.css` declares `color-scheme: light` and has no dark
+values, so a page renders the same whatever the operating system prefers.
+
+## Spacing
+
+Components set no outer margin. The page or container that places them owns the space
+between them, for example with a grid or flex `gap`.
+
+## Visually hidden text
+
+`ui-sr-only` keeps text in the document for screen readers and removes it from layout:
+
+```html
+<span class="ui-sr-only">3 failing checks</span>
+```
 
 ## App shell
 
@@ -141,9 +155,15 @@ Node and pnpm versions are pinned in `.node-version` and `packageManager`.
 
 ```sh
 pnpm install --frozen-lockfile
-make check            # typecheck, build, and test
+make check            # typecheck, build, unit and browser tests
 make publish-dry-run  # pack into .work/tmp/pack and show the stuff publish plan
 make publish          # publish the packed tarball to the stuff npm registry
 ```
+
+Each component's CSS lives in `src/css/<component>.css` with its responsive rules inline;
+`src/styles.css` lists them in cascade order, and the named breakpoints live once in
+`src/css/media.css`. `make build` inlines them into the single `dist/styles.css` that imports
+only `dist/tokens.css`, so a CSS-only consumer serves exactly those two files.
+`make test-browser` checks layout invariants in Chromium against the app in `fixture/`.
 
 A published `name@version` is immutable, so bump `version` before publishing a change.

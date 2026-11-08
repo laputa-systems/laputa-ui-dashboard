@@ -1,0 +1,7 @@
+.ui-error-state { display: flex; align-items: center; gap: var(--ui-space-md); padding: var(--ui-space-md) var(--ui-inset); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-bad) 35%, transparent); font-family: var(--ui-font); }
+.ui-error-state.ui-error-state-compact { padding: var(--ui-space-md); }
+.ui-error-icon { color: var(--ui-bad); display: flex; flex: none; }
+.ui-error-content { flex: 1; min-width: 0; }
+.ui-error-title { margin: 0; font-weight: var(--ui-weight-medium); font-size: var(--ui-fs-body); color: var(--ui-text); }
+.ui-error-detail { margin: 0; color: var(--ui-muted); font-size: var(--ui-fs-meta); }
+.ui-error-retry { flex: none; }
