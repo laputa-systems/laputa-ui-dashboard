@@ -1,7 +1,7 @@
 # Component reference
 
 Import components and types from `@laputa-systems/ui-dashboard`. Import `styles.css` separately.
-All components accept `class` unless noted. Children and other element-valued props accept Solid JSX.
+`Shell` and `SideNav` do not accept `class`; every other component does. Children and other element-valued props accept Solid JSX.
 
 | Export | Contract |
 | --- | --- |
@@ -23,7 +23,7 @@ All components accept `class` unless noted. Children and other element-valued pr
 | `Shell`, `ShellProps`, `ShellBrand`, `NavGroup`, `NavItem` | Requires `brand`, `nav`, and children. `foot` and `mainId` are optional. Groups can have visible headings and links can mark the current page. |
 | `SideNav`, `groupId` | `SideNav` renders a `group` and its zero-based `index`; use distinct indexes on the page. `groupId(index)` returns the heading ID. |
 
-`Shell` and `SideNav` do not accept `class`. Refer to the exported declarations for exact prop types.
+Refer to the exported declarations for exact prop types.
 
 ## Examples
 
