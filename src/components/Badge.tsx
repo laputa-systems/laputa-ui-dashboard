@@ -13,7 +13,7 @@ export function Badge(props: BadgeProps): JSX.Element {
   const classes = () => ["ui-badge", `ui-badge-${props.tone}`, props.class].filter(Boolean).join(" ");
   return (
     <span class={classes()}>
-      {props.dot === true ? <span class="ui-badge-dot badge-dot" aria-hidden="true" /> : null}
+      {props.dot === true ? <span class="ui-badge-dot" aria-hidden="true" /> : null}
       {props.children}
     </span>
   );

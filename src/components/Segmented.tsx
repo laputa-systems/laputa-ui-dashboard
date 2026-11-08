@@ -22,7 +22,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>): JSX.Eleme
       <For each={props.options}>{([value, label]) => (
         <button
           type="button"
-          class="ui-segment segment"
+          class="ui-segment"
           aria-pressed={props.value === value ? "true" : "false"}
           onClick={() => props.onChange(value)}
         >

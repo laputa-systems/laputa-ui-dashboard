@@ -38,23 +38,23 @@ export function Modal(props: ModalProps): JSX.Element {
       closedby="any"
       onClose={() => props.onClose()}
     >
-      <header class="ui-modal-head modal-head">
+      <header class="ui-modal-head">
         <Show when={props.onBack}>{back => (
-          <button type="button" class="ui-btn ui-btn-small ui-modal-back modal-back" onClick={() => back()()}>
+          <button type="button" class="ui-btn ui-btn-small ui-modal-back" onClick={() => back()()}>
             <Icon name="chevronLeft" size={12} /> {props.backLabel ?? "Back"}
           </button>
         )}</Show>
-        <h2 class="ui-modal-title modal-title">{props.title}</h2>
+        <h2 class="ui-modal-title">{props.title}</h2>
         <button
           type="button"
-          class="ui-icon-btn ui-modal-close modal-close"
+          class="ui-icon-btn ui-modal-close"
           aria-label="Close"
           onClick={event => event.currentTarget.closest("dialog")?.close()}
         >
           ×
         </button>
       </header>
-      <div class="ui-modal-body modal-body">{props.children}</div>
+      <div class="ui-modal-body">{props.children}</div>
     </dialog>
   );
 }

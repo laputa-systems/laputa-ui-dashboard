@@ -31,7 +31,7 @@ export interface IconProps {
 export function Icon(props: IconProps): JSX.Element {
   return (
     <svg
-      class={["ui-icon icon", props.class].filter(Boolean).join(" ")}
+      class={["ui-icon", props.class].filter(Boolean).join(" ")}
       width={props.size ?? 16}
       height={props.size ?? 16}
       viewBox="0 0 24 24"

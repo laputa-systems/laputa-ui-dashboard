@@ -89,13 +89,13 @@ export function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
   const classes = () => [
     "ui-panel",
     props.class,
-    isExpanded() ? "ui-panel-expanded expanded" : undefined,
-    isCollapsed() ? "ui-panel-collapsed collapsed" : undefined
+    isExpanded() ? "ui-panel-expanded" : undefined,
+    isCollapsed() ? "ui-panel-collapsed" : undefined
   ].filter(Boolean).join(" ");
 
   const bodyClasses = () => [
-    "ui-panel-body widget-body",
-    props.flush === true ? "ui-panel-flush flush" : undefined,
+    "ui-panel-body",
+    props.flush === true ? "ui-panel-flush" : undefined,
     props.bodyClass
   ].filter(Boolean).join(" ");
 
@@ -103,7 +103,7 @@ export function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
     <>
       <Show when={isExpanded()}>
         <button
-          class="ui-panel-veil veil"
+          class="ui-panel-veil"
           type="button"
           aria-label="Close expanded panel"
           tabindex="-1"
@@ -112,21 +112,21 @@ export function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
       </Show>
       <Show when={isExpanded()}>
         <div
-          class={["ui-panel-slot widget-slot", props.slotClass].filter(Boolean).join(" ")}
+          class={["ui-panel-slot", props.slotClass].filter(Boolean).join(" ")}
           style={`height:${slotHeight()}px`}
           aria-hidden="true"
         />
       </Show>
       <section class={classes()} id={props.id} ref={(element) => { section = element; }}>
-        <header class="ui-panel-head widget-head">
-          <div class="ui-panel-title widget-title">
+        <header class="ui-panel-head">
+          <div class="ui-panel-title">
             {typeof props.title === "string" ? <h2>{props.title}</h2> : props.title}
           </div>
-          <div class="ui-panel-meta widget-meta">
+          <div class="ui-panel-meta">
             {props.meta}
             <Show when={props.expandable === true}>
               <button
-                class="ui-icon-btn icon-button ui-panel-expand expand"
+                class="ui-icon-btn ui-panel-expand"
                 type="button"
                 aria-label={`${isExpanded() ? "Collapse" : "Expand"} ${titleString()}`}
                 aria-pressed={isExpanded() ? "true" : "false"}
@@ -138,7 +138,7 @@ export function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
             </Show>
             <Show when={props.collapsible === true || props.onToggleCollapsed !== undefined}>
               <button
-                class="ui-icon-btn icon-button ui-panel-collapse collapse"
+                class="ui-icon-btn ui-panel-collapse"
                 type="button"
                 aria-label={`${isCollapsed() ? "Show" : "Hide"} ${titleString()}`}
                 aria-expanded={isCollapsed() ? "false" : "true"}

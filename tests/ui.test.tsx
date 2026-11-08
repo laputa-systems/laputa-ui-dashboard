@@ -3,10 +3,12 @@ import { renderToString } from "@solidjs/web";
 import {
   Badge,
   Button,
+  CollapsiblePanel,
   EmptyState,
   ErrorState,
   Icon,
   Meter,
+  Modal,
   Notice,
   PageHeader,
   Pagination,
@@ -16,7 +18,29 @@ import {
   Skeleton
 } from "../src/index";
 
+function classTokens(html: string): string[] {
+  return [...html.matchAll(/class="([^"]*)"/gu)].flatMap(match => (match[1] ?? "").split(/\s+/u)).filter(token => token !== "");
+}
+
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders only ui-* classes besides the ones a consumer passes", () => {
+    const html = renderToString(() => (
+      <>
+        <Badge tone="ok" dot>Healthy</Badge>
+        <Icon name="check" />
+        <Segmented label="Range" value="1h" options={[["1h", "1 Hour"]]} onChange={() => {}} />
+        <Modal title="Trace" label="Trace" onBack={() => {}} onClose={() => {}}>Body</Modal>
+        <CollapsiblePanel title="CPU" expandable expanded collapsible flush slotClass="app-slot">Chart</CollapsiblePanel>
+        <CollapsiblePanel title="Memory" collapsible collapsed>Hidden</CollapsiblePanel>
+      </>
+    ));
+    const foreign = classTokens(html).filter(token => !token.startsWith("ui-") && token !== "app-slot");
+    expect(foreign).toEqual([]);
+    expect(html).toContain("ui-panel-expanded");
+    expect(html).toContain("ui-panel-collapsed");
+    expect(html).toContain("ui-modal-body");
+  });
+
   it("renders Badge with tone and dot", () => {
     const html = renderToString(() => <Badge tone="ok" dot>Healthy</Badge>);
     expect(html).toContain("ui-badge");
