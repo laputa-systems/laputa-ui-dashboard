@@ -1,17 +1,26 @@
 # @laputa-systems/ui-dashboard
 
-Compact, editorial design system primitives for Solid.
+Compact, editorial design system for dashboards: CSS tokens and styles, plus optional Solid
+components that render the same markup. Stats uses the Solid components in its dashboard.
+Niceforge uses them in its CI workbench and serves the CSS alone to its server-rendered forge
+pages, which ship no JavaScript.
 
 ## Installation
+
+The package is published to the stuff npm registry. Route the scope there in `.npmrc`:
+
+```ini
+@laputa-systems:registry=https://npm.17166969.xyz/current/
+```
 
 ```sh
 pnpm add @laputa-systems/ui-dashboard
 ```
 
-`solid-js` and `@solidjs/web` (`>=2.0.0-rc.18`) are optional peers. Install them only
-when you import the JS entry; a CSS-only consumer needs neither.
+`solid-js` and `@solidjs/web` (`>=2.0.0-rc.18`) are optional peers. Install them only when you
+import the JS entry; a CSS-only consumer needs neither.
 
-## Usage
+## Solid usage
 
 ```ts
 import "@laputa-systems/ui-dashboard/styles.css";
@@ -23,6 +32,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  IconButton,
   Meter,
   Modal,
   Notice,
@@ -31,19 +41,30 @@ import {
   Panel,
   Segmented,
   Shell,
+  SideNav,
   Skeleton
 } from "@laputa-systems/ui-dashboard";
 ```
 
+Components render only `ui-*` class names. To style an instance from your app, pass `class`
+(and `bodyClass` or `slotClass` on panels) and select that, or select the `ui-*` name.
+
 ## CSS-only usage
 
-`@laputa-systems/ui-dashboard/tokens.css` and `@laputa-systems/ui-dashboard/styles.css` need no JavaScript. `styles.css`
-imports `tokens.css`. Server-rendered HTML can link the built files and emit the same `ui-*`
-class names the components render.
+`tokens.css` and `styles.css` need no JavaScript. Serve
+both files and emit the `ui-*` class names the components render. A server resolves the files
+from the installed package:
+
+```ts
+const styles = fileURLToPath(import.meta.resolve("@laputa-systems/ui-dashboard/styles.css"));
+const tokens = fileURLToPath(import.meta.resolve("@laputa-systems/ui-dashboard/tokens.css"));
+```
 
 ```html
 <link rel="stylesheet" href="/ui/styles.css">
 ```
+
+`styles.css` imports `./tokens.css`, so serve both from the same directory.
 
 ## Tokens
 
@@ -112,3 +133,17 @@ structure:
 
 `heading: true` renders the visible group label; the group's id is `ui-side-group-<index>`
 (`groupId(index)`). `SideNav` renders one nav group on its own.
+
+
+## Development
+
+Node and pnpm versions are pinned in `.node-version` and `packageManager`.
+
+```sh
+pnpm install --frozen-lockfile
+make check            # typecheck, build, and test
+make publish-dry-run  # pack into .work/tmp/pack and show the stuff publish plan
+make publish          # publish the packed tarball to the stuff npm registry
+```
+
+A published `name@version` is immutable, so bump `version` before publishing a change.
