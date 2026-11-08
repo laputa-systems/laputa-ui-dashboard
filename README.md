@@ -1,11 +1,11 @@
-# @joshuarli/ui
+# @laputa-systems/ui-dashboard
 
 Compact, editorial design system primitives for Solid.
 
 ## Installation
 
 ```sh
-pnpm add @joshuarli/ui
+pnpm add @laputa-systems/ui-dashboard
 ```
 
 `solid-js` and `@solidjs/web` (`>=2.0.0-rc.18`) are optional peers. Install them only
@@ -14,7 +14,7 @@ when you import the JS entry; a CSS-only consumer needs neither.
 ## Usage
 
 ```ts
-import "@joshuarli/ui/styles.css";
+import "@laputa-systems/ui-dashboard/styles.css";
 
 import {
   Badge,
@@ -32,12 +32,12 @@ import {
   Segmented,
   Shell,
   Skeleton
-} from "@joshuarli/ui";
+} from "@laputa-systems/ui-dashboard";
 ```
 
 ## CSS-only usage
 
-`@joshuarli/ui/tokens.css` and `@joshuarli/ui/styles.css` need no JavaScript. `styles.css`
+`@laputa-systems/ui-dashboard/tokens.css` and `@laputa-systems/ui-dashboard/styles.css` need no JavaScript. `styles.css`
 imports `tokens.css`. Server-rendered HTML can link the built files and emit the same `ui-*`
 class names the components render.
 

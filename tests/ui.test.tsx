@@ -16,7 +16,7 @@ import {
   Skeleton
 } from "../src/index";
 
-describe("@joshuarli/ui", () => {
+describe("@laputa-systems/ui-dashboard", () => {
   it("renders Badge with tone and dot", () => {
     const html = renderToString(() => <Badge tone="ok" dot>Healthy</Badge>);
     expect(html).toContain("ui-badge");
