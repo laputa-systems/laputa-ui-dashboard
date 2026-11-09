@@ -1,7 +1,7 @@
 # @laputa-systems/ui-dashboard
 
 Compact, editorial design system for dashboards: CSS tokens and styles, plus optional Solid
-components that render the same markup. Stats uses the Solid components in its dashboard.
+components that render the same markup in browsers and server rendering. Stats uses the Solid components in its dashboard.
 Niceforge uses them in its CI workbench and serves the CSS alone to its server-rendered forge
 pages, which ship no JavaScript.
 
