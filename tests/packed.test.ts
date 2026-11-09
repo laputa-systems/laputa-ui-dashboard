@@ -79,7 +79,8 @@ if (!progress.includes("Upload") || !progress.includes('value="0"')) throw new E
 const badge = renderToString(() => Badge({ children: "Ready" }));
 if (!badge.includes("ui-badge") || !badge.includes("Ready")) throw new Error(badge);
 const html = renderToString(() => TextField({ id: "name", label: "Name", hint: "Enter a name" }));
-if (!html.includes('for="name"') || !html.includes('aria-describedby="name-hint"')) throw new Error(html);
+const description = html.match(/aria-describedby="([^"]+)"/);
+if (!html.includes('for="name"') || !description || !html.includes('id="' + description[1] + '"')) throw new Error(html);
 `;
       execFileSync("node", ["--input-type=module", "-e", serverConsumer], { cwd: tmp, stdio: "inherit" });
       const consumerTypes = join(tmp, "consumer.ts");

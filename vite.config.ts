@@ -3,7 +3,7 @@ import solid from "@solidjs/vite-plugin";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [solid()],
+  plugins: [solid({ ssr: true })],
   build: {
     lib: {
       entry: { index: resolve(import.meta.dirname, "src/index.ts"), forms: resolve(import.meta.dirname, "src/forms/index.ts"), feedback: resolve(import.meta.dirname, "src/feedback/index.ts"), layout: resolve(import.meta.dirname, "src/layout/index.ts") },

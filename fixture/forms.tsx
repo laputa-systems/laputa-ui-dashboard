@@ -25,6 +25,8 @@ function Fixture() {
       <output data-testid="actions">{actions()}</output>
       <Button busy={false} disabled>Disabled action</Button>
       <IconButton ariaLabel="Refresh" busy>R</IconButton>
+      <TextField id="project" label="Project" hint="Project hint" />
+      <TextField id="project-hint" label="Project note" hint="Note hint" />
       <form>
         <TextField id="nickname" label="Nickname" name="nickname" defaultValue="first" />
         <button type="reset">Reset</button>

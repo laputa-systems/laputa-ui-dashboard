@@ -51,11 +51,28 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Progress label="Upload" value={11} max={10} />)).toThrow(RangeError);
     expect(() => renderToString(() => <Progress label="Upload" max={0} />)).toThrow(RangeError);
   });
+  it("namespaces field descriptions across independently rendered roots", () => {
+    const first = renderToString(() => <TextField id="first" label="First" hint="Help" />, { renderId: "first" });
+    const second = renderToString(() => <TextField id="second" label="Second" hint="Help" />, { renderId: "second" });
+    const firstId = first.match(/aria-describedby="([^"]+)"/u)?.[1];
+    const secondId = second.match(/aria-describedby="([^"]+)"/u)?.[1];
+    expect(firstId).toBeTruthy();
+    expect(secondId).toBeTruthy();
+    expect(firstId).not.toBe(secondId);
+  });
+  it("keeps generated field description IDs distinct from other input IDs", () => {
+    const html = renderToString(() => <><TextField id="project" label="Project" hint="Project hint" /><TextField id="project-hint" label="Project note" hint="Note hint" /></>);
+    const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(match => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
   it("renders a field with accessible hint, error, and native form attributes", () => {
     const html = renderToString(() => <TextField id="repository" label="Repository" hint="Use a slug" error="Already in use" name="repository" required aria-describedby="external" />);
     expect(html).toContain('for="repository"');
     expect(html).toContain('id="repository"');
-    expect(html).toContain('aria-describedby="external repository-hint repository-error"');
+    const descriptions = html.match(/aria-describedby="external ([^ ]+) ([^"]+)"/u);
+    expect(descriptions).not.toBeNull();
+    expect(html).toContain(`id="${descriptions?.[1]}"`);
+    expect(html).toContain(`id="${descriptions?.[2]}"`);
     expect(html).toContain('aria-invalid="true"');
     expect(html).toContain('name="repository"');
     expect(html).toContain("required");

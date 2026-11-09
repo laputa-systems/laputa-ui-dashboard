@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
@@ -286,4 +287,37 @@ test("@P1-journey preserves a draft through nested review and a rejected action"
   await expect(inner.getByRole("status").filter({ hasText: "Retrying" })).toBeVisible();
   await inner.getByRole("button", { name: "Acknowledge" }).click();
   await expect(inner.getByRole("status").filter({ hasText: "Acknowledged" })).toBeVisible();
+});
+
+
+test("@P1-field-ids keep descriptions distinct from other input IDs", async ({ page }) => {
+  await page.goto("/forms.html");
+  await expect(page.getByRole("textbox", { name: "Project", exact: true })).toHaveAccessibleDescription("Project hint");
+  await expect(page.getByRole("textbox", { name: "Project note" })).toHaveAccessibleDescription("Note hint");
+  const ids = await page.locator("[id]").evaluateAll(elements => elements.map(element => element.id));
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
+
+test("@P1-field-ids retain associations through server hydration", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { TextField } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => [createComponent(TextField, { id: "project", label: "Project", hint: "Project hint" }), createComponent(TextField, { id: "project-hint", label: "Project note", hint: "Note hint" })]));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/field-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialField = document.getElementById("project"); document.documentElement.dataset.before = [...document.querySelectorAll("[id]")].map(element => element.id).join("|");</script><script type="module" src="/hydrate-fields.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/field-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  const ids = await page.locator("html").evaluate(element => ({ before: element.dataset.before, after: element.dataset.after }));
+  expect(ids.after).toBe(ids.before);
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  expect(errors).toEqual([]);
+  await expect(page.getByRole("textbox", { name: "Project", exact: true })).toHaveAccessibleDescription("Project hint");
+  await expect(page.getByRole("textbox", { name: "Project note" })).toHaveAccessibleDescription("Note hint");
+  await page.getByRole("textbox", { name: "Project", exact: true }).fill("changed");
+  await expect(page.locator("html")).toHaveAttribute("data-edited", "changed");
 });

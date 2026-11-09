@@ -59,7 +59,9 @@ Components render only `ui-*` class names. To style an instance from your app, p
 
 Import `TextField` from `@laputa-systems/ui-dashboard/forms`. Load `styles/forms.css` after
 `styles.css`. The field requires a unique `id` and a visible `label`; `hint` and `error`
-are linked to the input. The forms entry supports server rendering and browser use. Native input attributes, `value`, `defaultValue`, and input events
+are linked to the input. Generated description IDs reserve the `ui-field-description-` prefix.
+For multiple server-rendered roots, use a distinct Solid `renderId` for each root and its hydration.
+The forms entry supports server rendering and browser use. Native input attributes, `value`, `defaultValue`, and input events
 are forwarded. Use `defaultValue` for native form reset and `value` for parent-owned state.
 
 ```tsx
