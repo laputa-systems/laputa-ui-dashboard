@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [solid()],
   build: {
     lib: {
-      entry: resolve(import.meta.dirname, "src/index.ts"),
+      entry: { index: resolve(import.meta.dirname, "src/index.ts"), forms: resolve(import.meta.dirname, "src/forms/index.ts") },
       formats: ["es"],
-      fileName: () => "index.js",
+      fileName: (_, name) => `${name}.js`,
     },
     rollupOptions: {
       external: [

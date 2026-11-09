@@ -18,6 +18,14 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./forms": {
+      "types": "./dist/forms/index.d.ts",
+      "browser": "./dist/forms.js",
+      "node": "./dist/ssr/forms.js",
+      "import": "./dist/forms.js",
+      "default": "./dist/forms.js"
+    },
+    "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",
     "./tokens.css": "./dist/tokens.css"
   },
@@ -27,7 +35,7 @@
     "docs"
   ],
   "scripts": {
-    "build": "rm -rf dist && vite build && tsrs -p tsconfig.json && node scripts/build-css.mjs",
+    "build": "rm -rf dist && vite build && vite build --ssr src/index.ts --outDir dist/ssr && tsrs -p tsconfig.json && node scripts/build-css.mjs",
     "lint": "oxlint",
     "typecheck": "tsrs -p tsconfig.json --noEmit",
     "test": "vitest run",

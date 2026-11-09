@@ -55,6 +55,21 @@ import {
 Components render only `ui-*` class names. To style an instance from your app, pass `class`
 (and `bodyClass` or `slotClass` on panels) and select that, or select the `ui-*` name.
 
+## Forms
+
+Import `TextField` from `@laputa-systems/ui-dashboard/forms`. Load `styles/forms.css` after
+`styles.css`. The field requires a unique `id` and a visible `label`; `hint` and `error`
+are linked to the input. The forms entry supports server rendering and browser use. Native input attributes, `value`, `defaultValue`, and input events
+are forwarded. Use `defaultValue` for native form reset and `value` for parent-owned state.
+
+```tsx
+import "@laputa-systems/ui-dashboard/styles.css";
+import "@laputa-systems/ui-dashboard/styles/forms.css";
+import { TextField } from "@laputa-systems/ui-dashboard/forms";
+
+<TextField id="repository" label="Repository" name="repository" hint="Use a slug" required />
+```
+
 ## CSS-only usage
 
 `tokens.css` and `styles.css` need no JavaScript. Serve
@@ -70,7 +85,16 @@ const tokens = fileURLToPath(import.meta.resolve("@laputa-systems/ui-dashboard/t
 <link rel="stylesheet" href="/ui/styles.css">
 ```
 
-`styles.css` imports `./tokens.css`, so serve both from the same directory.
+`styles.css` imports `./tokens.css`, so serve both from the same directory. For forms, also
+serve `styles/forms.css` and load it after `styles.css`. The same field needs no JavaScript:
+
+```html
+<div class="ui-field">
+  <label class="ui-field-label" for="repository">Repository</label>
+  <input class="ui-text-field" id="repository" name="repository" aria-describedby="repository-hint" required>
+  <div class="ui-field-hint" id="repository-hint">Use a slug</div>
+</div>
+```
 
 ## Tokens
 

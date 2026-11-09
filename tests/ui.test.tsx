@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
+import { TextField } from "../src/forms";
 import {
   Badge,
   Button,
@@ -24,6 +25,16 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders a field with accessible hint, error, and native form attributes", () => {
+    const html = renderToString(() => <TextField id="repository" label="Repository" hint="Use a slug" error="Already in use" name="repository" required aria-describedby="external" />);
+    expect(html).toContain('for="repository"');
+    expect(html).toContain('id="repository"');
+    expect(html).toContain('aria-describedby="external repository-hint repository-error"');
+    expect(html).toContain('aria-invalid="true"');
+    expect(html).toContain('name="repository"');
+    expect(html).toContain("required");
+  });
+
   it("renders only ui-* classes besides the ones a consumer passes", () => {
     const html = renderToString(() => (
       <>

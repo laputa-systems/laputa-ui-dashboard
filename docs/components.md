@@ -23,6 +23,14 @@ Import components and types from `@laputa-systems/ui-dashboard`. Import `styles.
 | `Shell`, `ShellProps`, `ShellBrand`, `NavGroup`, `NavItem` | Requires `brand`, `nav`, and children. `foot` and `mainId` are optional. Groups can have visible headings and links can mark the current page. |
 | `SideNav`, `groupId` | `SideNav` renders a `group` and its zero-based `index`; use distinct indexes on the page. `groupId(index)` returns the heading ID. |
 
+Import `TextField` and `TextFieldProps` from `@laputa-systems/ui-dashboard/forms`, and
+load `@laputa-systems/ui-dashboard/styles/forms.css` after the base stylesheet. `TextField`
+requires a unique `id` and a visible `label`. It forwards native input attributes and events.
+`hint` and `error` add associated descriptions; an error also sets `aria-invalid`. Existing
+`aria-describedby` values are retained. Use `defaultValue` for an uncontrolled input that
+resets with its form; use `value` and `onInput` for parent-controlled state. The control
+classes can also be used directly in static HTML as shown in the README.
+
 Refer to the exported declarations for exact prop types.
 
 ## Examples
