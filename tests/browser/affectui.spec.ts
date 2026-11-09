@@ -255,3 +255,35 @@ test("@P1-overlays backdrop dismissal affects only the top dialog", async ({ pag
   await expect(outer).toHaveCount(0);
   await expect(page.getByTestId("overlay-counts")).toHaveText("1:1");
 });
+
+test("@P1-journey preserves a draft through nested review and a rejected action", async ({ page }) => {
+  await page.goto("/overlays.html");
+  await page.getByRole("button", { name: "Open outer" }).click();
+  const outer = page.getByRole("dialog", { name: "Outer" });
+  const innerTrigger = outer.getByRole("button", { name: "Open inner" });
+  await innerTrigger.click();
+  let inner = page.getByRole("dialog", { name: "Inner" });
+  await inner.getByText("Request details", { exact: true }).click();
+  const draft = inner.getByRole("textbox", { name: "Request" });
+  await draft.fill("draft");
+  await draft.press("ArrowLeft");
+  await draft.pressSequentially("X");
+  await expect(draft).toHaveValue("drafXt");
+  await inner.getByRole("button", { name: "Submit request" }).click();
+  await expect(inner.getByRole("alert")).toHaveText("Request rejected");
+  await expect(draft).toHaveValue("drafXt");
+  await inner.getByRole("button", { name: "Retry" }).click();
+  await expect(inner.getByRole("status").filter({ hasText: "Retrying" })).toBeVisible();
+  await expect(inner.getByTestId("journey-attempts")).toHaveText("1");
+  await expect(draft).toHaveValue("drafXt");
+  await page.keyboard.press("Escape");
+  await expect(inner).toHaveCount(0);
+  await expect(innerTrigger).toBeFocused();
+  await innerTrigger.click();
+  inner = page.getByRole("dialog", { name: "Inner" });
+  await inner.getByText("Request details", { exact: true }).click();
+  await expect(inner.getByRole("textbox", { name: "Request" })).toHaveValue("drafXt");
+  await expect(inner.getByRole("status").filter({ hasText: "Retrying" })).toBeVisible();
+  await inner.getByRole("button", { name: "Acknowledge" }).click();
+  await expect(inner.getByRole("status").filter({ hasText: "Acknowledged" })).toBeVisible();
+});
