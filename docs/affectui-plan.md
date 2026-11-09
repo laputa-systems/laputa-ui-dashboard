@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** the M06 implementation commit. F01 and M06 are accepted; no slice is red or parked. C081 remains open for its remaining controls.
-- **Next:** continue P1 with busy button behavior. Resume with `git status --short --branch` and inspect `src/components/Button.tsx`, `src/css/button.css`, and `tests/browser/affectui.spec.ts`.
+- **Last accepted revision:** the C024-a implementation commit. F01, M06 and C024-a are accepted; no slice is red or parked. C024 and C081 remain open for their remaining controls.
+- **Next:** continue P1 with semantic determinate and indeterminate progress. Resume with `git status --short --branch` and inspect `src/components/Meter.tsx`, `src/css/meter.css`, and `tests/browser/affectui.spec.ts`.
 
 ## Charter
 

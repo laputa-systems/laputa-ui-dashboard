@@ -69,6 +69,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain("Click");
   });
 
+  it("renders busy buttons as labelled, disabled controls", () => {
+    const html = renderToString(() => <><Button busy>Save</Button><IconButton ariaLabel="Refresh" busy>R</IconButton></>);
+    expect(html.match(/aria-busy="true"/gu)).toHaveLength(2);
+    expect(html.match(/disabled/gu)).toHaveLength(2);
+    expect(html).toContain("Save");
+    expect(html).toContain('aria-label="Refresh"');
+  });
+
   it("forwards native button attributes and exposes meaningful icon names", () => {
     const html = renderToString(() => <>
       <Button name="action" value="save" form="editor" aria-describedby="hint">Save</Button>

@@ -66,3 +66,22 @@ test("@M06 loading placeholders respect reduced motion and expose a busy state",
   await expect(placeholder.locator(".ui-skeleton-line").first()).toHaveCSS("animation-name", "ui-pulse");
   await context.close();
 });
+
+
+test("@C024-a busy buttons retain their label and prevent duplicate actions", async ({ page }) => {
+  await page.goto("/forms.html");
+  const save = page.getByRole("button", { name: "Save changes" });
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect(save).toBeDisabled();
+  await expect(save).toHaveAttribute("aria-busy", "true");
+  await expect(page.getByTestId("actions")).toHaveText("1");
+  await save.evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByTestId("actions")).toHaveText("1");
+  await page.getByRole("button", { name: "Finish saving" }).click();
+  await expect(save).toBeEnabled();
+  await expect(save).not.toHaveAttribute("aria-busy", "true");
+  await expect(page.getByRole("button", { name: "Disabled action" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Refresh" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Refresh" })).toHaveAttribute("aria-busy", "true");
+});
