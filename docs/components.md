@@ -31,6 +31,14 @@ requires a unique `id` and a visible `label`. It forwards native input attribute
 resets with its form; use `value` and `onInput` for parent-controlled state. The control
 classes can also be used directly in static HTML as shown in the README.
 
+Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
+`@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
+native `<progress>` element. A missing `value` means indeterminate progress; zero is a measured
+value. `max` defaults to 100 and must be positive and finite. A value must be finite and within
+zero and `max`; invalid values throw `RangeError`. A reduced-motion preference makes the
+indeterminate presentation static. Static HTML can use `ui-progress`, `ui-progress-label`,
+and `ui-progress-bar` with the same native markup.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

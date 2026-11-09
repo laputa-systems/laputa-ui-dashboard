@@ -70,6 +70,21 @@ import { TextField } from "@laputa-systems/ui-dashboard/forms";
 <TextField id="repository" label="Repository" name="repository" hint="Use a slug" required />
 ```
 
+## Progress
+
+Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load
+`styles/feedback.css` after `styles.css`. Supply a label and a finite value between zero
+and `max` (100 by default). Omit `value` when progress is unknown. Invalid values throw.
+The component uses native `<progress>` semantics and supports server rendering.
+
+```tsx
+import "@laputa-systems/ui-dashboard/styles.css";
+import "@laputa-systems/ui-dashboard/styles/feedback.css";
+import { Progress } from "@laputa-systems/ui-dashboard/feedback";
+
+<Progress label="Upload" value={5} max={10} />
+```
+
 ## CSS-only usage
 
 `tokens.css` and `styles.css` need no JavaScript. Serve

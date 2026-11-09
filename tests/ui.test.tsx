@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { TextField } from "../src/forms";
+import { Progress } from "../src/feedback";
 import {
   Badge,
   Button,
@@ -25,6 +26,14 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders named progress and rejects invalid values", () => {
+    const html = renderToString(() => <Progress label="Upload" value={0} max={10} />);
+    expect(html).toContain("Upload");
+    expect(html).toContain('value="0"');
+    expect(html).toContain('max="10"');
+    expect(() => renderToString(() => <Progress label="Upload" value={11} max={10} />)).toThrow(RangeError);
+    expect(() => renderToString(() => <Progress label="Upload" max={0} />)).toThrow(RangeError);
+  });
   it("renders a field with accessible hint, error, and native form attributes", () => {
     const html = renderToString(() => <TextField id="repository" label="Repository" hint="Use a slug" error="Already in use" name="repository" required aria-describedby="external" />);
     expect(html).toContain('for="repository"');

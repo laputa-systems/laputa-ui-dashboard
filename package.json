@@ -27,6 +27,14 @@
       "import": "./dist/forms.js",
       "default": "./dist/forms.js"
     },
+    "./feedback": {
+      "types": "./dist/feedback/index.d.ts",
+      "browser": "./dist/feedback.js",
+      "node": "./dist/ssr/feedback.js",
+      "import": "./dist/feedback.js",
+      "default": "./dist/feedback.js"
+    },
+    "./styles/feedback.css": "./dist/styles/feedback.css",
     "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",
     "./tokens.css": "./dist/tokens.css"

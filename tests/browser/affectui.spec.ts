@@ -30,10 +30,11 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   const page = await context.newPage();
   await page.route("**/dist/**/*.css", async route => {
     const path = new URL(route.request().url()).pathname.replace(/^\/dist\//u, "");
-    if (!["styles.css", "tokens.css", "styles/forms.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
+    if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await expect(page.getByRole("progressbar", { name: "Upload" })).toHaveAttribute("value", "5");
   const field = page.getByRole("textbox", { name: "Query" });
   await expect(field).toHaveAccessibleDescription("Search repositories");
   await expect(field).toHaveCSS("font-size", "13px");
@@ -84,4 +85,19 @@ test("@C024-a busy buttons retain their label and prevent duplicate actions", as
   await expect(page.getByRole("button", { name: "Disabled action" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Refresh" })).toHaveAttribute("aria-busy", "true");
+});
+
+test("@P1-progress names measured and indeterminate progress", async ({ page }) => {
+  await page.goto("/progress.html");
+  const progress = page.getByRole("progressbar", { name: "Upload" });
+  await expect(progress).not.toHaveAttribute("value");
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(progress).toHaveAttribute("value", "0");
+  await expect(progress).toHaveAttribute("max", "10");
+  await page.getByRole("button", { name: "Half done" }).click();
+  await expect(progress).toHaveAttribute("value", "5");
+  await page.getByRole("button", { name: "Unknown" }).click();
+  await expect(progress).not.toHaveAttribute("value");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(progress).toHaveCSS("appearance", "none");
 });

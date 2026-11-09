@@ -1,0 +1,8 @@
+.ui-progress { display: grid; gap: var(--ui-space-xs); color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); }
+.ui-progress-label { font-weight: var(--ui-weight-medium); }
+.ui-progress-bar { width: 100%; min-width: 0; accent-color: var(--ui-accent); }
+@media (prefers-reduced-motion: reduce) {
+  .ui-progress-bar:indeterminate { appearance: none; height: var(--ui-space-sm); border: 0; background: var(--ui-hover); }
+  .ui-progress-bar:indeterminate::-webkit-progress-bar { background: var(--ui-hover); }
+  .ui-progress-bar:indeterminate::-webkit-progress-value { background: var(--ui-accent); }
+}

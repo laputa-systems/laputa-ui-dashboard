@@ -31,6 +31,9 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/components/Panel.d.ts"), "Missing Panel declaration");
       assert.ok(paths.includes("dist/components/Modal.d.ts"), "Missing Modal declaration");
 
+      assert.ok(paths.includes("dist/feedback.js"), "Missing feedback entry");
+      assert.ok(paths.includes("dist/feedback/index.d.ts"), "Missing feedback declarations");
+      assert.ok(paths.includes("dist/styles/feedback.css"), "Missing feedback stylesheet");
       assert.ok(paths.includes("dist/forms.js"), "Missing forms entry");
       assert.ok(paths.includes("dist/forms/index.d.ts"), "Missing forms declarations");
       assert.ok(paths.includes("dist/styles/forms.css"), "Missing forms stylesheet");
@@ -39,19 +42,25 @@ describe("packed artifact contract", () => {
       mkdirSync(scope, { recursive: true });
       renameSync(join(tmp, "package"), join(scope, "ui-dashboard"));
       writeFileSync(join(tmp, "package.json"), '{"name":"packed-consumer","type":"module","private":true}');
-      const consumer = `import { TextField } from "@laputa-systems/ui-dashboard/forms";
+      const consumer = `import { Progress } from "@laputa-systems/ui-dashboard/feedback";
+import { TextField } from "@laputa-systems/ui-dashboard/forms";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
+if (typeof Progress !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/feedback").endsWith("/dist/feedback.js")) throw new Error("browser feedback entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard").endsWith("/dist/index.js")) throw new Error("browser root entry is not selected");
 if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/forms.js")) throw new Error("browser forms entry is not usable");
-for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css"]) require.resolve(entry);
+for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
-      const serverConsumer = `import { Badge } from "@laputa-systems/ui-dashboard";
+      const serverConsumer = `import { Progress } from "@laputa-systems/ui-dashboard/feedback";
+import { Badge } from "@laputa-systems/ui-dashboard";
 import { TextField } from "@laputa-systems/ui-dashboard/forms";
 import { renderToString } from "@solidjs/web";
 if (!import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/ssr/forms.js")) throw new Error("server forms entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard").endsWith("/dist/ssr/index.js")) throw new Error("server root entry is not selected");
+if (!import.meta.resolve("@laputa-systems/ui-dashboard/feedback").endsWith("/dist/ssr/feedback.js")) throw new Error("server feedback entry is not selected");
+const progress = renderToString(() => Progress({ label: "Upload", value: 0, max: 10 }));
+if (!progress.includes("Upload") || !progress.includes('value="0"')) throw new Error(progress);
 const badge = renderToString(() => Badge({ children: "Ready" }));
 if (!badge.includes("ui-badge") || !badge.includes("Ready")) throw new Error(badge);
 const html = renderToString(() => TextField({ id: "name", label: "Name", hint: "Enter a name" }));
@@ -59,7 +68,7 @@ if (!html.includes('for="name"') || !html.includes('aria-describedby="name-hint"
 `;
       execFileSync("node", ["--input-type=module", "-e", serverConsumer], { cwd: tmp, stdio: "inherit" });
       const consumerTypes = join(tmp, "consumer.ts");
-      writeFileSync(consumerTypes, 'import { TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
+      writeFileSync(consumerTypes, 'import { Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
       execFileSync(join(uiDir, "node_modules/.bin/tsrs"), ["--ignoreConfig", "--noEmit", "--strict", "--skipLibCheck", "--module", "esnext", "--moduleResolution", "bundler", "--target", "es2022", "--lib", "es2022,dom", consumerTypes], { cwd: tmp, stdio: "inherit" });
       const declarations = readFileSync(join(scope, "ui-dashboard/dist/forms/index.d.ts"), "utf8");
       assert.match(declarations, /TextField/u);

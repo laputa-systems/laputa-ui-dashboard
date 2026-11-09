@@ -40,3 +40,4 @@ writeFileSync(join(dist, "styles.css"), styles);
 copyFileSync(join(source, "tokens.css"), join(dist, "tokens.css"));
 mkdirSync(join(dist, "styles"), { recursive: true });
 copyFileSync(join(source, "css/forms.css"), join(dist, "styles/forms.css"));
+copyFileSync(join(source, "css/feedback.css"), join(dist, "styles/feedback.css"));
