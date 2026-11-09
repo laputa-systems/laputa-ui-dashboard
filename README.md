@@ -7,6 +7,10 @@ pages, which ship no JavaScript.
 
 See the [component reference](docs/components.md) and [usage patterns](docs/patterns.md). The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted.
 
+The [AffectUI coverage plan](docs/affectui-plan.md) and [catalog gap matrix](docs/affectui-catalog.md)
+describe the proposed expansion of layouts, forms, data views, chat, and agent workflows.
+They are an implementation backlog, not a list of features already shipped.
+
 ## Installation
 
 The package is published to the stuff npm registry. Route the scope there in `.npmrc`:
