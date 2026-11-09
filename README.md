@@ -90,7 +90,8 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 Import `Disclosure` from `@laputa-systems/ui-dashboard/layout` and load
 `styles/layout.css` after the base stylesheet. `defaultOpen` initializes local state once.
 Set `open` and `onOpenChange` together for parent-controlled state. A controlled disclosure
-without a callback is read-only. The component uses native `<details>` and `<summary>`.
+without a callback is read-only. The component uses native `<details>` and `<summary>`. `Accordion` coordinates a single open
+item and supports arrow, Home, and End navigation; its unique `id` scopes the native group.
 
 ```tsx
 import "@laputa-systems/ui-dashboard/styles.css";

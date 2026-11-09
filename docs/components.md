@@ -47,6 +47,14 @@ action, and parent changes do not notify it. A controlled disclosure without a c
 read-only. Static HTML can use `ui-disclosure`, `ui-disclosure-summary`, and
 `ui-disclosure-body` with `<details>` and `<summary>` and needs no JavaScript.
 
+`Accordion` from the same entry accepts a unique group `id` and an `items` array with stable,
+unique item IDs, labels, children, and optional `disabled` states. `defaultOpenId` initializes
+local selection; `openId` and `onOpenChange` control selection from the parent. `null` closes
+all items. An absent selected item displays no open item and does not change the supplied ID.
+A controlled group without a callback is read-only. Arrow keys move between enabled summaries;
+Home and End move to the first and last enabled summary. Duplicate item IDs throw. Static HTML
+can group `<details>` elements with the same unique `name` for single-open behavior.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

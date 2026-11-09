@@ -34,6 +34,11 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByText("Static first", { exact: true }).click();
+  await expect(page.getByText("Static first content")).toBeVisible();
+  await page.getByText("Static second", { exact: true }).click();
+  await expect(page.getByText("Static first content")).toBeHidden();
+  await expect(page.getByText("Static second content")).toBeVisible();
   await page.getByText("Static detail").click();
   await expect(page.getByText("Static content")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Upload" })).toHaveAttribute("value", "5");
@@ -118,7 +123,7 @@ test("@P1-disclosure supports keyboard, controlled and local state", async ({ pa
   await page.getByRole("button", { name: "Parent toggle" }).click();
   await expect(controlled).not.toHaveAttribute("open");
   await expect(page.getByTestId("disclosure-requests")).toHaveText("1");
-  const local = page.locator("details").filter({ hasText: "Local" });
+  const local = page.getByText("Local", { exact: true }).locator("..");
   await expect(local).toHaveAttribute("open", "");
   await page.getByRole("button", { name: "Change default" }).click();
   await expect(local).toHaveAttribute("open", "");
@@ -126,8 +131,57 @@ test("@P1-disclosure supports keyboard, controlled and local state", async ({ pa
   await page.keyboard.press("Space");
   await expect(local).not.toHaveAttribute("open");
   await expect(page.getByTestId("local-requests")).toHaveText("1");
-  const locked = page.locator("details").filter({ hasText: "Locked" });
+  const locked = page.getByText("Locked", { exact: true }).locator("..");
   await expect(locked.locator("summary")).toHaveAttribute("aria-disabled", "true");
   await locked.locator("summary").click();
   await expect(locked).not.toHaveAttribute("open");
+});
+
+
+test("@P1-accordion coordinates sections and keyboard navigation", async ({ page }) => {
+  await page.goto("/disclosure.html");
+  const first = page.getByText("First section", { exact: true });
+  const second = page.getByText("Second section", { exact: true });
+  const disabled = page.getByText("Unavailable section", { exact: true });
+  await expect(disabled).toHaveAttribute("aria-disabled", "true");
+  await first.focus();
+  await page.keyboard.press("Enter");
+  await expect(first.locator("..")).toHaveAttribute("open", "");
+  await expect(page.getByTestId("accordion-requests")).toHaveText("1");
+  await page.keyboard.press("ArrowDown");
+  await expect(second).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(second.locator("..")).toHaveAttribute("open", "");
+  await expect(first.locator("..")).not.toHaveAttribute("open");
+  await expect(page.getByTestId("accordion-requests")).toHaveText("2");
+  await page.keyboard.press("Home");
+  await expect(first).toBeFocused();
+  await page.getByRole("button", { name: "Select first" }).click();
+  await expect(first.locator("..")).toHaveAttribute("open", "");
+  await expect(second.locator("..")).not.toHaveAttribute("open");
+  await expect(page.getByTestId("accordion-requests")).toHaveText("2");
+  await disabled.click();
+  await expect(disabled.locator("..")).not.toHaveAttribute("open");
+  await expect(page.getByTestId("accordion-requests")).toHaveText("2");
+});
+
+
+test("@P1-accordion initializes local state once and locks a controlled group without a handler", async ({ page }) => {
+  await page.goto("/disclosure.html");
+  const first = page.getByText("Local first", { exact: true });
+  const second = page.getByText("Local second", { exact: true });
+  await expect(first.locator("..")).toHaveAttribute("open", "");
+  await page.getByRole("button", { name: "Change initial section" }).click();
+  await expect(first.locator("..")).toHaveAttribute("open", "");
+  await second.click();
+  await expect(first.locator("..")).not.toHaveAttribute("open");
+  await expect(second.locator("..")).toHaveAttribute("open", "");
+  await expect(page.getByTestId("local-accordion-requests")).toHaveText("1");
+  await second.click();
+  await expect(second.locator("..")).not.toHaveAttribute("open");
+  await expect(page.getByTestId("local-accordion-requests")).toHaveText("2");
+  const locked = page.getByText("Locked section", { exact: true });
+  await expect(locked).toHaveAttribute("aria-disabled", "true");
+  await locked.click();
+  await expect(locked.locator("..")).not.toHaveAttribute("open");
 });
