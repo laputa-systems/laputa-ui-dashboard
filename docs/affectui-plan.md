@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** the P1-action implementation commit. F01, M06, C024-a, P1-progress, P1-disclosure, P1-accordion and P1-action are accepted; no slice is red or parked. C024 and C081 remain open for their remaining controls.
-- **Next:** continue P1 with nested overlay dismissal and focus coordination. Resume with `git status --short --branch` and inspect `src/components/Modal.tsx`, `src/components/Panel.tsx`, and `tests/browser/geometry.spec.ts`.
+- **Last accepted revision:** the P1-overlays implementation commit. F01, M06, C024-a, P1-progress, P1-disclosure, P1-accordion, P1-action and nested-dialog P1-overlays are accepted; no slice is red or parked. C024 and C081 remain open for their remaining controls.
+- **Next:** complete the P1 assembled input, nested-dialog, disclosure and rejected-action journey. Resume with `git status --short --branch` and inspect `fixture/overlays.tsx`, `src/feedback/ActionStatus.tsx`, and `tests/browser/affectui.spec.ts`.
 
 ## Charter
 
@@ -58,7 +58,7 @@ The phase descriptions, row requirements, and shared contracts below remain bind
 
 ## Needs environment
 
-None identified for the local baseline. If Firefox or WebKit is absent, install them only when authorized by the environment and run `pnpm exec playwright test --project=firefox` or `--project=webkit` after configuring those projects; otherwise list the missing browser, targeted cases and command here. For real assistive technology, record OS, browser, screen reader, fixture URL and the keyboard/announcement scenarios for an owner to run. Consumer integration is separate from local completion: on the relevant consumer checkout, install a locally packed tarball, run that consumer's documented checks, and record the exact command and result. Do not change or publish a consumer without a separate grant.
+Chromium passes the local suite. WebKit passed the 12 focused form, progress, disclosure, accordion, action and nested-dialog cases using `TMPDIR="$PWD/.work/tmp" PLAYWRIGHT_BROWSERS_PATH="$PWD/.work/tmp/playwright-browsers" pnpm exec playwright test tests/browser/affectui.spec.ts --browser=webkit`. Firefox 159 downloaded but failed to launch because it could not find its temporary profile, including with `TMPDIR` under `.work/tmp`; its behavior remains unverified. On an environment where Firefox starts, run `TMPDIR="$PWD/.work/tmp" PLAYWRIGHT_BROWSERS_PATH="$PWD/.work/tmp/playwright-browsers" pnpm exec playwright test tests/browser/affectui.spec.ts --browser=firefox` after installing that browser into the same path. The binaries under `.work` are disposable and may need reinstalling. For real assistive technology, record OS, browser, screen reader, fixture URL and the keyboard/announcement scenarios for an owner to run. Consumer integration is separate from local completion: on the relevant consumer checkout, install a locally packed tarball, run that consumer's documented checks, and record the exact command and result. Do not change or publish a consumer without a separate grant.
 
 ## Execution boundary and non-goals
 

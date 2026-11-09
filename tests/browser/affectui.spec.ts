@@ -213,3 +213,45 @@ test("@P1-action preserves the draft and reports host-owned failure and retry", 
   await expect(page.getByText("Saving unavailable")).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry" })).toHaveCount(0);
 });
+
+test("@P1-overlays dismisses the top dialog first and restores focus", async ({ page }) => {
+  await page.goto("/overlays.html");
+  const trigger = page.getByRole("button", { name: "Open outer" });
+  await trigger.click();
+  const outer = page.getByRole("dialog", { name: "Outer" });
+  await expect(outer).toBeVisible();
+  const innerTrigger = outer.getByRole("button", { name: "Open inner" });
+  await innerTrigger.click();
+  const inner = page.getByRole("dialog", { name: "Inner" });
+  await expect(inner).toBeVisible();
+  await inner.getByRole("textbox", { name: "Notes" }).fill("draft");
+  await page.keyboard.press("Escape");
+  await expect(inner).toHaveCount(0);
+  await expect(outer).toBeVisible();
+  await expect(innerTrigger).toBeFocused();
+  await expect(page.getByTestId("overlay-counts")).toHaveText("0:1");
+  await page.keyboard.press("Escape");
+  await expect(outer).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.getByTestId("overlay-counts")).toHaveText("1:1");
+});
+
+
+test("@P1-overlays backdrop dismissal affects only the top dialog", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/overlays.html");
+  await page.getByRole("button", { name: "Open outer" }).click();
+  const outer = page.getByRole("dialog", { name: "Outer" });
+  const innerTrigger = outer.getByRole("button", { name: "Open inner" });
+  await innerTrigger.click();
+  const inner = page.getByRole("dialog", { name: "Inner" });
+  await expect(inner).toBeVisible();
+  await page.mouse.click(2, 2);
+  await expect(inner).toHaveCount(0);
+  await expect(outer).toBeVisible();
+  await expect(innerTrigger).toBeFocused();
+  await expect(page.getByTestId("overlay-counts")).toHaveText("0:1");
+  await page.mouse.click(2, 2);
+  await expect(outer).toHaveCount(0);
+  await expect(page.getByTestId("overlay-counts")).toHaveText("1:1");
+});

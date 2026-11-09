@@ -8,6 +8,7 @@ export interface ModalProps extends ParentProps {
   readonly size?: "wide" | "compact" | undefined;
   readonly class?: string | undefined;
   readonly onClose: () => void;
+  readonly returnFocus?: HTMLElement | undefined;
   readonly onBack?: (() => void) | undefined;
   readonly backLabel?: string | undefined;
 }
@@ -40,7 +41,11 @@ export function Modal(props: ModalProps): JSX.Element {
       aria-label={props.label}
       ref={open}
       closedby="any"
-      onClose={() => props.onClose()}
+      onClose={() => {
+        const target = props.returnFocus;
+        props.onClose();
+        if (target?.isConnected) target.focus();
+      }}
     >
       <header class="ui-modal-head">
         <Show when={props.onBack}>{back => (
