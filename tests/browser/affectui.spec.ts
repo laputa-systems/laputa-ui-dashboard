@@ -57,6 +57,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   await field.fill("forge");
   await page.getByRole("button", { name: "Search" }).click();
   await expect(page).toHaveURL(/\/search\?query=forge$/u);
+  await page.goto("/forms-static.html");
+  await expect(page.getByRole("alert")).toHaveText("Save failed");
+  await page.getByRole("button", { name: "Retry request" }).click();
+  await expect(page).toHaveURL(/\/retry\?$/u);
   await context.close();
 });
 
@@ -184,4 +188,28 @@ test("@P1-accordion initializes local state once and locks a controlled group wi
   await expect(locked).toHaveAttribute("aria-disabled", "true");
   await locked.click();
   await expect(locked.locator("..")).not.toHaveAttribute("open");
+});
+
+test("@P1-action preserves the draft and reports host-owned failure and retry", async ({ page }) => {
+  await page.goto("/action.html");
+  const draft = page.getByRole("textbox", { name: "Draft" });
+  await draft.fill("Unsaved changes");
+  await page.getByRole("button", { name: "Start save" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Saving" })).toBeVisible();
+  await page.getByRole("button", { name: "Reject save" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Save failed");
+  await expect(draft).toHaveValue("Unsaved changes");
+  const retry = page.getByRole("button", { name: "Retry" });
+  await retry.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("retry-attempts")).toHaveText("1");
+  await expect(page.getByRole("button", { name: "Retry" })).toHaveCount(0);
+  await expect(page.locator(".ui-action-status")).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: "Saving" })).toBeVisible();
+  await expect(draft).toHaveValue("Unsaved changes");
+  await page.getByRole("button", { name: "Acknowledge save" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible();
+  await page.getByRole("button", { name: "Disable saving" }).click();
+  await expect(page.getByText("Saving unavailable")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry" })).toHaveCount(0);
 });

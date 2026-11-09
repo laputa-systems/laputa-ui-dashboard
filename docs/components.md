@@ -39,6 +39,13 @@ zero and `max`; invalid values throw `RangeError`. A reduced-motion preference m
 indeterminate presentation static. Static HTML can use `ui-progress`, `ui-progress-label`,
 and `ui-progress-bar` with the same native markup.
 
+`ActionStatus` and its `ActionState` type are also exported from `feedback`. The host supplies
+one of `idle`, `pending`, `succeeded`, `failed`, or `unavailable`. Non-idle states carry a
+message. Only a failed state may supply `retry`; the component never starts or acknowledges an
+operation itself. Failures use an alert and other messages use a status. Activating Retry moves
+focus to the status container before calling the host, so the disappearing button does not
+strand focus. The host retains structured error details and decides whether retry is appropriate.
+
 Import `Disclosure` and `DisclosureProps` from `@laputa-systems/ui-dashboard/layout`, and load
 `@laputa-systems/ui-dashboard/styles/layout.css` after the base stylesheet. `label` names a
 native summary and `children` supplies its content. `defaultOpen` initializes local state once.

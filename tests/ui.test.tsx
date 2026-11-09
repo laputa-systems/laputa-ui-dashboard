@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { TextField } from "../src/forms";
-import { Progress } from "../src/feedback";
+import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, Disclosure } from "../src/layout";
 import {
   Badge,
@@ -27,6 +27,13 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders a retry only when the failed action provides one", () => {
+    const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);
+    const withRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed", retry: () => {} }} />);
+    expect(withoutRetry).toContain('role="alert"');
+    expect(withoutRetry).not.toContain("<button");
+    expect(withRetry).toContain("Retry");
+  });
   it("rejects duplicate accordion identities", () => {
     expect(() => renderToString(() => <Accordion id="settings" items={[{ id: "same", label: "First", children: "One" }, { id: "same", label: "Second", children: "Two" }]} />)).toThrow("Duplicate accordion item ID: same");
   });

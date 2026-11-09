@@ -85,6 +85,10 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 <Progress label="Upload" value={5} max={10} />
 ```
 
+`ActionStatus` from the same entry presents host-supplied idle, pending, succeeded, failed,
+and unavailable states. A failed state offers Retry only when the host supplies a callback.
+The host owns the operation, error details, and acknowledgment.
+
 ## Disclosure
 
 Import `Disclosure` from `@laputa-systems/ui-dashboard/layout` and load

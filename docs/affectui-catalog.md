@@ -230,7 +230,7 @@ These are implementation requirements inferred from the catalog and repository g
 | RadioGroup and Tabs | Distinct semantics from the existing Segmented button group | P2 |
 | Popover, Menu, Tooltip and overlay coordination | Select, command/filter/model menus, source previews, nested dismissal | P1/P2 |
 | Disclosure/Accordion | Tool calls, comments, plans, settings groups and inspection details. Native disclosure and single-open accordion are in `src/layout/Disclosure.tsx` and `src/layout/Accordion.tsx`, with keyboard and state coverage in `tests/browser/affectui.spec.ts` (`@P1-disclosure`, `@P1-accordion`). | P1 |
-| Progress and async action status | Existing Meter/Notice do not provide operation/progress semantics. `src/feedback/Progress.tsx` supplies measured/indeterminate native progress; `tests/browser/affectui.spec.ts` (`@P1-progress`) covers state changes. Async action treatment remains open. | P1 |
+| Progress and async action status | Existing Meter/Notice do not provide operation/progress semantics. `src/feedback/Progress.tsx` supplies measured/indeterminate native progress; `tests/browser/affectui.spec.ts` (`@P1-progress`) covers state changes. `src/feedback/ActionStatus.tsx` displays host-owned action states and optional retry, covered by `tests/browser/affectui.spec.ts` (`@P1-action`). | P1 |
 | Breadcrumbs, Toolbar and bulk-action row | Resource directories, tables, filters, saved views and selection | P2/P3 |
 | Workbench, SplitPane, Inspector/Drawer and WorkspaceTabs | Flat/inset/double-sidebar/review/canvas layouts | P3 |
 | DescriptionList, SettingsRow and SaveBar | General/profile/security/model/integration settings | P3 |
