@@ -1,38 +1,72 @@
-# AffectUI coverage and implementation plan
+# Execute the AffectUI coverage plan
 
-Status: **proposed implementation backlog; this change is documentation only.**
+## Status
 
-Research snapshot: **2026-11-09**. Repository baseline: [`2fd9866c2ef28e27815cb6586bf65e31a96013d1`](https://github.com/laputa-systems/laputa-ui-dashboard/commit/2fd9866c2ef28e27815cb6586bf65e31a96013d1), package version **0.5.0**.
+- **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
+- **Last accepted revision:** `62eb56a`, the documentation baseline. No implementation slice has been accepted, is red, or is parked.
+- **Next:** F01, a native text field and a packed forms entry. Resume with `git status --short --branch` and then inspect C081, `src/components/Button.tsx`, `scripts/build-css.mjs`, `tests/packed.test.ts`, and `tests/browser/geometry.spec.ts`.
 
-## 1. Objective and recommendation
+## Charter
 
-Expand this package from a small dashboard primitive set into a coherent library of forms, workspace layouts, data views, chat surfaces, and agent workflows, using AffectUI's public catalog as a coverage reference. Keep Laputa's compact editorial appearance, Solid 2 implementation, explicit state, and useful CSS-only mode.
+This plan is not an execution grant. Once the owner explicitly starts the campaign, work locally within this plan without waiting for another approval. Do not push or publish. Park an item that needs outside-the-repository effects, an unauthorized destructive action, or a loop that cannot check the item. Continue independent items. Missing browsers, hardware, services, and external consumer access go in **Needs environment**, with a reproducible command or procedure.
 
-The highest-return work is a set of reusable layout and interaction foundations. AffectUI's many screens share navigation, panes, tabs, collections, inspectors, fields, and action states. Implementing those once makes the screen catalog achievable without putting a separate application into every component.
+Work one slice at a time. After each accepted slice and on resume, run the parent steering checkpoint in `~/usr/dotfiles/base/.agents/skills/orchestrate/references/campaigns.md`. The parent may change methods and slice order inside the decisions and acceptance here. Default to one writer. Do not run parallel writers: every slice touches shared fixture, test, export, or catalog files. If later changes remove those overlaps, the parent may name disjoint ownership pairs here before launching through the Pi bridge. Worktrees belong under `.work/wt/`; use the orchestrate worktree lifecycle. Keep scratch under `.work/tmp`, ensure `.work/` is excluded in `.git/info/exclude` before writing, and set `TMPDIR` to `.work/tmp` for spilling commands.
 
-The companion [catalog and gap matrix](affectui-catalog.md) accounts for **172 reference items**:
+Commit each green slice with a Conventional Commit scoped to its workstream and its item ID in the body. Include code, behavior tests, docs, and relevant catalog evidence in the same slice. Do not add code comments that point to this plan. Do not run formatters or modify CI. Run the slice acceptance on the integrated tree, then the narrowest affected suite. Run `make check` at each phase exit and close; this repository requires it. Red work never lands on the integration branch.
 
-| Catalog section | Items | Treatment |
-| --- | ---: | --- |
-| Components | 90 | Map every item to an existing partial primitive, new primitive, feature module, or specialized recipe. |
-| Screens | 34 | Compose reusable page layouts and demonstrate each named screen family. |
-| Blocks | 14 | Reuse the same components and state across larger compositions. |
-| Motion | 8 | Add useful state transitions selectively; explicitly defer decorative effects. |
-| Illustrations | 26 | Inventory explicitly; optional art does not become a prerequisite for functional dashboard coverage. |
+On failure, reproduce narrowly and establish the cause before changing code. After two failed hypotheses, bisect the input, code, or environment. After three unsuccessful fixes, park the slice on its branch, state the cause or unresolved hypothesis and exact retry condition in Status, and continue independent work. One parent owns each shared environment blocker. Do not retry a flaky test to green or weaken it.
 
-Every catalog row has a stable ID, source link, proposed implementation destination, delivery phase, and observable acceptance requirement. These IDs are planning identifiers, not public API names. They should survive later renames. Nothing in the matrix is marked implemented merely because this plan exists.
+Fix a defect encountered on the path in its own commit when it causes incorrect user-visible data, an inaccessible required action, loss of a draft, or an existing check failure. A verification loop taking over five minutes on two consecutive comparable runs is an execution blocker: find the cause and fix it before continuing, preserving the same evidence. Record other unrelated issues without expanding scope. During feature phases, measure resource usage without making product speed a gate; harden and optimize after functional parity. Size and memory checks still run where relevant. Time-based performance gates require `perf-gate-ready` before and `perf-gate-ready -1` immediately after each measurement; discard overlaps. If busy, defer the gate and report `perf gate deferred: host busy`; do not call the campaign complete or release it.
 
-### Research method and limits
+## Decisions
 
-The audit read the public detail documentation for all 90 components, 34 screens, 14 blocks, and eight motion effects, including props, keyboard, accessibility, and responsive sections where supplied. It enumerated all 26 illustrations and examined Model Wheel and Voice Orb more closely. The initial text index returned 33 screens; a refreshed index and the live site showed 34, including **AI Chat / Progress**. The matrix uses the later snapshot.
+- **Prescribed — reference and parity:** The 2026-11-09 [catalog](affectui-catalog.md) is the frozen functional reference, not a claim of pixel or React API parity. Its row descriptions and the contracts below are the oracle where a runnable reference is unavailable. Original Solid/CSS implementations are required; do not copy Pro source or branded assets. Preserve each row's distinct success, failure, keyboard, accessibility, responsive, and data cases. Maintain the catalog's row-to-source, fixture, and behavioral-test mapping as slices land. An untested behavior is open. A deliberate difference needs a reason in that row. Do not silently refresh the snapshot or make its raw count the target. This freezes the reference for unattended execution instead of the draft's phase-by-phase inventory refresh; catalog changes after the snapshot are separately scoped.
+- **Prescribed — sequencing:** F01 brings one useful native field through the full package pipeline. Complete P1–P8 functional behavior before optimization and presentation polish. The fixture catalog, optional motion, and other optimization/polish work follow parity; this supersedes the draft's P0.3 placement. P9 graph/editor/scheduling/commerce/presentation and theme work remain out of scope without a separate consumer and grant. No claim of P9 completion follows from P0–P8.
+- **Prescribed — compatibility:** Preserve existing exports, prop meanings, classes, tokens, default geometry, light appearance, `Shell` markup and mobile behavior, `Segmented` semantics, `Button.variant`, and the two-file base CSS contract. Add semantic tabs and radio groups separately. `Meter` stays decorative. Solid and `@solidjs/web` remain optional peers. Existing instances get no new behavior without opt-in.
+- **Prescribed — public surface:** Add feature exports through explicit package subpaths and matching declarations, starting with `./forms`; add feature CSS subpaths loaded after the existing base sheet. The root entry and its existing exports remain intact; do not re-export feature entries from root. Update package exports, Vite entries, declaration emission, CSS builder, packed tests, and documentation together. Each feature family must be independently usable from the packed tarball. Keep no-JS native markup for static functions and label interactive-only behavior. New exports, prop and callback types, CSS classes and tokens are additive public contracts and must be surfaced in the final report.
+- **Prescribed — state and effects:** Views accept explicit data and callbacks; hosts own routing, storage, network, authority, command idempotency, revisions, and reconciliation. Controlled changes notify once per user request, never on parent updates. Require stable IDs. Represent pending, rejected, expired, superseded and acknowledged operations distinctly; a request never implies success. Retain drafts on failure and stale results. Keep runtime permissions separate from visual approval. Do not add a provider, router, automatic storage, fake upload, autonomous scheduler, or network call to the library. Use one visibility-aware clock per live scene, bound queues and payload previews, and clean up listeners, timers and object URLs on unmount.
+- **Prescribed — dependencies:** Prefer native controls, SVG/CSS and existing dependencies. A new dependency is allowed only when a documented behavior cannot reasonably be delivered with those; vet license, maintenance, transitive size, and report build-time and artifact-size impact. It must meet the optimization-phase build-time, memory, runtime, and bundle-size gates. Keep React, Tailwind, router, animation framework, query client, provider SDK and rich editor out of the base package. Never change the pinned Node or pnpm versions to work around a check.
+- **Prescribed — security and data:** Treat tool output, messages, links, files, and preview payloads as untrusted. Render text without raw HTML by default, bound payloads and queues, validate URL schemes, and sandbox rich previews. Consumers validate authorization and external records. Distinguish missing from zero, estimated from measured, exclusive from inclusive cost, dates from instants, and draft plans from executed steps.
+- **Delegated — local design:** Choose names and exact component boundaries from existing conventions. Split a catalog row into the smallest coherent user capabilities when its implementation cannot be reviewed and verified in minutes; retain every row requirement and leave the row open until all parts pass. Choose bounded data limits from fixtures and document them. Prefer the simpler native behavior when reference behavior is ambiguous. Record only decisions later slices depend on in this section. No API removal, public behavior change, new persistence format, or outside service action is authorized by this delegation.
 
-Live browser inspection covered the catalog, App Shell Inset, Data Table, and Mission Control previews. In App Shell Inset, the labelled sidebar separator changed from 272 to 288 after a right-arrow keypress. This is representative visual/interaction evidence, not an assertion that every demo, viewport, keyboard path, or accessibility claim was independently tested. The public documentation is a design specification to learn from, not a conformance report.
+## Baseline
 
-The source audit covered the repository's components, CSS, exports, build, fixtures, documentation, and tests. Stats and Niceforge usage is documented by this repository; their current integrations were not separately audited in this task.
+At `62eb56a`, Node `26.13.0`, pnpm `12.18.0`, and `jaq` were available. `make check` passed on 2026-11-09: 24 unit/packed tests and 23 Chromium tests; wall time 5.09 seconds on this host. The focused existing CSS-only and runtime-export browser checks passed in 1.03 seconds. These are single loop timings, not performance claims. The source build has one JS entry and emits `styles.css` importing sibling `tokens.css`. A disposable Vite build using the actual Solid plugin and `Badge.tsx` succeeded as a separate library entry. It does not prove packed feature exports, declarations, CSS ordering or isolation; F01 must prove those. Current external Stats and Niceforge integrations were not checked.
 
-Public pages label some examples MIT/free and others Pro. The plan calls for original Solid/CSS implementations of useful behaviors. It does not depend on acquiring or redistributing Pro source, copying branded assets, or translating an entire React file. If a future change reuses any source, record its exact provenance and applicable license in that change. No paid source was obtained for this audit.
+## Sequence
 
-## 2. Baseline: what already exists
+The phase descriptions, row requirements, and shared contracts below remain binding. The following sequence controls execution where the reference phase text describes larger packets. A row is accepted only when its complete catalog behavior has proof; a partial row remains open. For each phase, select the lowest numbered open component row, then screen, block, and required motion row, whose prerequisites have landed. A later row may proceed first when it supplies a prerequisite. M01 and M05 are optional animations deferred beyond this campaign; preserve immediate and reduced-motion states. Finish P1 before P2, P2 before P3, and P3 before P4; then P5, P6, P7, and P8. P4 editable grid remains independent of P5–P6 and may be parked without falsely marking P4 complete. Complete the eight shared journeys at the relevant phase exits. A phase with a parked item is not accepted, but independent later work may proceed.
+
+| ID | Size and capability | Prerequisites | Owned files and acceptance |
+| --- | --- | --- | --- |
+| F01 | Medium: first C081 slice, a labelled native text input with hint/error, controlled and native form behavior, plus real forms subpath and CSS packaging | None | `src/forms/`, `src/css/`, `src/styles.css` only if necessary to preserve base, `package.json`, `vite.config.ts`, `scripts/build-css.mjs`, `fixture/`, `tests/`, `docs/`, catalog row C081. Create `tests/browser/affectui.spec.ts` with `@F01` behavior tests and extend `tests/packed.test.ts` for the packed entry, declarations, optional peers and feature CSS. Run `pnpm exec playwright test tests/browser/affectui.spec.ts --grep '@F01' && pnpm exec vitest run tests/packed.test.ts`. The tests must exercise a packed consumer, labelled hint/error, form submit/reset, controlled callback and static HTML; existing CSS-only and root consumers must continue to work. Finish the remaining C081 controls in later row slices. |
+| P1–P8 | Small per slice: one catalog row or a bounded sub-capability, including its required shared primitives and relevant recipe | F01; phase prerequisites above; read the row and shared contracts before each slice | The current family under `src/`, its relevant CSS, `fixture/`, `tests/`, `docs/`, catalog row, and package/build files only when introducing a family. Name each test `@<row ID>`; name sub-slices `@<row ID>-<letter>`. Create or extend `tests/browser/affectui.spec.ts` before implementation, with failure cases from the row. Run `pnpm exec playwright test tests/browser/affectui.spec.ts --grep '@<slice ID>'` substituting the actual ID. A slice touching packaging also runs `pnpm exec vitest run tests/packed.test.ts` in the same acceptance command. Build before the focused command whenever the changed output or packed fixture requires it. Tests must fail when the required behavior is broken; keep nonbrowser logic tests where the browser is not the right boundary. |
+| H01 | Medium: reconcile all P0–P8 rows, eight journeys, contracts, documentation and deterministic fixture states | All functional rows accepted | `docs/`, `fixture/`, `tests/` and defects found in their owners. Run `make check`. Verify each row maps to real source, fixture and test, and that no static example implies a connected backend. |
+| O01 | Medium: discoverability and performance/polish | H01 | `fixture/`, relevant docs and measured hot paths. Add the searchable fixture catalog, width and reduced-motion controls without a new site framework. Run `make check`, plus the measurements in Acceptance. Decorative effects remain optional and never enter normal dashboard styles. |
+| C01 | Small: close and remove dead campaign-only code | O01 | Search real callers, tests, docs, scripts and exports before deleting a candidate; preserve the current public contract. Run `make check`, perform the installed `ultrareview` procedure, and fix P1/P2 findings. If the procedure or an essential proof is unavailable, park C01 with its retry condition. Report accepted slices, remaining parked work, environment proof, contract additions and measured limits. |
+
+## Acceptance
+
+- **Each functional slice:** Its named behavior command proves actual user-visible success and failure, keyboard and focus behavior when relevant, controlled-state callbacks, and the row's responsive and accessibility requirements. The test must fail for a plausible broken behavior. For F01 use the exact command in Sequence; its test file and `@F01` do not exist yet and are created test-first. Later commands use the same existing Playwright runner and create their own named tests, not a new general evaluator. Keep existing behavior tests intact unless demonstrably wrong.
+- **Phase exits and close:** `make check` covers typecheck, build, declaration checks, 24 baseline unit/packed tests and 23 baseline Chromium tests, plus newly added cases. The baseline counts are not targets. Run `pnpm run lint` for changed TypeScript because `make check` does not include lint. Existing consumer exports, classes, token definitions, appearance, SSR, geometry and static CSS must remain green. Check at 320, 390, 768 and 1440 pixels, narrow embedded containers, long text and 200% zoom where the slice can affect layout.
+- **Packaging:** Run the real packed-package test after building. Exercise CSS-only and Solid consumers from the tarball, including the new family declarations and exact CSS import order. Compare the root `Badge` and family consumer import graphs and compressed bytes against the F01 baseline. A new optional family must not pull graph, editor, provider, network, or another unrelated feature into the base consumer. The base stylesheet keeps only the sibling token import.
+- **Shared journeys:** Implement all eight journeys listed below using deterministic data. Cover duplicate and late acknowledgments, failed requests, missing and zero values, retained drafts, focus after close/deletion, IME, keyboard operation and CSS-only fallbacks where applicable. For graph and scheduling items outside P0–P8, the board journey covers P8 board operations only; scheduling remains P9.
+- **Optimization and size:** In F01 record compressed built CSS, a CSS-only page, root Badge and existing shell consumer bytes, peak memory, and the commands and environment used; measure each new family's packed output as it lands. Use realistic large collection, long transcript, live trace and repeated mount/unmount fixtures. In O01 compare the same workloads and baseline on the same host, interleave at least five runs, use median and observed spread, verify output and failures, and profile separately before changing code. Gate a regression only when it exceeds both 15% and observed spread; for an unchanged base consumer, do not accept an increase caused solely by an unrelated optional family. Memory and artifact size always run; time gates follow the Charter. Attribute unavoidable growth to the implemented contract and remove unnecessary dependencies or imports. If a time gate is deferred, keep C01 open.
+- **Browser and accessibility:** Chromium is the local automated baseline. Exercise native dialog/popover, clipboard, IME, touch and date behavior in Firefox and WebKit when available, and record exact gaps. Assistive-technology checks need a named person and environment; list them under Needs environment when unavailable. Never describe unrun checks as passed.
+
+## Needs environment
+
+None identified for the local baseline. If Firefox or WebKit is absent, install them only when authorized by the environment and run `pnpm exec playwright test --project=firefox` or `--project=webkit` after configuring those projects; otherwise list the missing browser, targeted cases and command here. For real assistive technology, record OS, browser, screen reader, fixture URL and the keyboard/announcement scenarios for an owner to run. Consumer integration is separate from local completion: on the relevant consumer checkout, install a locally packed tarball, run that consumer's documented checks, and record the exact command and result. Do not change or publish a consumer without a separate grant.
+
+## Execution boundary and non-goals
+
+Execution may edit this library, its fixtures, tests, docs, package metadata and dependencies within the decisions above; it may commit locally. It may not push, publish, modify CI, change consumers, acquire paid source, activate real credentials or send external commands. Destructive user data operations and API removals require a separate owner grant and are parked. Existing API contracts remain stable; additive feature exports, new CSS and new typed callback/state contracts are planned changes. No backend, editor engine, scheduler, real speech, billing authority or permission enforcement is implemented by a view.
+
+## Reference use
+
+The detailed sections below specify behaviors, not additional sequencing or work packets. The Sequence and Decisions above supersede their larger packet order and any proposal to build a fixture catalog before functional parity. The [catalog](affectui-catalog.md) remains the detailed row-level acceptance source. Existing implementation claims in the reference describe the baseline; recheck current source before each slice.
+
+## Reference: existing surface and compatibility
 
 There are **17 component exports plus `groupId`**, implemented in 14 TSX files. These are useful building blocks, but they do not constitute the larger workflows in the reference catalog. The authoritative inventory is [the component reference](components.md) and [`src/index.ts`](../src/index.ts).
 
@@ -59,7 +93,7 @@ There are **17 component exports plus `groupId`**, implemented in 14 TSX files. 
 7. Keep Solid 2 and `@solidjs/web` optional peers. New work does not justify React, Tailwind, a router, an animation framework, a query client, or a provider SDK in the base package.
 8. Treat [agent evaluation scenarios](agent-evaluation.md) as unexecuted prompts until actual results are recorded.
 
-## 3. Architecture and package boundaries
+## Reference: architecture and package boundaries
 
 ### 3.1 Layers
 
@@ -103,7 +137,7 @@ Do not create many npm packages initially. One repository and package with expli
 - Expose renderer slots for code, documents, tables, images and files. Begin with safe, bounded previews. Rich document editing, formula evaluation, embedded terminals/browsers and media playback are separate adapters.
 - No network calls, imported sample customer data, random API keys, fake microphone output, simulated uploads, auto-approvals or autonomous schedulers in production exports. Deterministic demonstration playback belongs in `fixture/`.
 
-## 4. Shared behavior contracts
+## Reference: shared behavior contracts
 
 These are proposed Laputa requirements, not claims that AffectUI or the current package already satisfies them.
 
@@ -177,7 +211,7 @@ First add a reduced-motion path for the existing Skeleton pulse. Use short trans
 
 If a later consumer needs dark mode, provide an explicit opt-in semantic theme sheet and validate all statuses, chart colors, overlays, disabled controls and focus. Do not change `color-scheme: light` behavior for existing consumers or rely on `prefers-color-scheme` rules that the current CSS builder forbids.
 
-## 5. Delivery phases and concrete work packets
+## Reference: phase requirements
 
 Phases describe dependency order, not a claim of equal effort or a calendar commitment. Complete one reviewable work packet at a time. Each packet updates its catalog IDs, docs, specimen and meaningful tests together. Do not implement all 172 entries in one change.
 
@@ -194,15 +228,15 @@ Phases describe dependency order, not a claim of equal effort or a calendar comm
 | P8 | Administration, onboarding and complete screen recipes | Relevant P2-P7 modules | Large; parallel by recipe |
 | P9 | Specialized editors, commerce and optional presentation | Relevant earlier modules; concrete consumer | Separate scoped projects |
 
-### P0 — baseline and delivery structure
+### P0 — baseline and delivery structure (superseded by the pilot above)
 
 **P0.1: Record compatibility and payload baselines.** Capture the published/tarball export surface, SSR markup, existing fixture geometry and compressed JS/CSS sizes using the pinned toolchain. Measure a CSS-only page, a root `Badge` consumer, and a representative existing shell. Record environment and build commands; do not invent a size baseline from source-line count.
 
 **P0.2: Establish family packaging.** Implement one small family entry and its CSS sheet through the real package/build pipeline. Test packed declarations, optional peers, CSS imports and isolation. Existing root imports and CSS-only pages must continue working.
 
-**P0.3: Make implemented states discoverable.** Add a lightweight fixture catalog using existing Vite infrastructure: searchable component/recipe list, source and catalog ID, state selector, container width and reduced-motion controls. Keep static examples available without JS. Avoid adding Storybook, a documentation service, a registry CLI or a second site framework solely for this plan.
+**P0.3: Make implemented states discoverable.** Follow the final-phase fixture catalog slice above. Keep static examples available without JS. Do not add Storybook, a documentation service, a registry CLI or a second site framework solely for this plan.
 
-Exit: one reproducible baseline report and a packed consumer proving the proposed boundaries. The catalog marks planned versus implemented explicitly.
+Exit: the pilot proves the proposed boundaries. Add the catalog in the final phase.
 
 ### P1 — shared mechanics and basic semantics
 
@@ -309,36 +343,6 @@ These rows remain visible in the matrix. Each requires a named consumer and its 
 
 Exit is per feature. Completing P0-P8 does not entitle the project to claim every P9 behavior is implemented; the matrix retains its exact status and rationale.
 
-## 6. Verification and acceptance
-
-### Current gate
-
-Follow `AGENTS.md`: no formatters, and run **`make check`** with the pinned toolchain. It covers typecheck, build, declaration checks, packed-package/SSR tests and Chromium browser tests. `pnpm run check` is a different, narrower command (lint, typecheck and unit tests); it does not replace the Makefile gate. Run the lint script as appropriate alongside the required gate.
-
-The planning task attempted `make check` on the baseline. It stopped at `node-ready` with **`use the Node version in .node-version`**. This environment has Node 24.22.1; the repository requires 26.13.0 and pnpm 12.18.0. `jaq` is also absent here. No gate passed, no pins were changed, and no implementation or test behavior was changed by this plan. Future implementation must use the required environment.
-
-### Required checks for implementation packets
-
-| Risk | Evidence required |
-| --- | --- |
-| Existing consumers regress | Existing SSR/classes, root export array, exact prop/type checks, geometry and no-JS fixture stay green. Intentional additions update assertions explicitly. |
-| Optional features enlarge the core | Packed consumer builds for CSS-only, base component, forms, analytics, chat and agents; compare compressed output/import graphs to P0 baseline. No graph/editor/provider code in the base consumer. |
-| CSS shipping differs from dev | Serve the packed CSS and tokens in static and Solid fixtures; test feature-sheet order, every token reference, no unintended imports/resets and unchanged base paths. |
-| Controlled state lies or duplicates effects | Callback once per user action; parent updates do not echo; pending failure retains context; duplicate/late results and stale revisions do not settle the wrong request. |
-| Keyboard/focus breaks | Menu/list/tree/tab/grid paths, nested Escape, focus after deletion/resolve/close, modal versus docked pane, no hidden tabbable content, IME and editable-field shortcut exceptions. |
-| Layout breaks | Existing viewport widths plus narrow embedded containers, long text, many tabs, 200% zoom, touch-sized controls and internal scrolling without page overflow. |
-| Data is misleading | Empty/zero/missing/negative/unknown cases, timezone/date boundaries, planned versus actual time, overlapping durations, credits and exclusive/inclusive costs. |
-| Live UI overwhelms readers or CPU | Bounded rows/payloads; coalesced semantic announcements; one shared clock; hidden/completed scenes stop unnecessary work; reduced motion preserves all information. |
-| Static usage is lost | No-JS shell, forms, GET filters, tables, settings and read-only snapshots have usable examples. Interactive-only features are labelled honestly. |
-| Browser-sensitive behavior is assumed | Chromium remains the current gate. Add targeted Firefox/WebKit/manual assistive-tech evidence for native popover/dialog, clipboard, IME, touch and calendar behavior when these features are introduced; record untested coverage explicitly. |
-
-Do not add superficial tests that restate a prop or mirror the implementation. Test the shared mechanisms and the assembled user journeys where bugs cross component boundaries. Accessibility documentation is not a substitute for executing those paths.
-
-### Performance acceptance policy
-
-Measure before setting numeric budgets. P0 records bytes, environment and representative rendering/update measurements; the first implementation packet proposes explicit limits using that baseline. Report meaningful regressions and their cause. Do not claim a frame-rate, bundle size, scalability limit or full browser support that has not been measured.
-
-Default safeguards are architectural: optional subpaths, zero provider/network dependencies in views, bounded data, virtual/paged alternatives for large collections, no offscreen playback, no per-row clocks and no rich editors bundled into Shell. The benchmark fixtures should include a large collection, live trace, long transcript and repeated mounted/unmounted panes so memory/listener cleanup is visible.
 
 ### Shared acceptance journeys
 
@@ -350,30 +354,3 @@ Default safeguards are architectural: optional subpaths, zero provider/network d
 6. **Multi-agent diagnosis:** tree, timeline, cost and trace refer to the same IDs; parallel duration and cost totals remain correct through delayed/out-of-order data.
 7. **Review/history:** compare versions, accept/reject edits, preserve unsaved drafts, preview compensation dependencies, handle failed/expired undo and retain the audit record.
 8. **Board/schedule:** complete every move/assignment with buttons or keyboard; reject a move without losing the item; schedule dates and capacities remain authoritative.
-
-## 7. First shipments and work allocation
-
-Start with three useful, reviewable shipments:
-
-1. **Foundation:** P0/P1 plus native fields, semantic tabs/menu, reduced motion and a complete settings form. Proves the public contracts and packaging.
-2. **Dashboard/workbench:** P3 plus read-only collections and P4 analytics. Delivers the biggest immediate layout gain for the documented Stats/Niceforge use cases.
-3. **Agent run loop:** P5/P6 with composer, tool calls, plan/progress, decision/permission/approval and a shared inbox/inspector. Then expand to P7 operational views.
-
-Parallelize by stable contracts: one workstream owns fields/selection; one owns layout/focus; one owns data/visualization after the contracts land. Chat and agent streams can proceed once the overlay, input and pane APIs stabilize. Assign one owner to shared CSS/token/export changes. Avoid concurrent edits to the same root barrel, CSS manifest or state schema without coordination.
-
-Each handoff should name the catalog IDs, prerequisites, allowed files, public contracts to preserve, one complete user journey and the required checks. Require a single coherent diff per packet and a short result describing implemented versus fixture-only behavior. An example handoff for P3.2 is: implement Workbench and SplitPane in the layout subpath, preserve Shell, demonstrate keyboard/pointer resizing plus narrow drawer/focus behavior, verify packed CSS and no-JS baseline, and stop before rich editor work.
-
-## 8. Completion and maintenance
-
-For every implemented catalog row, record the component/recipe source, documentation, fixture states, relevant tests and actual verification result. If one primitive satisfies several rows, link those rows to the same source and demonstrate the distinct compositions. A screenshot-only imitation is not completion of an interaction contract; a backend placeholder is not a working adapter.
-
-P0-P8 are complete when the relevant matrix rows have equivalent implemented behavior, the shared journeys pass, package boundaries are measured, CSS-only coverage is preserved, and consumer integration evidence exists. P9 rows remain individually scoped until their adapters and acceptance checks exist. Decorative deferrals remain explicit decisions, not accidental omissions.
-
-Refresh the AffectUI inventory when beginning a new phase, recording added/renamed/removed entries rather than changing the 2026-11-09 baseline silently. Do not pursue an ever-changing raw component count at the expense of a consistent library. Reassess each addition by reusable behavior and concrete consumer need.
-
-### Primary references
-
-- AffectUI [components](https://www.affectui.com/components), [screens](https://www.affectui.com/screens), [blocks](https://www.affectui.com/blocks), [motion](https://www.affectui.com/motion), [illustrations](https://www.affectui.com/illustrations); exact item sources are linked in the [catalog matrix](affectui-catalog.md).
-- Layout evidence: [App Shell Inset](https://www.affectui.com/screens/app-shell), [App Shell Flat](https://www.affectui.com/screens/app-shell-flat), [AI Chat / Progress](https://www.affectui.com/screens/agent-chat-progress), [Mission Control](https://www.affectui.com/blocks/mission-control).
-- Interaction evidence: [Text Field](https://www.affectui.com/components/text-field), [Data Table](https://www.affectui.com/components/data-table), [Toaster](https://www.affectui.com/components/toaster), [Tool Call Card](https://www.affectui.com/components/tool-call-card). Source recommendations are translated into the original Laputa contracts above, not adopted blindly.
-- Pinned repository evidence: [README](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/README.md), [components](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/docs/components.md), [package](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/package.json), [CSS builder](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/scripts/build-css.mjs), [packed tests](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/tests/packed.test.ts), [browser tests](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/tests/browser/geometry.spec.ts), [Makefile](https://github.com/laputa-systems/laputa-ui-dashboard/blob/2fd9866c2ef28e27815cb6586bf65e31a96013d1/Makefile).
