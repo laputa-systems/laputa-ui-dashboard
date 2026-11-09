@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { TextField } from "../src/forms";
 import { Progress } from "../src/feedback";
+import { Disclosure } from "../src/layout";
 import {
   Badge,
   Button,
@@ -26,6 +27,12 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders local and controlled disclosures in their initial state", () => {
+    const html = renderToString(() => <><Disclosure label="Open" defaultOpen>Body</Disclosure><Disclosure label="Closed" open={false}>Hidden</Disclosure></>);
+    expect(html).toMatch(/<details[^>]*open[^>]*>.*Open/su);
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain("Hidden");
+  });
   it("renders named progress and rejects invalid values", () => {
     const html = renderToString(() => <Progress label="Upload" value={0} max={10} />);
     expect(html).toContain("Upload");

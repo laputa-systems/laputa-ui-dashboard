@@ -30,10 +30,12 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   const page = await context.newPage();
   await page.route("**/dist/**/*.css", async route => {
     const path = new URL(route.request().url()).pathname.replace(/^\/dist\//u, "");
-    if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
+    if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByText("Static detail").click();
+  await expect(page.getByText("Static content")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Upload" })).toHaveAttribute("value", "5");
   const field = page.getByRole("textbox", { name: "Query" });
   await expect(field).toHaveAccessibleDescription("Search repositories");
@@ -100,4 +102,32 @@ test("@P1-progress names measured and indeterminate progress", async ({ page }) 
   await expect(progress).not.toHaveAttribute("value");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(progress).toHaveCSS("appearance", "none");
+});
+
+test("@P1-disclosure supports keyboard, controlled and local state", async ({ page }) => {
+  await page.goto("/disclosure.html");
+  const controlled = page.locator("details").filter({ hasText: "Controlled" });
+  const summary = controlled.locator("summary");
+  await expect(controlled).not.toHaveAttribute("open");
+  await expect(page.getByRole("button", { name: "Controlled content" })).toHaveCount(0);
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  await expect(controlled).toHaveAttribute("open", "");
+  await expect(page.getByRole("button", { name: "Controlled content" })).toBeVisible();
+  await expect(page.getByTestId("disclosure-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent toggle" }).click();
+  await expect(controlled).not.toHaveAttribute("open");
+  await expect(page.getByTestId("disclosure-requests")).toHaveText("1");
+  const local = page.locator("details").filter({ hasText: "Local" });
+  await expect(local).toHaveAttribute("open", "");
+  await page.getByRole("button", { name: "Change default" }).click();
+  await expect(local).toHaveAttribute("open", "");
+  await local.locator("summary").focus();
+  await page.keyboard.press("Space");
+  await expect(local).not.toHaveAttribute("open");
+  await expect(page.getByTestId("local-requests")).toHaveText("1");
+  const locked = page.locator("details").filter({ hasText: "Locked" });
+  await expect(locked.locator("summary")).toHaveAttribute("aria-disabled", "true");
+  await locked.locator("summary").click();
+  await expect(locked).not.toHaveAttribute("open");
 });

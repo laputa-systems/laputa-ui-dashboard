@@ -39,6 +39,14 @@ zero and `max`; invalid values throw `RangeError`. A reduced-motion preference m
 indeterminate presentation static. Static HTML can use `ui-progress`, `ui-progress-label`,
 and `ui-progress-bar` with the same native markup.
 
+Import `Disclosure` and `DisclosureProps` from `@laputa-systems/ui-dashboard/layout`, and load
+`@laputa-systems/ui-dashboard/styles/layout.css` after the base stylesheet. `label` names a
+native summary and `children` supplies its content. `defaultOpen` initializes local state once.
+`open` makes the state controlled; `onOpenChange` receives the requested state once per user
+action, and parent changes do not notify it. A controlled disclosure without a callback is
+read-only. Static HTML can use `ui-disclosure`, `ui-disclosure-summary`, and
+`ui-disclosure-body` with `<details>` and `<summary>` and needs no JavaScript.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

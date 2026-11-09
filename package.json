@@ -34,6 +34,14 @@
       "import": "./dist/feedback.js",
       "default": "./dist/feedback.js"
     },
+    "./layout": {
+      "types": "./dist/layout/index.d.ts",
+      "browser": "./dist/layout.js",
+      "node": "./dist/ssr/layout.js",
+      "import": "./dist/layout.js",
+      "default": "./dist/layout.js"
+    },
+    "./styles/layout.css": "./dist/styles/layout.css",
     "./styles/feedback.css": "./dist/styles/feedback.css",
     "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",

@@ -85,6 +85,21 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 <Progress label="Upload" value={5} max={10} />
 ```
 
+## Disclosure
+
+Import `Disclosure` from `@laputa-systems/ui-dashboard/layout` and load
+`styles/layout.css` after the base stylesheet. `defaultOpen` initializes local state once.
+Set `open` and `onOpenChange` together for parent-controlled state. A controlled disclosure
+without a callback is read-only. The component uses native `<details>` and `<summary>`.
+
+```tsx
+import "@laputa-systems/ui-dashboard/styles.css";
+import "@laputa-systems/ui-dashboard/styles/layout.css";
+import { Disclosure } from "@laputa-systems/ui-dashboard/layout";
+
+<Disclosure label="Details"><p>More information</p></Disclosure>
+```
+
 ## CSS-only usage
 
 `tokens.css` and `styles.css` need no JavaScript. Serve
