@@ -321,3 +321,28 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   await page.getByRole("textbox", { name: "Project", exact: true }).fill("changed");
   await expect(page.locator("html")).toHaveAttribute("data-edited", "changed");
 });
+
+
+test("@P1-focus keeps focus visible in forced colors and scroll containers", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.goto("/forms.html");
+  const field = page.getByRole("textbox", { name: "Repository" });
+  await field.focus();
+  const fieldStyle = await field.evaluate(element => ({ outline: getComputedStyle(element).outlineStyle, outlineColor: getComputedStyle(element).outlineColor, background: getComputedStyle(element).backgroundColor }));
+  expect(fieldStyle.outline).not.toBe("none");
+  expect(fieldStyle.outlineColor).not.toBe(fieldStyle.background);
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  await expect(field).toHaveAccessibleDescription("Use the repository slug Repository is unavailable");
+  const scroll = page.getByRole("region", { name: "Scrollable controls" });
+  const first = scroll.getByRole("button", { name: "First in scroll" });
+  const last = scroll.getByRole("button", { name: "Last in scroll" });
+  await first.focus();
+  await page.keyboard.press("Tab");
+  await expect(last).toBeFocused();
+  const visible = await last.evaluate(element => {
+    const control = element.getBoundingClientRect();
+    const container = element.closest("section")?.getBoundingClientRect();
+    return container !== undefined && control.top >= container.top && control.bottom <= container.bottom && getComputedStyle(element).outlineStyle !== "none";
+  });
+  expect(visible).toBe(true);
+});

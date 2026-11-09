@@ -27,6 +27,11 @@ function Fixture() {
       <IconButton ariaLabel="Refresh" busy>R</IconButton>
       <TextField id="project" label="Project" hint="Project hint" />
       <TextField id="project-hint" label="Project note" hint="Note hint" />
+      <section aria-label="Scrollable controls" style="height: 80px; overflow: auto; border: 1px solid">
+        <Button>First in scroll</Button>
+        <div style="height: 200px"></div>
+        <Button>Last in scroll</Button>
+      </section>
       <form>
         <TextField id="nickname" label="Nickname" name="nickname" defaultValue="first" />
         <button type="reset">Reset</button>

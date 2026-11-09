@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** the P1-field-ids implementation commit. F01, M06, C024-a, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey and P1-field-ids are accepted; no slice is red or parked. C024 and C081 remain open for their remaining controls.
-- **Next:** continue P1 with focus visibility and forced-color checks, then implement the first menu needed to exercise scoped shortcuts. Resume with `git status --short --branch` and inspect `src/css/button.css`, `src/css/layout.css`, and `tests/browser/affectui.spec.ts`.
+- **Last accepted revision:** the P1-focus implementation commit. F01, M06, C024-a, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P1-field-ids and P1-focus are accepted; no slice is red or parked. C024 and C081 remain open for their remaining controls.
+- **Next:** implement an action menu as the prerequisite for P1 scoped shortcuts and nested popover dismissal. Resume with `git status --short --branch` and inspect `src/layout/Accordion.tsx`, `src/components/Modal.tsx`, and `tests/browser/affectui.spec.ts`.
 
 ## Charter
 
