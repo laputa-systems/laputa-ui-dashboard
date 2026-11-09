@@ -54,7 +54,8 @@ function Fixture() {
           <Meter value={82} warn={70} bad={90} />
         </CollapsiblePanel>
         <CollapsiblePanel id="memory" title="Memory" collapsible collapsed={collapsed().has("memory")} onToggleCollapsed={toggle("memory")}>
-          <Skeleton rows={2} chart />
+          <span role="status">Loading memory</span>
+          <div aria-busy="true"><Skeleton rows={2} chart /></div>
         </CollapsiblePanel>
         <CollapsiblePanel id="locked" title="Locked" expandable expanded={false} collapsible collapsed={false}>Locked content</CollapsiblePanel>
         <div>

@@ -16,7 +16,7 @@ Import components and types from `@laputa-systems/ui-dashboard`. Import `styles.
 | `EmptyState`, `EmptyStateProps` | Requires `title`. Optional `detail`, `icon`, and `action`; `icon={null}` removes the icon. |
 | `ErrorState`, `ErrorStateProps` | An alert with optional `title`, `detail`, `icon`, `retry`, `retryLabel`, and `compact`. |
 | `Notice`, `NoticeProps` | A message with optional `tone` (`info`, `warn`, `bad`, `ok`) and `icon`. |
-| `Skeleton`, `SkeletonProps` | Decorative loading placeholder. `rows` defaults to 3 and `chart` adds a chart placeholder. |
+| `Skeleton`, `SkeletonProps` | Decorative loading placeholder, hidden from assistive technology. `rows` defaults to 3 and `chart` adds a chart placeholder. Animation stops when reduced motion is requested. |
 | `Pagination`, `PaginationProps` | `page`, `pages`, `from`, `to`, `total`, and `onChange` describe pagination. Pages are one-based. |
 | `Meter`, `MeterProps` | Decorative bar for `value`, `warn`, `bad`, and optional `max` (default 100). Supply a text equivalent separately. |
 | `PageHeader`, `PageHeaderProps` | Requires a string `title`. Optional `mark`, `titleExtra`, and children render alongside it. |
@@ -30,6 +30,9 @@ requires a unique `id` and a visible `label`. It forwards native input attribute
 `aria-describedby` values are retained. Use `defaultValue` for an uncontrolled input that
 resets with its form; use `value` and `onInput` for parent-controlled state. The control
 classes can also be used directly in static HTML as shown in the README.
+
+Choose placeholder dimensions to match the content they replace. Keep the loading status outside
+the busy region so assistive technology can announce it immediately.
 
 Refer to the exported declarations for exact prop types.
 
@@ -51,7 +54,7 @@ are Solid signal setters. Render the modal only while `open()` is true and close
 <EmptyState title="No results" detail="Try another query" />
 <ErrorState detail="Request failed" retry={retry} />
 <Notice tone="warn">Check the configuration</Notice>
-<><span role="status">Loading</span><Skeleton rows={2} /></>
+<><span role="status">Loading</span><div aria-busy="true"><Skeleton rows={2} /></div></>
 <Pagination page={page()} pages={3} from={1} to={10} total={30} onChange={setPage} />
 <><span>CPU: 82%</span><Meter value={82} warn={70} bad={90} /></>
 <PageHeader title="Overview" />

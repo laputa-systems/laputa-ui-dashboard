@@ -51,3 +51,18 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   await expect(page).toHaveURL(/\/search\?query=forge$/u);
   await context.close();
 });
+
+
+test("@M06 loading placeholders respect reduced motion and expose a busy state", async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page.getByRole("status").filter({ hasText: "Loading memory" })).toBeVisible();
+  const placeholder = page.locator('[aria-busy="true"] .ui-skeleton');
+  await expect(placeholder).toHaveAttribute("aria-hidden", "true");
+  await expect(placeholder.locator(".ui-skeleton-line").first()).toHaveCSS("animation-name", "none");
+  await expect(placeholder.locator(".ui-skeleton-chart")).toHaveCSS("animation-name", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(placeholder.locator(".ui-skeleton-line").first()).toHaveCSS("animation-name", "ui-pulse");
+  await context.close();
+});

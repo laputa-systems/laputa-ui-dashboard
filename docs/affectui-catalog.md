@@ -174,7 +174,7 @@ Blocks should compose the same public pieces and shared selected IDs/filters as 
 
 ## D. Motion — 8
 
-The existing Skeleton pulse is the only directly related implementation; it lacks a reduced-motion override. Exact content must be readable immediately and independently of every effect below. Optional effects do not enter default dashboard CSS.
+The existing Skeleton pulse is the only directly related baseline implementation; its reduced-motion override is now implemented. Exact content must be readable immediately and independently of every effect below. Optional effects do not enter default dashboard CSS.
 
 | ID | AffectUI reference | Phase / disposition | Requirement |
 | --- | --- | --- | --- |
@@ -183,7 +183,7 @@ The existing Skeleton pulse is the only directly related implementation; it lack
 | M03 | [Gradient Text](https://www.affectui.com/motion/gradient-text) | P9 deferred | Decorative heading emphasis while retaining actual text. Defer; readable static typography remains the default. |
 | M04 | [Grid Background](https://www.affectui.com/motion/grid-background) | P7 static; P9 motion | Background layer must not interfere with pointer input or semantics. Static grid can support a canvas example; animation optional and outside default dashboard CSS. |
 | M05 | [Number Ticker](https://www.affectui.com/motion/number-ticker) | P4 optional | Keep tabular numerals, locale formatting and one accessible final value. Optional metric animation after profiling; avoid every cell/time tick animating. Exact text must be available immediately. |
-| M06 | [Shimmer Loader](https://www.affectui.com/motion/shimmer-loader) | P1 | Skeleton matches final geometry, is hidden from accessibility tree and accompanies container busy state. Extend existing Skeleton and loading recipes first; do not replace determinate progress with decorative shimmer. |
+| M06 | [Shimmer Loader](https://www.affectui.com/motion/shimmer-loader) | P1 | Skeleton matches final geometry, is hidden from accessibility tree and accompanies container busy state. Extend existing Skeleton and loading recipes first; do not replace determinate progress with decorative shimmer. Reduced-motion and busy-state coverage: `src/css/skeleton.css`, `fixture/main.tsx` and `tests/browser/affectui.spec.ts` (`@M06`); consumers size placeholders to match their content. |
 | M07 | [Text Reveal](https://www.affectui.com/motion/text-reveal) | P9 deferred | Animated fragments need a complete accessible text equivalent and normal wrapping. Defer as marketing utility; never artificially delay streamed answers or required text. |
 | M08 | [Tilt Card](https://www.affectui.com/motion/tilt-card) | P9 deferred | Decorative pointer response has no semantic role and should not add focus stops. Defer; inappropriate default for control-heavy dashboard cards. |
 

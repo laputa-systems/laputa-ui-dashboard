@@ -6,3 +6,6 @@
   0%, 100% { opacity: 1; }
   50% { opacity: .4; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton-line, .ui-skeleton-chart { animation: none; }
+}
