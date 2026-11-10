@@ -27,6 +27,7 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/index.d.ts"), "Missing dist/index.d.ts");
       assert.ok(paths.includes("dist/styles.css"), "Missing dist/styles.css");
       assert.ok(paths.includes("dist/tokens.css"), "Missing dist/tokens.css");
+      assert.ok(paths.includes("dist/themes/dark.css"), "Missing dist/themes/dark.css");
       assert.ok(paths.includes("dist/components/Badge.d.ts"), "Missing Badge declaration");
       assert.ok(paths.includes("dist/components/Panel.d.ts"), "Missing Panel declaration");
       assert.ok(paths.includes("dist/components/Modal.d.ts"), "Missing Modal declaration");
@@ -85,7 +86,7 @@ if (typeof IntegrationPicker !== "function" || !import.meta.resolve("@laputa-sys
 if (typeof ProfileMenu !== "function") throw new Error("profile menu is missing");
 if (dateRangeComparison({ start: "2024-03-01", end: "2024-03-01", comparison: "previous" }).start !== "2024-02-29") throw new Error("date comparison is wrong");
 if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/forms.js")) throw new Error("browser forms entry is not usable");
-for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/sortable-header.css", "@laputa-systems/ui-dashboard/styles/recipes.css", "@laputa-systems/ui-dashboard/styles/editorial.css"]) require.resolve(entry);
+for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/themes/dark.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/sortable-header.css", "@laputa-systems/ui-dashboard/styles/recipes.css", "@laputa-systems/ui-dashboard/styles/editorial.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
       const serverConsumer = `import { BreakdownChart, ChangeSummary, DataTable, SortableHeader } from "@laputa-systems/ui-dashboard/data";
@@ -313,6 +314,23 @@ if (!invalidReveal) throw new Error("revealable requires a password field");
     assert.doesNotMatch(tokens + styles, /prefers-color-scheme/u);
     const names = [...tokens.matchAll(/(--ui-[\w-]+):/gu)].map(match => match[1]);
     assert.equal(new Set(names).size, names.length, "a token is defined twice");
+  });
+
+  it("ships an opt-in dark theme without changing the base sheets", () => {
+    const theme = readFileSync(resolve(distDir, "themes/dark.css"), "utf8");
+    assert.match(theme, /:root\.ui-theme-dark,/u);
+    assert.match(theme, /\.ui-theme\.ui-theme-dark/u);
+    assert.match(theme, /color-scheme: dark;/u);
+    for (const token of ["--ui-bg", "--ui-surface", "--ui-text", "--ui-text-2", "--ui-muted", "--ui-line", "--ui-line-strong", "--ui-hover", "--ui-accent", "--ui-ok", "--ui-warn", "--ui-bad", "--ui-scrim", "--ui-outline", "--ui-shadow-card", "--ui-shadow-pop", "--ui-shadow-modal", "--ui-viz-blue", "--ui-viz-ghost", "--ui-s0", "--ui-s1", "--ui-s2", "--ui-s3", "--ui-s4"]) {
+      assert.match(theme, new RegExp(`${token}:`, "u"), `Missing ${token}`);
+    }
+    assert.doesNotMatch(theme, /prefers-color-scheme|!important|@import|@custom-media/u);
+
+    const styles = readFileSync(resolve(distDir, "styles.css"), "utf8");
+    const tokens = readFileSync(resolve(distDir, "tokens.css"), "utf8");
+    assert.doesNotMatch(styles + tokens, /ui-theme-dark|themes\/dark/u);
+    assert.doesNotMatch(styles + tokens, /prefers-color-scheme/u);
+
   });
 
   it("ships styles.css as one file whose only import is tokens.css", () => {

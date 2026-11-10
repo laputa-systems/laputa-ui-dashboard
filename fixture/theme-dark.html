@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opt-in dark theme</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/dist/styles/forms.css">
+<link rel="stylesheet" href="/dist/styles/layout.css">
+<link rel="stylesheet" href="/dist/styles/data.css">
+<link rel="stylesheet" href="/dist/styles/feedback.css">
+<link rel="stylesheet" href="/dist/themes/dark.css">
+<style>
+  body { margin: 0; }
+  .theme-dark-page { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .fixture-region { min-width: 0; padding: var(--ui-inset); background: var(--ui-bg); color: var(--ui-text); }
+  .fixture-region-title { margin: 0 0 var(--ui-space-lg); font: var(--ui-weight-semibold) var(--ui-fs-page) var(--ui-font); letter-spacing: var(--ui-tracking-tighter); }
+  .fixture-stack { display: grid; gap: var(--ui-space-lg); min-width: 0; }
+  .fixture-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-sm); min-width: 0; }
+  .fixture-body { margin: 0; }
+  .fixture-chart { padding: var(--ui-space-md); }
+  @media (max-width: 900px) { .theme-dark-page { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/theme-dark.tsx"></script>
+</body>
+</html>

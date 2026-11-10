@@ -280,8 +280,11 @@ region recalculates them: color (`bg`, `surface`, `text`, `text-2`, `muted`, `li
 and z-index. Put `.ui-theme` on the element that
 sets a region's tokens; [the theming contract](docs/theming.md) lists what recomputes.
 
-There is one light scheme. `tokens.css` declares `color-scheme: light` and has no dark
-values, so a page renders the same whatever the operating system prefers.
+There is one light scheme by default. `tokens.css` declares `color-scheme: light` and has no dark
+values, so a page renders the same whatever the operating system prefers. An opt-in dark theme is
+published at `@laputa-systems/ui-dashboard/themes/dark.css`: load it after the base and family
+sheets and add `ui-theme-dark` to `:root` or to a `.ui-theme` region. It sets `color-scheme: dark`
+and dark input tokens without changing the default sheets; see [the dark theme contract](docs/theming.md#dark-theme).
 
 ## Spacing
 

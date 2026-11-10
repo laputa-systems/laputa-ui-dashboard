@@ -63,7 +63,8 @@
     "./styles/feedback.css": "./dist/styles/feedback.css",
     "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",
-    "./tokens.css": "./dist/tokens.css"
+    "./tokens.css": "./dist/tokens.css",
+    "./themes/dark.css": "./dist/themes/dark.css"
   },
   "files": [
     "dist",

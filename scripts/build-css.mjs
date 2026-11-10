@@ -38,6 +38,12 @@ for (const forbidden of ["/*", "@media (--", "@custom-media", "!important", "pre
 mkdirSync(dist, { recursive: true });
 writeFileSync(join(dist, "styles.css"), styles);
 copyFileSync(join(source, "tokens.css"), join(dist, "tokens.css"));
+const darkTheme = readFileSync(join(source, "themes/dark.css"), "utf8");
+for (const forbidden of ["/*", "@custom-media", "!important", "prefers-color-scheme"]) {
+  if (darkTheme.includes(forbidden)) throw new Error(`themes/dark.css contains ${forbidden}`);
+}
+mkdirSync(join(dist, "themes"), { recursive: true });
+writeFileSync(join(dist, "themes/dark.css"), darkTheme);
 mkdirSync(join(dist, "styles"), { recursive: true });
 copyFileSync(join(source, "css/forms.css"), join(dist, "styles/forms.css"));
 copyFileSync(join(source, "css/feedback.css"), join(dist, "styles/feedback.css"));

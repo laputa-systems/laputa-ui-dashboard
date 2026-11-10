@@ -43,7 +43,9 @@ Colors mixed inline in component rules (`color-mix()` in buttons, notices, meter
 
 `--ui-serif` and `--ui-reading-width` are input tokens added for the optional editorial family.
 They are declared only on `:root`; no existing default changed. `.ui-theme` remains the only new
-public selector, and `styles/editorial.css` adds only `ui-*` classes.
+selector in the base contract; `styles/editorial.css` adds only `ui-*` classes, and the opt-in
+dark theme adds `.ui-theme-dark`, documented below. `dist/styles.css` and `dist/tokens.css` do not
+include the dark theme, and the default light appearance does not change.
 
 ## Cascade order
 
@@ -133,7 +135,7 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | Outline and shadows | `--ui-outline`, `--ui-shadow-card`, `--ui-shadow-pop`, `--ui-shadow-modal` | inset ring; layered shadows | design inputs with defaults from line colors | A theme that changes line colors sets them too. |
 | Side navigation | `--ui-side-width`, `--ui-side-gap`, `--ui-side-link-height` | `236px`, `12px`, `34px` | design width; structural hit area | Themes may change width, not the link height. |
 | Stacking | `--ui-z-veil`, `--ui-z-modal` | `40`, `50` | structural | No. |
-| Color scheme | `color-scheme: light` | `light` | structural | No dark scheme exists. |
+| Color scheme | `color-scheme: light` | `light` | structural | The base sheet stays light; the opt-in `themes/dark.css` adds a dark scheme. |
 
 ### Hard-coded literals in `src/css`
 

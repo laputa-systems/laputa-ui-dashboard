@@ -1,0 +1,28 @@
+:root.ui-theme-dark,
+.ui-theme.ui-theme-dark {
+  color-scheme: dark;
+  --ui-bg: #121412;
+  --ui-surface: #1b1e1c;
+  --ui-text: #f2f3ef;
+  --ui-text-2: #c8cbc4;
+  --ui-muted: #9ea39a;
+  --ui-line: #2c302d;
+  --ui-line-strong: #6b746d;
+  --ui-hover: #242825;
+  --ui-accent: #79b8ff;
+  --ui-ok: #4fd67a;
+  --ui-warn: #f0b35c;
+  --ui-bad: #ff7b72;
+  --ui-scrim: rgb(0 0 0 / 55%);
+  --ui-outline: inset 0 0 0 1px var(--ui-line-strong);
+  --ui-shadow-card: 0 0 0 1px var(--ui-line), 0 1px 2px rgb(0 0 0 / 40%), 0 8px 20px -12px rgb(0 0 0 / 50%);
+  --ui-shadow-pop: 0 0 0 1px var(--ui-line-strong), 0 12px 32px rgb(0 0 0 / 55%);
+  --ui-shadow-modal: 0 0 0 1px var(--ui-line-strong), 0 30px 80px rgb(0 0 0 / 65%);
+  --ui-viz-blue: #79b8ff;
+  --ui-viz-ghost: #7f857c;
+  --ui-s0: #79b8ff;
+  --ui-s1: #4fd67a;
+  --ui-s2: #b39bff;
+  --ui-s3: #ff8fbf;
+  --ui-s4: #ff9d6b;
+}
