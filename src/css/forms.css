@@ -18,6 +18,7 @@
 .ui-combobox-option { padding: var(--ui-space-sm); border-radius: var(--ui-radius-sm); overflow-wrap: anywhere; cursor: pointer; }
 .ui-combobox-option[data-active], .ui-combobox-option:not([aria-disabled="true"]):hover { background: var(--ui-hover); }
 .ui-combobox-option[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.ui-combobox-create { display: grid; gap: var(--ui-space-xs); padding: var(--ui-space-sm); overflow-wrap: anywhere; }
 .ui-combobox-empty { padding: var(--ui-space-sm); color: var(--ui-muted); }
 .ui-combobox-group-label { padding: var(--ui-space-xs) var(--ui-space-sm); color: var(--ui-muted); font-size: var(--ui-fs-label); font-weight: var(--ui-weight-semibold); }
 .ui-multi-combobox { display: grid; gap: var(--ui-space-xs); }

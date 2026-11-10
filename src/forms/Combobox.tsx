@@ -6,12 +6,23 @@ import { createFieldDescriptions } from "./fieldDescriptions";
 import { validatedComboboxOptions, type ComboboxEntry, type ComboboxOption } from "./comboboxOptions";
 export type { ComboboxEntry, ComboboxGroup, ComboboxOption } from "./comboboxOptions";
 
+export type ComboboxCreateState =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly query: string }
+  | { readonly kind: "failed"; readonly query: string; readonly message: string };
+
+export interface ComboboxCreate {
+  readonly state: ComboboxCreateState;
+  readonly onCreate: (query: string) => void;
+}
+
 export interface ComboboxProps {
   readonly id: string;
   readonly label: string;
   readonly options: readonly ComboboxEntry[];
   readonly value: string | null;
   readonly onChange: (id: string | null) => void;
+  readonly create?: ComboboxCreate | undefined;
   readonly name?: string | undefined;
   readonly hint?: string | undefined;
   readonly error?: string | undefined;
@@ -20,6 +31,10 @@ export interface ComboboxProps {
 }
 
 export function Combobox(props: ComboboxProps): JSX.Element {
+  return <ComboboxControl {...props} />;
+}
+
+export function ComboboxControl(props: ComboboxProps & { readonly creationOptions?: readonly ComboboxEntry[] | undefined }): JSX.Element {
   const popupId = `ui-combobox-${createUniqueId()}`;
   const listId = `${popupId}-list`;
   const missingId = `${popupId}-missing`;
@@ -29,6 +44,7 @@ export function Combobox(props: ComboboxProps): JSX.Element {
   const [active, setActive] = createSignal<string | null>(null);
   let input: HTMLInputElement | undefined;
   let popup: HTMLDivElement | undefined;
+  let createButton: HTMLButtonElement | undefined;
   let disposed = false;
   let composing = false;
   let openOnPointerDown = false;
@@ -47,6 +63,13 @@ export function Combobox(props: ComboboxProps): JSX.Element {
     const text = query().trim().toLocaleLowerCase();
     return groups().map(group => ({ ...group, options: group.options.filter(option => option.label.toLocaleLowerCase().includes(text)) })).filter(group => group.options.length > 0);
   });
+  const creationQuery = () => query().trim();
+  const canCreate = () => props.create !== undefined && creationQuery() !== "" && !(props.creationOptions ? validatedComboboxOptions(props.creationOptions) : allOptions()).some(option => option.label.trim().toLocaleLowerCase() === creationQuery().toLocaleLowerCase());
+  const creationState = () => {
+    const state = props.create?.state;
+    return state && state.kind !== "idle" && state.query === creationQuery() ? state : undefined;
+  };
+  const creationError = () => { const state = creationState(); return state?.kind === "failed" ? state.message : undefined; };
   const enabled = () => visible().flatMap(group => group.options).filter(option => !option.disabled);
   const activeOption = () => enabled().find(option => option.id === active());
   const optionId = (id: string) => `${popupId}-option-${Array.from({ length: id.length }, (_, index) => id.charCodeAt(index).toString(16)).join("-")}`;
@@ -103,6 +126,14 @@ export function Combobox(props: ComboboxProps): JSX.Element {
       onClick={() => { pointerInPopup = false; if (suppressClick) { suppressClick = false; return; } select(untrack(option)); }}
     >{option().label}</div>
   );
+  const CreateAction = () => {
+    onCleanup(() => { if (typeof document !== "undefined" && document.activeElement === createButton && !disposed) input?.focus(); });
+    return <div class="ui-combobox-create">
+      <button type="button" class="ui-btn ui-btn-small" ref={element => { createButton = element; }} aria-disabled={creationState()?.kind === "pending" ? "true" : undefined} onClick={() => { if (creationState()?.kind !== "pending") props.create?.onCreate(creationQuery()); }} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); input?.focus(); } }}>Create {creationQuery()}</button>
+      {creationState()?.kind === "pending" ? <span role="status">Creating…</span> : null}
+      {creationState()?.kind === "failed" ? <span role="alert">{creationError()}</span> : null}
+    </div>;
+  };
   createEffect(() => [props.options, query()] as const, () => {
     if (untrack(open)) queueMicrotask(() => { if (!disposed) positioner.position(); });
   });
@@ -153,7 +184,10 @@ export function Combobox(props: ComboboxProps): JSX.Element {
           onBlur={() => { queueMicrotask(() => { if (!disposed && !pointerInPopup && open() && document.activeElement !== input && !popup?.contains(document.activeElement)) close(); }); }}
           onKeyDown={event => {
             if (event.isComposing || composing) return;
-            if (event.key === "Tab") pointerInPopup = false;
+            if (event.key === "Tab") {
+              pointerInPopup = false;
+              if (open() && !event.shiftKey && canCreate() && createButton !== undefined) { event.preventDefault(); createButton.focus(); return; }
+            }
             if (event.key === "Escape" && open()) { event.preventDefault(); event.stopPropagation(); close(); return; }
             const current = activeOption();
             if (event.key === "Enter" && open()) { event.preventDefault(); if (current) select(current); return; }
@@ -180,6 +214,7 @@ export function Combobox(props: ComboboxProps): JSX.Element {
         class="ui-popover ui-combobox-popup"
         popover="auto"
         ref={element => { popup = element; }}
+        onFocusOut={() => { queueMicrotask(() => { if (!disposed && open() && document.activeElement !== input && !popup?.contains(document.activeElement)) close(); }); }}
         onPointerDown={() => { pointerInPopup = true; }}
         onPointerMove={event => { if (touch?.pointerId === event.pointerId && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 8) touch.moved = true; }}
         onPointerCancel={() => { touch = undefined; }}
@@ -189,6 +224,7 @@ export function Combobox(props: ComboboxProps): JSX.Element {
           <For each={visible()} keyed={group => group.key}>{group => <Show when={group().label !== undefined} fallback={<For each={group().options} keyed={option => option.id}>{renderOption}</For>}><div role="group" aria-label={group().label}><div class="ui-combobox-group-label" aria-hidden="true">{group().label}</div><For each={group().options} keyed={option => option.id}>{renderOption}</For></div></Show>}</For>
         </div>
         {visible().length === 0 ? <div role="status" class="ui-combobox-empty">No matching options</div> : null}
+        <Show when={canCreate()}><CreateAction /></Show>
       </div>
     </div>
   );

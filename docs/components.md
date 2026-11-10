@@ -62,7 +62,17 @@ the search moves to the last chip. Missing option IDs remain visible and submitt
 host removes them. With `name`, each selected ID is submitted as a separate hidden input with
 the same name. A disabled control submits nothing. The host owns reset and rejected changes;
 hidden inputs do not provide native required validation. Use `<select multiple>` for a static
-fallback. Option creation and async query/result coordination are not yet supported.
+fallback.
+
+Both controls accept an optional `create` object with `onCreate(query)` and a
+`ComboboxCreateState`: `idle`, `pending` with the requested query, or `failed` with that query
+and a message. A nonempty trimmed draft offers creation only when no existing option has the same
+trimmed, case-insensitive label. Tab reaches the create button; Escape returns focus to the input.
+Pending prevents duplicate activation. Failure remains available for retry, and states for other
+drafts are not shown. A request does not create or select an option: the host adds the acknowledged
+option and updates the selected value. The host must correlate requests and ignore late responses,
+including repeated requests with identical text. Async search result coordination is not yet
+supported.
 
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a

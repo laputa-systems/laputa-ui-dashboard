@@ -1011,3 +1011,107 @@ test("@C030-b wraps long selected IDs within a narrow viewport", async ({ page }
   await expect(chip).toContainText("Unavailable:");
   expect(await chip.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("@C030-c requests creation without selecting an unacknowledged option", async ({ page }) => {
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("New project");
+  const create = page.getByRole("button", { name: "Create New project" });
+  await create.click();
+  await expect(page.getByTestId("create-request")).toHaveText("New project");
+  await expect(page.getByTestId("create-calls")).toHaveText("1");
+  await expect(create).toHaveAttribute("aria-disabled", "true");
+  await create.evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByTestId("create-calls")).toHaveText("1");
+  await expect(input).toHaveValue("New project");
+  await page.locator("form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+  await expect(page.locator("html")).toHaveAttribute("data-submitted", "alpha");
+  await input.click();
+  await input.fill("New project");
+  await page.getByRole("button", { name: "Fail creation" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("alert")).toHaveText("Creation failed");
+  await expect(input).toHaveValue("New project");
+  await page.getByRole("button", { name: "Create New project" }).click();
+  await expect(page.getByTestId("create-calls")).toHaveText("2");
+  await page.getByRole("button", { name: "Create New project" }).focus();
+  await page.getByRole("button", { name: "Acknowledge creation" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(input).toBeFocused();
+  await input.press("Escape");
+  await expect(input).toHaveValue("New project");
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-submitted", "new-id");
+});
+
+test("@C030-c scopes creation errors to their draft and omits duplicate labels", async ({ page }) => {
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill(" alpha ");
+  await expect(page.getByRole("button", { name: /Create/u })).toHaveCount(0);
+  await input.fill("First");
+  await page.getByRole("button", { name: "Create First" }).click();
+  await input.focus();
+  await input.fill("Second");
+  await page.getByRole("button", { name: "Fail creation" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Create Second" })).not.toHaveAttribute("aria-disabled", "true");
+});
+
+
+test("@C030-c supports keyboard creation and Escape", async ({ page }) => {
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("Keyboard project");
+  const create = page.getByRole("button", { name: "Create Keyboard project" });
+  await input.press("Tab");
+  await expect(create).toBeFocused();
+  await create.press("Enter");
+  await expect(page.getByTestId("create-request")).toHaveText("Keyboard project");
+  await expect(create).toBeFocused();
+  await create.press("Escape");
+  await expect(input).toBeFocused();
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await expect(input).toHaveValue("Alpha");
+});
+
+test("@C030-c does not offer to create an already selected multi option", async ({ page }) => {
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Projects" });
+  await input.click();
+  await input.fill("Alpha");
+  await expect(page.getByRole("button", { name: "Create Alpha" })).toHaveCount(0);
+  await input.fill("New multi");
+  await page.getByRole("button", { name: "Create New multi" }).click();
+  await expect(page.getByTestId("multi-create")).toHaveText("New multi");
+  await expect(page.getByRole("button", { name: "Remove Alpha (alpha) from Projects" })).toBeVisible();
+});
+
+
+test("@C030-c does not steal focus when a later acknowledgment arrives", async ({ page }) => {
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("Later");
+  await input.press("Tab");
+  const create = page.getByRole("button", { name: "Create Later" });
+  await create.press("Enter");
+  await create.press("Tab");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: "Fail creation" }).focus();
+  await page.getByRole("button", { name: "Acknowledge creation" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("button", { name: "Fail creation" })).toBeFocused();
+});
+
+
+test("@C030-c keeps a long creation action within a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/combobox-create.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("LongProjectName".repeat(20));
+  const create = page.getByRole("button", { name: /Create LongProjectName/u });
+  await expect(create).toBeVisible();
+  expect(await create.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
