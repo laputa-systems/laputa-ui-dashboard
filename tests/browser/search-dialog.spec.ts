@@ -145,6 +145,19 @@ test("renders host results through renderResult with link and selection semantic
   await expect(dialog.locator('[role="option"][aria-selected="true"]')).toHaveCount(1);
 });
 
+test("sizes each result to its content when the host limits the list height", async ({ page }) => {
+  await page.goto("/search-dialog.html");
+  await page.addStyleTag({ content: ".ui-search-dialog-list { max-height: 120px; overflow-y: auto; } .ui-search-dialog-option { display: grid; min-height: 58px; }" });
+  const { dialog } = await openWithOpener(page);
+  await dialog.getByTestId("excerpt-alpha").evaluate(element => { element.textContent = "A long excerpt. ".repeat(40); });
+  const rows = await dialog.getByRole("option").evaluateAll(elements => elements.map(element => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom, overflows: element.scrollHeight > element.clientHeight + 1 };
+  }));
+  expect(rows.map(row => row.overflows)).toEqual(rows.map(() => false));
+  for (let index = 1; index < rows.length; index += 1) expect(rows[index]!.top).toBeGreaterThanOrEqual(rows[index - 1]!.bottom - 0.5);
+});
+
 test("moves the active option with arrows, Home, End, and wraps", async ({ page }) => {
   await page.goto("/search-dialog.html");
   const { dialog, input } = await openWithOpener(page);
