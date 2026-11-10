@@ -2,6 +2,8 @@
 
 ## Status
 
+- **State:** Winding down on 2026-11-10; no new slices may start. Finish or park the in-flight Stats Durable Object cost fix, then record its outcome and resume instructions here.
+
 - **Goal:** Improve the investigation workflows in `joshuarli/stats` using this library, with verified package integration and preserved frontend efficiency. The [catalog](affectui-catalog.md) remains the long-term inventory.
 - **Starting revisions:** Library `6d093c74ff9d6354f88238d05e4576a7ba71ff94`; Stats `5fedff5c00f004280adcd858fc00889174d5a131`. The earlier review used library `916c17e` and Stats `dcda2b9`; refresh every finding against the current source.
 - **Accepted library slices:** F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P2-static-forge, S10-a, S10-b, S16-a, S17-split-a, S17-split-b, S17-tabs-a, S17-tabs-b, S17-preview-a, S17-journey, P3-tab-mechanics, P3-settings-a, P3-description-a, P3-page-frame-a, P3-page-grid-a, P3-canvas-journey, P3-collapse-a, P3 exit, C039-table-a, C039-table-sort, C023-a, C023-b, C025-a, P1-field-ids, P1-focus and P1-menu are accepted. Nested mixed-axis SplitPane ownership and controlled Workbench drawers have focused coverage. `make check` passed 67 unit and packed tests and 272 browser tests after the latest slice.
