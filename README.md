@@ -158,6 +158,8 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+The layout stylesheet also provides responsive description-list styles for native `dl`, `dt`, and `dd` markup.
+
 `SettingsRow` groups labelled settings with a responsive layout. `SaveBar` presents host-owned
 save state and requests save or discard through callbacks.
 

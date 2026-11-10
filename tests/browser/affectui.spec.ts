@@ -11,6 +11,25 @@ test("@fixture-assets serves built CSS to static pages", async ({ browser }) => 
   await context.close();
 });
 
+test("@P3-description-a keeps description pairs readable at container widths without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/description-list-static.html");
+  const row = page.locator(".ui-description-list-row").first();
+  await expect(row.locator("dt")).toHaveText("Owner");
+  await expect(row.locator("dd").getByRole("link", { name: "Ada Lovelace" })).toHaveAttribute("href", "/people/ada");
+  let boxes = await row.locator("dt, dd").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+  expect(boxes[1]!.left).toBeGreaterThan(boxes[0]!.right);
+  await page.getByTestId("details-container").evaluate(element => { (element as HTMLElement).style.width = "300px"; });
+  boxes = await row.locator("dt, dd").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+  expect(boxes[1]!.top).toBeGreaterThanOrEqual(boxes[0]!.bottom);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await context.close();
+});
+
 test("@P3-settings-a preserves a draft through pending and failed saves", async ({ page }) => {
   await page.goto("/settings-row.html");
   const group = page.getByRole("group", { name: "Workspace identity" });

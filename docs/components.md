@@ -279,6 +279,11 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+For a responsive description list, apply `ui-description-list` to a native `dl` and wrap each
+`dt`/`dd` pair in a `ui-description-list-row` div. Values may contain ordinary text or elements
+such as links. Rows stack when the list container is at most 480 pixels wide. The markup works
+without JavaScript and retains native description-list semantics.
+
 `SettingsRow` and `SettingsRowProps` from `layout` group related controls under a required,
 nonempty `label` and optional `description`. Each control still needs its own label. The group
 stacks when its container is at most 600 pixels wide. Generated IDs beginning with
