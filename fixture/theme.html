@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/dist/styles.css">
+<title>Scoped theme fixture</title>
+<style>
+  body { margin: 0; }
+  .fixture-probe { display: block; width: 64px; }
+  .fixture-soft { background: var(--ui-accent-soft); }
+  .fixture-head { height: var(--ui-head-height); }
+  .fixture-inset { padding-left: var(--ui-inset); }
+  .fixture-outer {
+    --ui-accent: #123456;
+    --ui-shadow-card: none;
+  }
+  .fixture-inner {
+    --ui-surface: #fcfbf8;
+  }
+  .fixture-theme {
+    --ui-accent: #7a3f2b;
+    --ui-ok: #20432f;
+    --ui-surface: #fcfbf8;
+    --ui-control: 28px;
+    --ui-space-sm: 10px;
+    --ui-inset: 24px;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div id="page">
+    <div class="fixture-probe fixture-soft" data-testid="page-soft"></div>
+    <div class="fixture-probe fixture-head" data-testid="page-head"></div>
+  </div>
+  <section id="plain" data-testid="plain">
+    <div class="fixture-probe fixture-soft" data-testid="plain-soft"></div>
+    <div class="fixture-probe fixture-head" data-testid="plain-head"></div>
+    <div class="fixture-probe fixture-inset" data-testid="plain-inset"></div>
+    <span class="ui-badge ui-badge-ok" data-testid="plain-ok">Ready</span>
+  </section>
+  <section id="scoped" class="ui-theme fixture-theme" data-testid="scoped">
+    <div class="fixture-probe fixture-soft" data-testid="scoped-soft"></div>
+    <div class="fixture-probe fixture-head" data-testid="scoped-head"></div>
+    <div class="fixture-probe fixture-inset" data-testid="scoped-inset"></div>
+    <span class="ui-badge ui-badge-ok" data-testid="scoped-ok">Ready</span>
+  </section>
+  <section class="fixture-outer" data-testid="outer">
+    <div class="ui-theme fixture-inner" data-testid="inner">
+      <div class="fixture-probe fixture-soft" data-testid="inner-soft"></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

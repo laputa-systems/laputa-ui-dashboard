@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layered theme fixture</title>
+<script>
+  const sheet = document.createElement("style");
+  sheet.textContent = [
+    "@layer ui, app;",
+    '@import url("/dist/styles.css") layer(ui);',
+    "@layer app { :where(.ui-btn) { background-color: rgb(1, 2, 3); } }"
+  ].join("\n");
+  document.head.append(sheet);
+</script>
+</head>
+<body style="margin:0">
+<button class="ui-btn" type="button">Layered</button>
+</body>
+</html>

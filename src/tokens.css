@@ -15,10 +15,6 @@
   --ui-ok: var(--ui-good);
   --ui-warn: var(--ui-serious);
   --ui-bad: var(--ui-critical);
-  --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 15%, transparent);
-  --ui-ok-soft: color-mix(in srgb, var(--ui-ok) 12%, var(--ui-surface));
-  --ui-warn-soft: color-mix(in srgb, var(--ui-warn) 12%, var(--ui-surface));
-  --ui-bad-soft: color-mix(in srgb, var(--ui-bad) 12%, var(--ui-surface));
   --ui-scrim: rgb(20 20 18 / 28%);
   --ui-scrim-filter: blur(2px);
   --ui-viz-blue: #2a78d6;
@@ -54,7 +50,6 @@
 
   --ui-control-sm: 20px;
   --ui-control: 24px;
-  --ui-head-height: calc(var(--ui-control) + 2 * var(--ui-space-sm));
   --ui-icon-size: 16px;
   --ui-icon-stroke: 1.4;
   --ui-dot: 8px;
@@ -79,4 +74,13 @@
 
   --ui-z-veil: 40;
   --ui-z-modal: 50;
+}
+
+:root,
+:where(.ui-theme) {
+  --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 15%, transparent);
+  --ui-ok-soft: color-mix(in srgb, var(--ui-ok) 12%, var(--ui-surface));
+  --ui-warn-soft: color-mix(in srgb, var(--ui-warn) 12%, var(--ui-surface));
+  --ui-bad-soft: color-mix(in srgb, var(--ui-bad) 12%, var(--ui-surface));
+  --ui-head-height: calc(var(--ui-control) + 2 * var(--ui-space-sm));
 }

@@ -5,7 +5,9 @@ components that render the same markup in browsers and server rendering. Stats u
 Niceforge uses them in its CI workbench and serves the CSS alone to its server-rendered forge
 pages, which ship no JavaScript.
 
-See the [component reference](docs/components.md) and [usage patterns](docs/patterns.md). The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted.
+See the [component reference](docs/components.md), [usage patterns](docs/patterns.md), and the
+[theming contract](docs/theming.md) for scoped themes and the styling audit. The
+[agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted.
 
 The [AffectUI coverage plan](docs/affectui-plan.md) and [catalog gap matrix](docs/affectui-catalog.md)
 describe the proposed expansion of layouts, forms, data views, chat, and agent workflows.
@@ -251,13 +253,15 @@ serve `styles/forms.css` and load it after `styles.css`. The same field needs no
 
 ## Tokens
 
-All tokens are `--ui-*` custom properties on `:root`, each defined once in `tokens.css`:
-color (`bg`, `surface`, `text`, `text-2`, `muted`, `line`, `line-strong`, `hover`, `accent`,
+All tokens are `--ui-*` custom properties, each defined once in `tokens.css`. Inputs are on
+`:root`; the computed soft fills and `head-height` are on `:root, :where(.ui-theme)` so a themed
+region recalculates them: color (`bg`, `surface`, `text`, `text-2`, `muted`, `line`, `line-strong`, `hover`, `accent`,
 `good`/`ok`, `serious`/`warn`, `critical`/`bad`, tinted backgrounds `accent-soft`, `ok-soft`,
 `warn-soft` and `bad-soft`, the `scrim` behind modals and expanded panels, `viz-blue`,
 `viz-ghost`, and the series colors `s0` to `s4`), type (`font`, `mono`, `fs-*`, `weight-*`,
 `tracking-*`), spacing (`space-*`, `inset`), sizes (`control*`, `head-height`, `icon-size`,
-`row-height`, `dot*`, `side-*`), radius, shadow and z-index.
+`row-height`, `dot*`, `side-*`), radius, shadow and z-index. Put `.ui-theme` on the element that
+sets a region's tokens; [the theming contract](docs/theming.md) lists what recomputes.
 
 There is one light scheme. `tokens.css` declares `color-scheme: light` and has no dark
 values, so a page renders the same whatever the operating system prefers.
