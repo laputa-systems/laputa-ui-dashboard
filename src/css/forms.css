@@ -79,3 +79,7 @@
 .ui-switch .ui-checkbox:checked::before { left: auto; right: 2px; }
 .ui-switch .ui-checkbox[aria-disabled="true"] { opacity: .7; }
 @media (forced-colors: active) { .ui-switch .ui-checkbox { appearance: auto; } .ui-switch .ui-checkbox::before { display: none; } }
+.ui-tag-input { display: grid; gap: var(--ui-space-xs); min-width: 0; }
+.ui-tag-control { display: flex; gap: var(--ui-space-xs); min-width: 0; }
+.ui-tag-control .ui-text-field { flex: 1; }
+.ui-tag-input .ui-multi-chip { max-width: 100%; min-width: 0; }

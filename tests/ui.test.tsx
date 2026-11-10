@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
@@ -131,6 +131,12 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('name="sync"');
     expect(() => renderToString(() => <Switch id="sync" label="Sync" state={{ kind: "failed", message: "" }} />)).toThrow("Switch failure requires a message");
+  });
+  it("bounds tags and rejects duplicate identities and normalized labels", () => {
+    const first = { id: "one", label: "First tag" };
+    expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[first, { id: "two", label: "  FIRST   TAG " }]} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow("Tag IDs and normalized labels must be nonempty and unique");
+    expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[first]} maxLength={3} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow("Tag label exceeds maxLength");
+    expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[]} maxTags={101} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow(RangeError);
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

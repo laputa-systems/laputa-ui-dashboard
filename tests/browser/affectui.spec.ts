@@ -846,6 +846,86 @@ test("@C078-a exposes native switch state and host-owned pending and failure", a
   await expect(control).toHaveCSS("appearance", "auto");
 });
 
+test("@C079-a retains rejected drafts and serializes acknowledged tags", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.fill("  New   tag  ");
+  await input.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove New tag" })).toBeVisible();
+  await expect(input).toHaveValue("");
+  await page.getByRole("button", { name: "Save tags" }).click();
+  await expect(page.getByTestId("tag-submitted")).toHaveText("First tag|New tag");
+  await input.fill("new tag");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("already selected");
+  await expect(page.getByTestId("tag-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject tags" }).click();
+  await input.fill("Rejected value");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("Could not add tags");
+  await expect(input).toHaveValue("Rejected value");
+  await expect(page.getByTestId("tag-calls")).toHaveText("2");
+});
+
+test("@C079-a navigates and removes chips without submitting on Enter", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.focus();
+  await page.keyboard.press("Backspace");
+  const chip = page.getByRole("button", { name: "Remove First tag" });
+  await expect(chip).toBeFocused();
+  await page.keyboard.press("Delete");
+  await expect(chip).toHaveCount(0);
+  await expect(input).toBeFocused();
+  await expect(page.getByTestId("tag-submitted")).toHaveText("");
+});
+
+test("@C079-a preserves later edits across acknowledgment and ignores composition", async ({ page }) => {
+  await page.goto("/tags.html");
+  await page.getByRole("button", { name: "Defer tags" }).click();
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.fill("Later tag");
+  await input.evaluate(element => element.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
+  await input.press("Enter");
+  await expect(page.getByTestId("tag-calls")).toHaveText("0");
+  await input.evaluate(element => element.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true })));
+  await input.press("Enter");
+  await expect(page.getByTestId("tag-calls")).toHaveText("1");
+  await expect(page.getByRole("button", { name: "Add tag" })).toBeDisabled();
+  await input.fill("New draft");
+  await page.getByRole("button", { name: "Acknowledge tags" }).click();
+  await expect(page.getByRole("button", { name: "Remove Later tag" })).toBeVisible();
+  await expect(input).toHaveValue("New draft");
+});
+
+test("@C079-a enforces tag limits and validation in narrow layouts", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.fill("x".repeat(21));
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("at most 20");
+  await input.fill("bad#tag");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("cannot contain #");
+  await input.fill("Second tag");
+  await input.press("Enter");
+  await expect(input).toHaveValue("");
+  await input.fill("Third tag");
+  await input.press("Enter");
+  await expect(input).toHaveValue("");
+  await input.fill("Fourth tag");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("at most 3");
+  await expect(page.getByRole("status").filter({ hasText: "selected" })).toHaveText("3 selected");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -877,6 +957,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByLabel("Static tags, separated by commas").fill("alpha,beta");
+  await page.getByRole("button", { name: "Save static tags" }).click();
+  await expect(page).toHaveURL(/\/tags\?tags=alpha%2Cbeta$/u);
   await page.goto("/forms-static.html");
   await page.getByRole("switch", { name: "Static sync" }).check();
   await page.getByRole("button", { name: "Choose sync" }).click();

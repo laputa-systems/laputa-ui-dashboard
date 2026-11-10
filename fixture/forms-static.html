@@ -2,6 +2,7 @@
 <html lang="en">
   <head><meta charset="utf-8"><title>Static forms fixture</title><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/forms.css"><link rel="stylesheet" href="/dist/styles/feedback.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head>
   <body>
+    <form action="/tags" method="get"><label for="static-tags">Static tags, separated by commas</label><input id="static-tags" name="tags"><button type="submit">Save static tags</button></form>
     <form action="/switch" method="get"><label class="ui-choice ui-switch"><input class="ui-checkbox" type="checkbox" role="switch" name="sync" value="yes"><span class="ui-choice-content"><span class="ui-field-label">Static sync</span></span></label><button type="submit">Choose sync</button></form>
     <form action="/frequency" method="get"><fieldset><legend>Static frequency</legend><label><input type="radio" name="frequency" value="daily" required> Daily</label><label><input type="radio" name="frequency" value="weekly"> Weekly</label></fieldset><button type="submit">Choose frequency</button></form>
     <nav aria-label="Static sections"><a href="/overview">Overview</a><a href="/activity">Activity</a></nav>
