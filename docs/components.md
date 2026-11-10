@@ -279,6 +279,16 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`ArtifactPreview`, `ArtifactPreviewProps`, and `ArtifactPreviewState` from `layout` present a
+labelled artifact region. The host supplies `loading`, `failed`, `not-found`, or `ready` state;
+non-ready states require a message. A failure may provide `retry`, which moves focus to the region
+before invoking the callback. A ready state supplies a JSX `content` slot and may mark it `dirty`.
+Optional `actions` are host-supplied. Text, code, image, table, and file views can be supplied as
+ordinary elements. The component does not fetch, parse, sanitize HTML, or validate host-supplied
+URLs; the host owns those decisions. Create reactive slots within a Solid owner. Static pages may
+use `ui-artifact-preview`, `ui-artifact-preview-header`, and `ui-artifact-preview-content` with
+ordinary text and links.
+
 `WorkspaceTabs`, `WorkspaceTabsProps`, and `WorkspaceTab` from `layout` present up to 100
 host-owned artifacts. IDs and labels must be nonempty and IDs unique. `selectedId` must identify an
 open tab, or be `null` for an empty list. `onSelect` and optional `onClose` request host changes;

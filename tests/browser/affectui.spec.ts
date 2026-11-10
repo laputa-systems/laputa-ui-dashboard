@@ -3,6 +3,70 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S17-preview-a presents host states and preserves safe text", async ({ page }) => {
+  await page.goto("/artifact-preview.html");
+  const preview = page.getByRole("region", { name: "Artifact preview" });
+  await expect(preview.getByRole("alert")).toHaveText("Preview unavailable");
+  await preview.getByRole("button", { name: "Retry" }).click();
+  await expect(preview).toBeFocused();
+  await expect(preview.getByRole("status")).toHaveText("Loading preview");
+  const showText = page.getByRole("button", { name: "Show text" });
+  await showText.focus();
+  await showText.evaluate((button: HTMLButtonElement) => button.click());
+  await expect(showText).toBeFocused();
+  await expect(preview.getByText("Unsaved changes")).toBeVisible();
+  await expect(preview.locator("pre")).toHaveText('<img src=x onerror="alert(1)">');
+  await expect(preview.locator("img")).toHaveCount(0);
+  await page.getByRole("button", { name: "Show image" }).click();
+  await expect(preview.getByRole("img", { name: "Pixel preview" })).toBeVisible();
+  await page.getByRole("button", { name: "Show table" }).click();
+  await expect(preview.getByRole("cell", { name: "Passed" })).toBeVisible();
+  await page.getByRole("button", { name: "Show file" }).click();
+  await expect(preview.getByRole("link", { name: "Download report.txt" })).toHaveAttribute("href", "/files/report.txt");
+  await page.getByRole("button", { name: "Show missing" }).click();
+  await expect(preview.getByText("Artifact no longer exists")).toBeVisible();
+  await expect(preview.getByRole("button", { name: "Retry" })).toHaveCount(0);
+});
+
+test("@S17-preview-a fits a narrow embedded container", async ({ page }) => {
+  await page.goto("/artifact-preview.html");
+  await page.getByRole("button", { name: "Show long code" }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@S17-preview-a hydrates a failure and retries in place", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { ArtifactPreview } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(ArtifactPreview, { label: "Artifact", state: { kind: "failed", message: "Preview unavailable", retry() {} } })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/artifact-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialPreview = document.querySelector('.ui-artifact-preview');</script><script type="module" src="/hydrate-artifact-preview.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/artifact-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const preview = page.getByRole("region", { name: "Artifact" });
+  await preview.getByRole("button", { name: "Retry" }).click();
+  await expect(preview.getByRole("status")).toHaveText("Loading");
+  await expect(preview).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
+test("@S17-preview-a provides a static artifact view", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/artifact-preview-static.html");
+  await expect(page.getByRole("link", { name: "Download artifact" })).toHaveAttribute("href", "/artifact/download");
+  await expect(page.locator("pre")).toHaveText("Static artifact text");
+  await context.close();
+});
+
 test("@S17-tabs-a retains drafts when changing artifact tabs", async ({ page }) => {
   await page.goto("/workspace-tabs.html");
   const first = page.getByRole("tab", { name: /notes\.txt/u });

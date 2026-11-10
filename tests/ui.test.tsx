@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench, WorkspaceTabs } from "../src/layout";
+import { Accordion, ActionMenu, ArtifactPreview, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench, WorkspaceTabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -113,6 +113,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render([{ id: "one", label: "First", content: "Body" }], null)).toThrow("selectedId");
     expect(() => render([], "one")).toThrow("selectedId");
     expect(() => renderToString(() => <WorkspaceTabs label="Artifacts" tabs={[{ id: "one", label: "First", content: "Body" }]} selectedId="one" onSelect={() => {}} returnFocus={() => null} closeState={{ kind: "failed", tabId: "one", message: " " }} />)).toThrow("Invalid workspace close state");
+  });
+  it("validates artifact preview states and escapes text", () => {
+    const html = renderToString(() => <ArtifactPreview label="Artifact" state={{ kind: "ready", content: "<script>bad()</script>", dirty: true }} />);
+    expect(html).toContain("&lt;script>bad()&lt;/script>");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("Unsaved changes");
+    expect(() => renderToString(() => <ArtifactPreview label="Artifact" state={{ kind: "failed", message: " " }} />)).toThrow("nonempty");
+    expect(() => renderToString(() => <ArtifactPreview label=" " state={{ kind: "loading", message: "Loading" }} />)).toThrow("nonempty");
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

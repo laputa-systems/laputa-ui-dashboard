@@ -10,3 +10,4 @@ export { Tooltip, type TooltipProps } from "./Tooltip";
 export { Workbench, type WorkbenchProps, type WorkbenchPane } from "./Workbench";
 export { SplitPane, type SplitPaneProps } from "./SplitPane";
 export { WorkspaceTabs, type WorkspaceTabsProps, type WorkspaceTab, type WorkspaceCloseState } from "./WorkspaceTabs";
+export { ArtifactPreview, type ArtifactPreviewProps, type ArtifactPreviewState } from "./ArtifactPreview";

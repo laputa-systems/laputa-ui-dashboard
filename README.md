@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`ArtifactPreview` presents host-owned loading, failure, missing, and ready states. Its content and
+actions are supplied as slots; the component does not fetch or interpret artifacts.
+
 `WorkspaceTabs` from the layout entry presents host-owned artifact tabs, retains inactive pane
 content, and returns focus after a confirmed close.
 
