@@ -243,6 +243,44 @@ test("@C039-table-a displays host updates with semantic headers and bounded scro
   await expect(table.getByRole("cell", { name: "No records." })).toBeVisible();
 });
 
+test("@C039-table-sort requests sorting without owning it", async ({ page }) => {
+  await page.goto("/sortable-header.html");
+  const header = page.getByRole("columnheader", { name: "Host" });
+  const button = header.getByRole("button", { name: "Host" });
+  await expect(header).not.toHaveAttribute("aria-sort");
+  await button.focus();
+  await button.press("Space");
+  await expect(header).toHaveAttribute("aria-sort", "ascending");
+  await expect(button.locator("[data-direction]")).toHaveAttribute("data-direction", "ascending");
+  await expect(button).toBeFocused();
+  await expect(page.getByLabel("Sort requests")).toHaveText("1");
+  await button.press("Enter");
+  await expect(header).toHaveAttribute("aria-sort", "descending");
+  await expect(button.locator("[data-direction]")).toHaveAttribute("data-direction", "descending");
+  await expect(page.getByLabel("Sort requests")).toHaveText("2");
+  await page.getByRole("button", { name: "Set externally" }).click();
+  await expect(header).toHaveAttribute("aria-sort", "ascending");
+  await expect(page.getByLabel("Sort requests")).toHaveText("2");
+});
+
+test("@C039-table-sort hydrates the host-controlled direction", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { SortableHeader } from "./dist/ssr/data.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(SortableHeader, { label: "Host", direction: "ascending", onSort() {} })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/sortable-header-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><table><thead><tr id="root">${html}</tr></thead></table><script type="module" src="/hydrate-sortable-header.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/sortable-header-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const header = page.getByRole("columnheader", { name: "Host" });
+  await expect(header).toHaveAttribute("aria-sort", "ascending");
+  await header.getByRole("button").click();
+  await expect(header).toHaveAttribute("aria-sort", "descending");
+  expect(errors).toEqual([]);
+});
+
 test("@C039-table-a hydrates server rows and applies host updates", async ({ page }) => {
   const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
 import { DataTable } from "./dist/ssr/data.js";

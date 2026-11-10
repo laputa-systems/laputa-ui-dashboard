@@ -332,8 +332,17 @@ current row; read it within reactive JSX so the same cell can update when the ho
 Set `rowHeader: true` for a column containing row labels. The host owns row order and data. Keep
 column definitions stable across updates when preserving cell focus matters. Empty rows show
 `No records.` or the supplied nonempty `emptyMessage`. The named scroll region is keyboard-focusable
-and keeps wide tables inside the page. Larger datasets need host pagination or aggregation. Sorting,
-selection, paging, loading and editing controls are not part of this initial read-only slice.
+and keeps wide tables inside the page. Larger datasets need host pagination or aggregation. Selection,
+paging, loading and editing controls are not part of this initial read-only slice.
+
+`SortableHeader` and its `SortableHeaderProps` and `SortDirection` types from `data` provide a
+controlled column header for native tables. Supply `label` and `onSort`; set `direction` to
+`"ascending"` or `"descending"` only for the active column. The host owns the ordering and decides
+the next direction. Each activation requests sorting once; changing `direction` does not call
+`onSort`. The header exposes the direction through `aria-sort` and leaves inactive headers unmarked.
+Its default arrow is decorative. An `indicator` function may supply a decorative replacement;
+`class` and `buttonClass` add host classes. Import `styles/data.css` after the base stylesheet.
+Static tables can use a native column header and an ordinary link or GET form to request a sort.
 
 Static pages can use `ui-data-table-scroll` on a focusable named region around `ui-data-table`,
 with a native caption, column headers and row headers. Use real links and GET forms where appropriate.
