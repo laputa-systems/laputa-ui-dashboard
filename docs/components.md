@@ -279,6 +279,18 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`SplitPane` and `SplitPaneProps` from `layout` accept a `label`, `primary` and `secondary` content,
+`axis` (`horizontal` places panes side by side; `vertical` stacks them), and whole-pixel
+`minSize`, `maxSize`, `minOtherSize`, and `defaultSize`. The default is read once and is also the
+reset target. `size` with `onSizeChange` is controlled; a controlled pane without a callback is
+read-only. Arrow keys adjust by 10 pixels, Shift by 50, and Home/End choose the available bounds.
+Horizontal keys follow the writing direction. Container changes clamp the displayed size without
+notifying the host; if both minimums cannot fit, the primary minimum shrinks to the available
+maximum. Invalid bounds throw. Give vertical panes a definite container height. The separator is
+keyboard-operated in this slice; pointer resizing remains open. Static markup can use
+`ui-split`, `ui-split-panes`, `ui-split-primary`, `ui-split-secondary`, and `ui-split-separator`.
+Generated control IDs reserve the `ui-split-primary-` prefix.
+
 `Workbench`, `WorkbenchProps`, and `WorkbenchPane` from `layout` arrange supplied `navigation`,
 optional `secondaryNavigation`, main `children`, and optional labelled `workspace` and
 `diagnostics` panes. `appearance` is `flat` by default or `inset`; pane labels must contain text.

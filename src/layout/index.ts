@@ -8,3 +8,4 @@ export { Breadcrumbs, type BreadcrumbsProps, type Breadcrumb } from "./Breadcrum
 export { Popover, type PopoverProps } from "./Popover";
 export { Tooltip, type TooltipProps } from "./Tooltip";
 export { Workbench, type WorkbenchProps, type WorkbenchPane } from "./Workbench";
+export { SplitPane, type SplitPaneProps } from "./SplitPane";

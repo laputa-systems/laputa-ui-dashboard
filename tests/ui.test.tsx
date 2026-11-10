@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs, Tooltip, Workbench } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -97,6 +97,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).not.toContain("ui-workbench-secondary");
     expect(() => renderToString(() => <Workbench navigation={<nav />} workspace={{ label: " ", content: "Details" }}>Main</Workbench>)).toThrow("nonempty");
     expect(() => renderToString(() => <Workbench navigation={<nav />} navigationDrawer={{ label: " " }}>Main</Workbench>)).toThrow("nonempty");
+  });
+  it("validates split pane bounds before rendering", () => {
+    const render = (minSize: number, maxSize: number, defaultSize: number) => renderToString(() => <SplitPane label="Split" axis="horizontal" minSize={minSize} maxSize={maxSize} minOtherSize={20} defaultSize={defaultSize} primary="First" secondary="Second" />);
+    expect(render(20, 200, 100)).toContain('role="separator"');
+    expect(() => render(200, 20, 100)).toThrow(RangeError);
+    expect(() => render(20, 200, 201)).toThrow(RangeError);
+    expect(() => render(20, 200, Number.NaN)).toThrow(RangeError);
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

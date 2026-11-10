@@ -3,6 +3,118 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S17-split-a resizes with the keyboard and restores the initial size", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  await expect(separator).toHaveAttribute("aria-orientation", "vertical");
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await separator.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "250");
+  await page.keyboard.press("Shift+ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "300");
+  await page.keyboard.press("Home");
+  await expect(separator).toHaveAttribute("aria-valuenow", "120");
+  await page.keyboard.press("End");
+  await expect(separator).toHaveAttribute("aria-valuenow", "600");
+  await page.getByRole("button", { name: "Reset Project split" }).click();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await page.getByRole("button", { name: "Reject resize" }).click();
+  await separator.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await expect(page.getByTestId("split-calls")).toHaveText("6");
+});
+
+test("@S17-split-a clamps a saved size to available container space", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  await page.getByRole("button", { name: "Narrow split" }).click();
+  await expect(separator).toHaveAttribute("aria-valuemax", "152");
+  await expect(separator).toHaveAttribute("aria-valuenow", "152");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+  await page.getByRole("button", { name: "Expand split" }).click();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+});
+
+test("@S17-split-a handles vertical, local, and right-to-left resizing", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const vertical = page.getByRole("separator", { name: "Timeline split" });
+  await expect(vertical).toHaveAttribute("aria-orientation", "horizontal");
+  await vertical.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(vertical).toHaveAttribute("aria-valuenow", "110");
+  await page.getByRole("button", { name: "Reset Timeline split" }).click();
+  await expect(vertical).toHaveAttribute("aria-valuenow", "100");
+  const locked = page.getByRole("separator", { name: "Locked split" });
+  await expect(locked).toHaveAttribute("aria-disabled", "true");
+  await locked.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(locked).toHaveAttribute("aria-valuenow", "100");
+  const horizontal = page.getByRole("separator", { name: "Project split" });
+  await page.getByTestId("split-container").evaluate(element => { element.setAttribute("dir", "rtl"); });
+  await horizontal.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(horizontal).toHaveAttribute("aria-valuenow", "250");
+});
+
+test("@S17-split-a keeps static panes usable without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
+  const page = await context.newPage();
+  await page.goto("/split-pane-static.html");
+  await expect(page.getByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/projects/alpha");
+  await expect(page.getByRole("region", { name: "Detail" })).toHaveText("Project detail");
+  await expect(page.getByRole("separator")).not.toHaveAttribute("tabindex");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+});
+
+test("@S17-split-a handles a container narrower than both minimums", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/split-pane.html");
+  await page.getByRole("button", { name: "Constrain split" }).click();
+  const separator = page.getByRole("separator", { name: "Project split" });
+  await expect(separator).toHaveAttribute("aria-valuemin", "0");
+  await expect(separator).toHaveAttribute("aria-valuemax", "0");
+  await expect(separator).toHaveAttribute("aria-valuenow", "0");
+  expect(await page.getByTestId("split-container").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+});
+
+test("@S17-split-a hydrates its separator and enables keyboard resizing", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { SplitPane } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(SplitPane, { label: "Split", axis: "horizontal", minSize: 20, maxSize: 200, minOtherSize: 20, defaultSize: 100, primary: "First", secondary: "Second" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/split-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root" style="width:400px;height:200px">${html}</div><script>window.initialSeparator = document.querySelector('[role="separator"]');</script><script type="module" src="/hydrate-split-pane.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/split-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const separator = page.getByRole("separator", { name: "Split" });
+  await expect(separator).toHaveAttribute("tabindex", "0");
+  await separator.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "110");
+  expect(errors).toEqual([]);
+});
+
+test("@S17-split-a releases its resize observer when unmounted", async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = window.ResizeObserver;
+    const state = window as Window & { splitDisconnects?: number };
+    state.splitDisconnects = 0;
+    window.ResizeObserver = class extends original { disconnect() { state.splitDisconnects! += 1; super.disconnect(); } };
+  });
+  await page.goto("/split-pane.html");
+  await page.getByRole("button", { name: "Unmount split" }).click();
+  await expect(page.getByRole("separator", { name: "Project split" })).toHaveCount(0);
+  expect(await page.evaluate(() => (window as Window & { splitDisconnects?: number }).splitDisconnects)).toBe(1);
+});
+
 test("@S16-a opens independent navigation and workspace drawers", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/workbench-drawers.html");
