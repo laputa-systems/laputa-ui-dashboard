@@ -281,7 +281,9 @@ not moved elsewhere. Background removal never restores focus. Static HTML can us
 
 `ui-page-section` lays out a section's children with a consistent gap, while `ui-page-toolbar`
 wraps its heading and controls. `ui-dashboard-grid` arranges supplied content in columns of at
-least 18rem when space permits, falling back to one column in narrower containers. Use semantic
+least `--ui-dashboard-min` (18rem) separated by `--ui-dashboard-gap`, falling back to one column in
+narrower containers. Cards stretch to fill a row; add `ui-dashboard-grid-fill` to keep every card at
+the column width, so a lone card does not widen. Use semantic
 headings, forms, links and articles appropriate to the content; these classes work without JavaScript.
 
 For settings and collection/detail pages, wrap `ui-page-frame` in `ui-page-frame-container`,

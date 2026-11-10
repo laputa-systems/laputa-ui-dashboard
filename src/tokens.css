@@ -68,6 +68,9 @@
   --ui-shadow-pop: 0 0 0 1px var(--ui-line-strong), 0 12px 32px rgb(0 0 0 / 12%);
   --ui-shadow-modal: 0 0 0 1px var(--ui-line-strong), 0 30px 80px rgb(0 0 0 / 22%);
 
+  --ui-dashboard-min: 18rem;
+  --ui-dashboard-gap: var(--ui-space-lg);
+
   --ui-side-width: 236px;
   --ui-side-gap: var(--ui-space-md);
   --ui-side-link-height: 34px;

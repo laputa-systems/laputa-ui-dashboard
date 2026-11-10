@@ -260,7 +260,7 @@ region recalculates them: color (`bg`, `surface`, `text`, `text-2`, `muted`, `li
 `warn-soft` and `bad-soft`, the `scrim` behind modals and expanded panels, `viz-blue`,
 `viz-ghost`, and the series colors `s0` to `s4`), type (`font`, `mono`, `fs-*`, `weight-*`,
 `tracking-*`), spacing (`space-*`, `inset`), sizes (`control*`, `head-height`, `icon-size`,
-`row-height`, `dot*`, `side-*`), radius, shadow and z-index. Put `.ui-theme` on the element that
+`row-height`, `dot*`, `side-*`, `dashboard-min`, `dashboard-gap`), radius, shadow and z-index. Put `.ui-theme` on the element that
 sets a region's tokens; [the theming contract](docs/theming.md) lists what recomputes.
 
 There is one light scheme. `tokens.css` declares `color-scheme: light` and has no dark

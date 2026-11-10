@@ -340,6 +340,29 @@ test("@P3-page-grid-a adapts cards and keeps native search available", async ({ 
   await context.close();
 });
 
+test("a filling dashboard grid keeps card widths at its minimum column token", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/dashboard-grid-static.html");
+  const grid = page.getByTestId("dashboard");
+  await grid.evaluate(element => {
+    const node = element as HTMLElement;
+    node.style.width = "1100px";
+    node.style.setProperty("--ui-dashboard-min", "260px");
+    node.style.setProperty("--ui-dashboard-gap", "12px");
+    for (const extra of [...node.querySelectorAll("article")].slice(1)) extra.remove();
+  });
+  const stretched = await grid.locator("article").evaluate(element => element.getBoundingClientRect().width);
+  expect(stretched).toBe(1100);
+  await grid.evaluate(element => element.classList.add("ui-dashboard-grid-fill"));
+  const card = await grid.locator("article").evaluate(element => element.getBoundingClientRect().width);
+  expect(card).toBeCloseTo((1100 - 3 * 12) / 4, 0);
+  await grid.evaluate(element => { (element as HTMLElement).style.width = "200px"; });
+  expect(await grid.locator("article").evaluate(element => element.getBoundingClientRect().width)).toBe(200);
+  await context.close();
+});
+
 test("@P3-page-frame-a lays out settings and collection details with native navigation", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

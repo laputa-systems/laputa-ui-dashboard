@@ -143,7 +143,8 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | `table.css:11` | `260px` | search width | design | `--ui-search-width` | No. |
 | `meter.css:1` | `44px × 6px` | meter size | design | `--ui-meter-width`, `--ui-meter-height` | No. |
 | `skeleton.css:4,5-7` | `140px`, `2.4s`, `opacity: .4` | skeleton shape and pulse | design / motion | `--ui-skeleton-height`, `--ui-skeleton-duration` | No. |
-| `layout.css:134,136,141` | `15rem`, `48rem`, `18rem` | page-frame sidebar, reading measure, dashboard card minimum | design | `--ui-page-frame-sidebar`, `--ui-reading-width`, `--ui-dashboard-min` | Discover reading measure; future token. |
+| `layout.css:134,136` | `15rem`, `48rem` | page-frame sidebar, reading measure | design | `--ui-page-frame-sidebar`, `--ui-reading-width` | Discover reading measure; future token. |
+| `layout.css:141` | dashboard card minimum and gap | now `--ui-dashboard-min` (18rem) and `--ui-dashboard-gap` | design | tokenized | repomod sets a 260px minimum and a 12px gap. |
 | `layout.css:60-63,66` | `3.5rem`, `15rem`, `20rem`, `22rem` | workbench columns and drawer | design / structural mechanics | `--ui-workbench-rail`, `--ui-workbench-secondary`, `--ui-workbench-workspace`, `--ui-workbench-drawer` | No. |
 | `layout.css:89-90` | `24px` | split separator target | structural hit area | `--ui-split-separator` | No. |
 | `layout.css:78,122,132,137,146` | `900px`, `600px`, `480px`, `720px` | container-query breakpoints | structural | none; custom properties cannot appear in queries | No. |

@@ -138,7 +138,8 @@
 .ui-page-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-lg); min-width: 0; }
 .ui-page-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-sm); min-width: 0; }
 .ui-page-toolbar > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-.ui-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--ui-space-lg); min-width: 0; }
+.ui-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-dashboard-min)), 1fr)); gap: var(--ui-dashboard-gap); min-width: 0; }
+.ui-dashboard-grid-fill { grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ui-dashboard-min)), 1fr)); }
 .ui-dashboard-grid > * { min-width: 0; overflow-wrap: anywhere; }
 .ui-workbench-secondary-disclosure > summary { cursor: pointer; overflow-wrap: anywhere; }
 .ui-workbench-secondary-disclosure > summary:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
