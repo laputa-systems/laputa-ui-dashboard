@@ -501,6 +501,61 @@ test("@C052-a fits long service descriptions and offers static navigation", asyn
   await staticContext.close();
 });
 
+test("@C059-a keeps only the active notice readable and requests host actions", async ({ page }) => {
+  await page.goto("/notification-stack.html");
+  const region = page.getByRole("region", { name: "Notifications" });
+  await expect(region.getByRole("group", { name: "First notice" })).toBeVisible();
+  await expect(region.getByText("Second notice")).toHaveCount(0);
+  await expect(region.getByRole("link", { name: "Open inbox" })).toHaveAttribute("href", "/inbox");
+  await region.getByRole("button", { name: "Open first" }).click();
+  await expect(page.getByTestId("notice-actions")).toHaveText("action one");
+  await region.getByRole("button", { name: "Next notice" }).click();
+  await expect(region.getByRole("group", { name: "Second notice" })).toBeVisible();
+  await expect(region.getByText("First notice")).toHaveCount(0);
+  await region.getByRole("button", { name: "Dismiss Second notice" }).click();
+  await expect(page.getByTestId("notice-actions")).toHaveText("dismiss two");
+  await expect(region.getByRole("group", { name: "Third notice" })).toBeFocused();
+  await region.getByRole("button", { name: "Dismiss Third notice" }).click();
+  await expect(region.getByRole("group", { name: "First notice" })).toBeFocused();
+  await region.getByRole("button", { name: "Dismiss First notice" }).click();
+  await expect(region.getByText("No notifications in this stack.")).toBeVisible();
+  await expect(region).toBeFocused();
+});
+
+test("@C059-a fits a compact stack and retains navigation focus at its end", async ({ page }) => {
+  await page.goto("/notification-stack.html");
+  const region = page.getByRole("region", { name: "Notifications" });
+  const next = region.getByRole("button", { name: "Next notice" });
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(next).toBeFocused();
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@C059-a retains a rejected notice and never steals focus for background updates", async ({ page }) => {
+  await page.goto("/notification-stack.html");
+  await page.getByRole("button", { name: "Reject dismissal" }).click();
+  const region = page.getByRole("region", { name: "Notifications" });
+  const dismiss = region.getByRole("button", { name: "Dismiss First notice" });
+  await dismiss.focus();
+  await page.keyboard.press("Enter");
+  await expect(dismiss).toBeFocused();
+  await expect(region.getByRole("group", { name: "First notice" })).toBeVisible();
+  const background = page.getByRole("button", { name: "Remove first in background" });
+  await background.focus();
+  await background.evaluate(button => (button as HTMLButtonElement).click());
+  await expect(region.getByRole("group", { name: "Second notice" })).toBeVisible();
+  await expect(background).toBeFocused();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -533,6 +588,7 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await expect(page.getByRole("region", { name: "Static notifications" }).getByRole("link", { name: "Open notification inbox" })).toHaveAttribute("href", "/inbox");
   await page.getByRole("group", { name: "Static status filters" }).getByLabel("Open").check();
   await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/\/filter\?status=open$/u);

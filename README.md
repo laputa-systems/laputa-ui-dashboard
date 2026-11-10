@@ -125,6 +125,9 @@ Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load
 and `max` (100 by default). Omit `value` when progress is unknown. Invalid values throw.
 The component uses native `<progress>` semantics and supports server rendering.
 
+`NotificationStack` from the same entry presents one host-owned persistent notice at a time.
+The host handles dismissal and actions and can link to an inbox for a larger history.
+
 ```tsx
 import "@laputa-systems/ui-dashboard/styles.css";
 import "@laputa-systems/ui-dashboard/styles/feedback.css";

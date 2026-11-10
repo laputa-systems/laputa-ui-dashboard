@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
-import { ActionStatus, Progress } from "../src/feedback";
+import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu } from "../src/layout";
 import { IntegrationPicker } from "../src/recipes";
 import {
@@ -80,6 +80,15 @@ describe("@laputa-systems/ui-dashboard", () => {
     const html = renderToString(() => <IntegrationPicker label="Integrations" integrations={[item]} />);
     expect(html).toContain("1 integration");
     expect(html).not.toContain("<dialog");
+  });
+  it("bounds notification stacks and rejects unsafe inbox links", () => {
+    const notice = { id: "one", title: "First" };
+    expect(() => renderToString(() => <NotificationStack label="Notices" notices={[notice, notice]} />)).toThrow("Notification IDs must be nonempty and unique");
+    expect(() => renderToString(() => <NotificationStack label="Notices" notices={[]} total={1} />)).toThrow("An inbox link is required");
+    expect(() => renderToString(() => <NotificationStack label="Notices" notices={[]} inbox={{ href: "javascript:alert(1)", label: "Inbox" }} />)).toThrow("Invalid notification inbox URL");
+    const html = renderToString(() => <NotificationStack label="Notices" notices={[notice, { id: "two", title: "Second" }]} />);
+    expect(html).toContain("First");
+    expect(html).not.toContain("Second");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

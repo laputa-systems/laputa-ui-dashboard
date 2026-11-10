@@ -188,6 +188,16 @@ operation itself. Failures use an alert and other messages use a status. Activat
 focus to the status container before calling the host, so the disappearing button does not
 strand focus. The host retains structured error details and decides whether retry is appropriate.
 
+`NotificationStack`, `NotificationStackProps`, and `Notification` from `feedback` present a
+host-owned persistent list. Supply a label and at most 100 notices with nonempty unique IDs.
+The stack renders one notice at a time. Previous and Next change the visible notice. An optional
+action and Dismiss call the host with the notice ID; missing callbacks disable the corresponding
+actions. A rejected dismissal leaves the notice in place. After the host removes a deliberately
+dismissed notice, focus moves to the next notice if the user has not moved focus elsewhere.
+Background updates do not move focus. Optional `total` includes all shown notices; if it exceeds
+the supplied list, `inbox` must provide an HTTP or HTTPS link or a relative URL. Invalid IDs,
+counts, or URLs throw. The stack does not expire notices.
+
 Import `Disclosure` and `DisclosureProps` from `@laputa-systems/ui-dashboard/layout`, and load
 `@laputa-systems/ui-dashboard/styles/layout.css` after the base stylesheet. `label` names a
 native summary and `children` supplies its content. `defaultOpen` initializes local state once.
