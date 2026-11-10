@@ -407,7 +407,13 @@ optional `secondaryNavigation`, main `children`, and optional labelled `workspac
 The container stacks the same content at 900 CSS pixels of available width or less. Supply real links
 and named navigation landmarks in the navigation slots. `navigationDrawer={{ label }}` opts into a
 combined modal drawer at that width. Set `drawer: true` on `workspace` to offer a separate modal
-workspace drawer. `secondaryNavigationCollapse` adds a native disclosure around supplied secondary
+workspace drawer. To control either drawer from a selection, provide a `WorkbenchDrawerControl`
+with `open` and `onOpenChange`: use `navigationDrawer={{ label, control }}` for navigation or
+`workspace={{ label, content, drawer: control }}` for the workspace. User open and close actions
+request a change through the callback; the host updates `open`. Parent updates do not call the
+callback. The control applies at the narrow layout boundary; on wider layouts the content remains
+visible in its pane, and an open control opens its drawer again when the layout becomes narrow.
+`secondaryNavigationCollapse` adds a native disclosure around supplied secondary
 navigation. Its nonempty `label` names the summary; `defaultOpen` initializes local state (open by
 default), or `open` and `onOpenChange` control it from the host. A controlled value without a callback
 is read-only while JavaScript is active. Parent updates do not invoke the callback, and the host may
@@ -415,9 +421,8 @@ persist changes itself. If an external close would hide focused navigation, focu
 The closed desktop pane narrows to a rail. Without JavaScript the native summary remains operable.
 Escape returns focus to the opener, resizing preserves focus inside a pane, and
 removing a focused workspace moves focus to the main area. Without JavaScript, both areas remain
-visible and stacked. If a host action closes a drawer directly with `dialog.close()`, the host must
-return focus to an appropriate control; browsers differ in their native focus restoration. The CSS
-classes also support static HTML. Resizable panes remain separate work.
+visible and stacked. Closing a controlled drawer returns focus to its opener when focus was inside.
+The CSS classes also support static HTML. Resizable panes remain separate work.
 
 `Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
 strings and noninteractive `children`. The label names the button independently of its tooltip;

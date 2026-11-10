@@ -13,21 +13,30 @@ export interface WorkbenchNavigationCollapse {
   readonly onOpenChange?: ((open: boolean) => void) | undefined;
 }
 
+export interface WorkbenchDrawerControl {
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+}
+
 export interface WorkbenchProps {
   readonly navigation: JSX.Element;
   readonly secondaryNavigation?: JSX.Element | undefined;
   readonly secondaryNavigationCollapse?: WorkbenchNavigationCollapse | undefined;
-  readonly workspace?: (WorkbenchPane & { readonly drawer?: boolean | undefined }) | undefined;
+  readonly workspace?: (WorkbenchPane & { readonly drawer?: boolean | WorkbenchDrawerControl | undefined }) | undefined;
   readonly diagnostics?: WorkbenchPane | undefined;
   readonly appearance?: "flat" | "inset" | undefined;
-  readonly navigationDrawer?: { readonly label: string } | undefined;
+  readonly navigationDrawer?: { readonly label: string; readonly control?: WorkbenchDrawerControl | undefined } | undefined;
   readonly class?: string | undefined;
   readonly children: JSX.Element;
 }
 
-function createWorkbenchDrawer(enabled: () => boolean, present: () => boolean, container: () => HTMLDivElement | undefined, grid: () => HTMLDivElement | undefined, fallback: () => HTMLElement | undefined) {
+function createWorkbenchDrawer(enabled: () => boolean, present: () => boolean, control: () => WorkbenchDrawerControl | undefined, container: () => HTMLDivElement | undefined, grid: () => HTMLDivElement | undefined, fallback: () => HTMLElement | undefined) {
   const id = `ui-workbench-drawer-${createUniqueId()}`;
-  const [open, setOpen] = createSignal(false);
+  const controlled = createMemo(control);
+  const controlledOpen = createMemo(() => controlled()?.open);
+  const [localOpen, setLocalOpen] = createSignal(false);
+  const open = () => controlledOpen() ?? localOpen();
+  const setOpen = (value: boolean) => { if (untrack(controlled) === undefined) setLocalOpen(value); };
   const [ready, setReady] = createSignal(false);
   const [narrow, setNarrow] = createSignal(false);
   const active = createMemo(enabled);
@@ -35,16 +44,30 @@ function createWorkbenchDrawer(enabled: () => boolean, present: () => boolean, c
   const refs: { content?: HTMLElement; modal?: HTMLDialogElement; opener?: HTMLButtonElement; closer?: HTMLButtonElement } = {};
   let enabledSnapshot = false;
   let presentSnapshot = false;
+  let ignoredCloseEvents = 0;
   const firstControl = (element: HTMLElement) => [...element.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])')].find(control => control.getClientRects().length > 0 && getComputedStyle(control).visibility === "visible" && !control.closest('[inert], [aria-disabled="true"]'));
-  const close = () => {
-    if (refs.modal?.open) refs.modal.close();
+  const closeModal = () => { if (refs.modal?.open) { ignoredCloseEvents += 1; refs.modal.close(); } };
+  const closeNow = () => {
+    const focusedInside = refs.modal?.contains(document.activeElement) === true;
+    closeModal();
     setOpen(false);
-    if (refs.opener?.isConnected) refs.opener.focus();
+    if (focusedInside) (refs.opener?.getClientRects().length ? refs.opener : fallback())?.focus();
   };
-  const show = () => {
+  const showNow = () => {
     if (refs.modal && !refs.modal.open) { refs.modal.showModal(); setOpen(true); refs.closer?.focus(); }
   };
-  const closed = () => { if (refs.modal?.isConnected) setOpen(refs.modal.open); };
+  const close = () => { const current = untrack(controlled); if (current === undefined) closeNow(); else current.onOpenChange(false); };
+  const show = () => { const current = untrack(controlled); if (current === undefined) showNow(); else current.onOpenChange(true); };
+  const closed = () => {
+    if (ignoredCloseEvents > 0) { ignoredCloseEvents -= 1; return; }
+    if (!refs.modal?.isConnected) return;
+    setOpen(refs.modal.open);
+    if (!refs.modal.open && untrack(controlledOpen) === true) untrack(controlled)?.onOpenChange(false);
+  };
+  createEffect(() => ({ open: controlledOpen(), active: active(), ready: ready(), narrow: narrow() }), state => {
+    if (state.open === undefined || !state.active || !state.ready || !state.narrow) return;
+    if (state.open) showNow(); else closeNow();
+  });
   createEffect(() => { enabledSnapshot = active(); presentSnapshot = exists(); return enabledSnapshot; }, isEnabled => {
     if (!isEnabled || !container() || !grid() || !refs.content || !refs.modal) return;
     const host = container()!;
@@ -75,9 +98,10 @@ function createWorkbenchDrawer(enabled: () => boolean, present: () => boolean, c
         modal.appendChild(contents);
         setNarrow(true);
         setReady(true);
-        if (inside) { modal.showModal(); setOpen(true); focused?.focus(); }
+        if (inside && untrack(controlledOpen) !== false) { modal.showModal(); setOpen(true); focused?.focus(); }
+        else if (inside) (refs.opener ?? fallback())?.focus();
       } else {
-        if (modal.open) modal.close();
+        closeModal();
         setOpen(false);
         parent.insertBefore(contents, modal);
         setNarrow(false);
@@ -103,7 +127,7 @@ function createWorkbenchDrawer(enabled: () => boolean, present: () => boolean, c
       if (frame !== undefined) cancelAnimationFrame(frame);
       const focused = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
       const inside = focused !== undefined && contents.contains(focused);
-      if (modal.open) modal.close();
+      closeModal();
       if (parent.isConnected && modal.parentNode === parent && presentSnapshot) parent.insertBefore(contents, modal);
       if (parent.isConnected && !enabledSnapshot) {
         const lostOpener = focused === refs.opener || (focused === document.body && openerHadFocus);
@@ -145,8 +169,9 @@ export function Workbench(props: WorkbenchProps): JSX.Element {
     if (props.secondaryNavigationCollapse?.open === undefined) setLocalSecondaryOpen(next);
     props.secondaryNavigationCollapse?.onOpenChange?.(next);
   };
-  const navigation = createWorkbenchDrawer(() => props.navigationDrawer !== undefined, () => true, () => container, () => grid, () => main);
-  const workspace = createWorkbenchDrawer(() => props.workspace?.drawer === true, () => props.workspace !== undefined, () => container, () => grid, () => main);
+  const navigation = createWorkbenchDrawer(() => props.navigationDrawer !== undefined, () => true, () => props.navigationDrawer?.control, () => container, () => grid, () => main);
+  const workspaceControl = () => typeof props.workspace?.drawer === "object" ? props.workspace.drawer : undefined;
+  const workspace = createWorkbenchDrawer(() => props.workspace?.drawer === true || workspaceControl() !== undefined, () => props.workspace !== undefined, workspaceControl, () => container, () => grid, () => main);
   const drawerLabel = () => {
     const label = props.navigationDrawer?.label;
     if (label !== undefined && !label.trim()) throw new Error("Workbench drawer label must be nonempty");

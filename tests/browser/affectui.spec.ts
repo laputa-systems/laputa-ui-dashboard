@@ -538,13 +538,51 @@ test("@P3-canvas-journey routes a mobile selection and restores drawer focus", a
   const drawer = page.getByRole("dialog", { name: "Navigation" });
   await drawer.getByRole("button", { name: "Beta", exact: true }).click();
   await expect(drawer).not.toBeVisible();
-  await expect(opener).toBeFocused();
   await expect(page.getByTestId("canvas-selection")).toHaveText("Selected: Beta");
-  await page.getByRole("button", { name: "Open Inspector" }).click();
   const inspector = page.getByRole("dialog", { name: "Inspector" });
+  await expect(inspector).toBeVisible();
   await expect(inspector.getByTestId("inspector-selection")).toHaveText("Beta");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open Inspector" })).toBeFocused();
+});
+
+test("controlled workbench drawers follow selection and restore focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/controlled-workbench.html");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  const navigation = page.getByRole("dialog", { name: "Navigation" });
+  await navigation.getByRole("button", { name: "Select Beta" }).click();
+  await expect(navigation).not.toBeVisible();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  await expect(inspector).toBeVisible();
+  await expect(inspector).toContainText("Selected: Beta");
+  await page.keyboard.press("Escape");
+  await expect(inspector).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Inspector" })).toBeFocused();
+  await page.getByRole("button", { name: "Inspect selection" }).click();
+  await expect(inspector).toBeVisible();
+  await page.getByRole("button", { name: "Dismiss inspector" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(inspector).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Inspector" })).toBeFocused();
+});
+
+test("controlled drawers respect the host and responsive layout", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/controlled-workbench.html");
+  await page.getByRole("button", { name: "Reject navigation changes" }).click();
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  await expect(page.getByRole("dialog", { name: "Navigation" })).not.toBeVisible();
+  await expect(page.getByTestId("navigation-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Inspect selection" }).click();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  await expect(inspector).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await expect(inspector).not.toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Inspector" })).toContainText("Selected: Alpha");
+  await page.setViewportSize({ width: 390, height: 800 });
+  await expect(inspector).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(inspector).not.toBeVisible();
 });
 
 test("@P3-canvas-journey keeps content reachable at page and embedded widths", async ({ browser }) => {
