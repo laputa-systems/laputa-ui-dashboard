@@ -2,12 +2,24 @@
 
 ## Status
 
-- **State (2026-11-10):** T1, T2, T3 and T5 accepted in the library. The Gate 0 library change is accepted, and the Stats data audit (lane D) is accepted in Stats. Gate 0 awaits an owner decision on the remaining project-route growth. T6 is running.
-- **Accepted:** library `b7d030d` (T1, T2: scoped themes recompute derived tokens; `.ui-theme` hook), `78ae116` (T3: one control set under two themes; icon-button font; semantic ok color), `914fda5` (Gate 0: Button forwarding leaves shared route chunks; consumer refs kept), `9815180` (T5: CSS-only review surface fixture). Stats `cd6409c` (lane D: partial series and storage coverage disclosed). Library `make check` passed 291 browser tests at `914fda5`; Stats `make dashboard-test` passed 258 at `cd6409c`.
-- **Branches, not landed:** Discover `ui-pilot` `85ab3a1` (T4 reader pilot); repomod `feat/ui-deps` `36c9bca` (dashboard on 0.6.0 CSS). Both depend on a `file:` tarball of unpublished 0.6.0 and land only after a version is published.
-- **Gate 0 evidence:** against the milestone baseline, Fleet, Host, Services and Service are within 5% raw and gzip on integrated Stats `cd6409c` with library `914fda5`. Projects is +8.7% raw and +5.8% gzip; Project, Errors and Requests are +7.0–7.5% raw and +4.5–4.8% gzip. The library change removed about 10 KB raw from every route. The remaining excess is Stats cost-truthfulness code on project routes. Paired cold readiness has not been rerun; under the 1.6 Mbit/s emulated download, cold time tracks bytes, so any route with added bytes will exceed the observed spread.
-- **Findings:** the reader pilot adopts one control for 3.5 KB of gzipped CSS, so reader adoption waits for per-component CSS imports. Library tokens change palette, scale and density but do not by themselves make products look distinct. Discover's admin review maps cleanly onto CSS-only library forms. repomod's card grid stays app-owned until `.ui-dashboard-grid` has a minimum-width token and a non-stretching option.
-- **Next:** T6 report; the owner's Gate 0 decision; then the quiet-window paired timings, the follow-up plan, and release preparation.
+- **State (2026-11-10):** All local deliverables accepted, and 0.7.0 published. Paired timing gates are deferred because the host is busy; the owner authorized publication anyway. Lanes are closed.
+- **Accepted:** library `b7d030d` (T1, T2: scoped themes recompute derived tokens; `.ui-theme` hook), `78ae116` (T3: one control set under two themes), `914fda5` (Gate 0: Button forwarding leaves shared route chunks), `9815180` (T5: CSS-only review surface), `ed4cb24` (0.7.0). Stats `cd6409c` (partial series and storage coverage), `3635002` (0.7.0 from the registry). Discover `a16d338` (reader loads the library beneath its styles; desk on 0.7.0). repomod branch `feat/ui-deps` (dashboard renders from the installed 0.7.0 package) waits for uncommitted work in repomod's main checkout before it can fast-forward `master`.
+- **Release:** `@laputa-systems/ui-dashboard@0.7.0` is on the stuff npm registry (generation `6f6ae4a160c473cfc41a0c7bfa630ce4ec062e30e0da10ee2ff53d5372f39a66`, SHA-512 `9ed6b949…27f7`). Frozen installs verify in Stats, Discover and repomod. Niceforge on 0.7.0 renders identically to 0.5.0, with all 54 script-free forge tests passing; it was checked in a disposable copy and not changed.
+- **Gate 0:** Fleet, Host, Services and Service are within 5% raw and gzip. The owner accepted the remaining project-route growth (Projects +8.7% raw, +5.8% gzip) as attributed to cost disclosure. The owner then relaxed size gates generously.
+- **Findings:** tokens change palette, scale and density but do not by themselves make products look distinct; character comes from consumer composition and type. The Discover reader shares one control. The admin review maps cleanly onto CSS-only library forms. Discover's search keeps its own island because the library lacks a controlled query, rich options and a document-scoped shortcut.
+
+## Follow-up plan
+
+In priority order, by consumer benefit:
+
+1. **Discover admin review on library forms.** Apply the T5 mapping (`fixture/review-static.html`) to `cloudflare/src/site/admin.ts` once DSC-33 releases its admin views. This removes the most duplicated UI in Discover.
+2. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`; the campaign is not complete until this runs or the owner waives it.
+3. **Niceforge and repomod upgrades.** Bump Niceforge's two packages from 0.5.0 to 0.7.0; the visual check found no change. Land repomod's `feat/ui-deps` after its main checkout's work is committed.
+4. **Dashboard grid density.** Add a minimum-column-width token and a non-stretching option to `.ui-dashboard-grid` so repomod can drop its own card grid.
+5. **Search mechanics for host-driven results.** A controlled query, rich option rendering and a document-scoped shortcut on `CommandMenu`, or a headless listbox entry, would let Discover drop its own dialog and listbox. Size is no longer the blocker.
+6. **Links in library tables** take the browser's link color; add a token-driven link rule if a second consumer needs it.
+7. **Editorial primitives** (citation reference list, figure with credit, taxonomy term) stay in Discover until another product renders them.
+8. **Dark theme** stays an optional sheet for the first consumer that needs one.
 - **Resume:** "Run the multi-product campaign in `docs/multi-product-plan.md` from **Status**." First command: `git status && git log --oneline -5`, then the same in `~/d/discover` and `~/d/stats`.
 
 ## Goal
