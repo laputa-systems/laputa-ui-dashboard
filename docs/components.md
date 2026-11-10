@@ -58,6 +58,14 @@ Each preset includes `today` and edits the draft without applying it. A preset o
 or supported date range is disabled. The host supplies `today`, so the component does not read a
 clock or infer a timezone.
 
+The calendar uses `locale` for month, weekday, and date labels, defaulting to `en-US`.
+`weekStartsOn` sets the first weekday from 0 for Sunday to 6 for Saturday and defaults to 0.
+Select a start and end date in the calendar. Selecting an earlier end reverses the endpoints.
+Arrow keys move by day or week, Home and End move within the week, and Page Up and Page Down
+move by month. Hold Shift with Page Up or Page Down to move by year. Month movement clamps the
+day to the destination month. Calendar dates outside the bounds are disabled. Two months appear
+when the dialog has room; a narrow dialog shows one.
+
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
 Options can be individual items or labelled groups. Option IDs must be unique across the whole

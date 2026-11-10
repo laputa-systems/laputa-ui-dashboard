@@ -84,6 +84,57 @@ test("@C040-b presets use the supplied today and remain drafts until applied", a
   await limited.getByRole("button", { name: "Cancel" }).click();
 });
 
+test("@C040-c navigates and selects calendar dates with the keyboard", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  const february = dialog.getByRole("grid", { name: "February 2024" });
+  await expect(february).toBeVisible();
+  await expect(dialog.getByRole("grid", { name: "March 2024" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Previous month" })).toBeDisabled();
+  await expect(february.getByRole("columnheader").first()).toHaveText("Mon");
+  const leap = february.getByRole("button", { name: "Thursday, February 29, 2024" });
+  await leap.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(dialog.getByRole("button", { name: "Friday, March 1, 2024" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByLabel("Start date")).toHaveValue("2024-03-01");
+  await expect(dialog.getByRole("status")).toHaveText("Choose an end date.");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByLabel("End date")).toHaveValue("2024-03-02");
+  await expect(dialog.getByRole("status")).toHaveText("Choose a start date.");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(page.getByTestId("range")).toHaveText("2024-03-01 / 2024-03-02");
+  await expect(page.getByRole("button", { name: "Reporting dates" })).toBeFocused();
+});
+
+test("@C040-c shows one calendar month in narrow space", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  await expect(dialog.getByRole("grid")).toHaveCount(1);
+  await dialog.getByRole("button", { name: "Next month" }).click();
+  await expect(dialog.getByRole("grid", { name: "March 2024" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Next month" })).toBeDisabled();
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+});
+
+test("@C040-c localizes the calendar and clamps month navigation to leap day", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "French dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "French dates" });
+  const march = dialog.getByRole("grid", { name: "mars 2024" });
+  await expect(march.getByRole("columnheader").first()).toHaveText("lun.");
+  await march.getByRole("button", { name: "dimanche 31 mars 2024" }).focus();
+  await page.keyboard.press("PageUp");
+  await expect(dialog.getByRole("button", { name: "jeudi 29 février 2024" })).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(dialog.getByRole("button", { name: "lundi 26 février 2024" })).toBeFocused();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -115,6 +166,11 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByLabel("Static start date").fill("2024-02-29");
+  await page.getByLabel("Static end date").fill("2024-03-01");
+  await page.getByRole("button", { name: "Choose dates" }).click();
+  await expect(page).toHaveURL(/\/dates\?start=2024-02-29&end=2024-03-01$/u);
   await page.goto("/forms-static.html");
   await page.getByLabel("Static multiple choice").selectOption(["alpha", "gamma"]);
   await page.getByRole("button", { name: "Choose many" }).click();

@@ -1,4 +1,4 @@
-import { createMemo, createSignal, createUniqueId, onCleanup, Show, untrack } from "solid-js";
+import { createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 
 export interface DateRange {
@@ -12,6 +12,8 @@ export interface DateRangePickerProps {
   readonly min?: string | undefined;
   readonly max?: string | undefined;
   readonly today?: string | undefined;
+  readonly locale?: string | undefined;
+  readonly weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined;
   readonly onChange: (range: DateRange) => void;
   readonly class?: string | undefined;
 }
@@ -22,6 +24,26 @@ function shiftDate(value: string, days: number): string | undefined {
   date.setUTCDate(date.getUTCDate() + days);
   const result = date.toISOString().slice(0, 10);
   return validDate(result) ? result : undefined;
+}
+
+function dateObject(value: string): Date {
+  const date = new Date(0);
+  date.setUTCFullYear(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
+  return date;
+}
+
+function shiftMonth(value: string, offset: number): string | undefined {
+  const index = (Number(value.slice(0, 4)) - 1) * 12 + Number(value.slice(5, 7)) - 1 + offset;
+  if (index < 0 || index >= 9999 * 12) return undefined;
+  return `${String(Math.floor(index / 12) + 1).padStart(4, "0")}-${String(index % 12 + 1).padStart(2, "0")}-01`;
+}
+
+function shiftDateMonth(value: string, offset: number): string | undefined {
+  const first = shiftMonth(value, offset);
+  if (!first) return undefined;
+  const following = shiftMonth(first, 1);
+  const last = following ? Number(shiftDate(following, -1)!.slice(8, 10)) : 31;
+  return `${first.slice(0, 8)}${String(Math.min(Number(value.slice(8, 10)), last)).padStart(2, "0")}`;
 }
 
 function validDate(value: string): boolean {
@@ -41,6 +63,9 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
   const [start, setStart] = createSignal("");
   const [end, setEnd] = createSignal("");
   const [error, setError] = createSignal("");
+  const [month, setMonth] = createSignal("0001-01-01");
+  const [cursor, setCursor] = createSignal("");
+  const [choosingEnd, setChoosingEnd] = createSignal(false);
   let trigger: HTMLButtonElement | undefined;
   let dialog: HTMLDialogElement | undefined;
   let startInput: HTMLInputElement | undefined;
@@ -50,6 +75,8 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     const { min, max, today, value: range } = props;
     if ((min !== undefined && !validDate(min)) || (max !== undefined && !validDate(max)) || (min !== undefined && max !== undefined && min > max)) throw new RangeError("Invalid date range bounds");
     if (today !== undefined && !validDate(today)) throw new RangeError("Invalid today date");
+    if (props.weekStartsOn !== undefined && (!Number.isInteger(props.weekStartsOn) || props.weekStartsOn < 0 || props.weekStartsOn > 6)) throw new RangeError("Invalid first weekday");
+    new Intl.DateTimeFormat(props.locale ?? "en-US");
     if (!validDate(range.start) || !validDate(range.end) || range.start > range.end || (min !== undefined && range.start < min) || (max !== undefined && range.end > max)) throw new RangeError("Invalid date range value");
     return range;
   });
@@ -64,6 +91,9 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     setStart(range.start);
     setEnd(range.end);
     setError("");
+    setMonth(`${range.start.slice(0, 7)}-01`);
+    setCursor(range.start);
+    setChoosingEnd(false);
     setOpen(true);
   };
   const present = (element: HTMLDialogElement) => {
@@ -97,6 +127,66 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     setStart(first);
     setEnd(props.today);
     setError("");
+    setMonth(`${first.slice(0, 7)}-01`);
+    setCursor(first);
+    setChoosingEnd(false);
+  };
+  const formatter = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(props.locale ?? "en-US", { ...options, calendar: "gregory", timeZone: "UTC" });
+  const monthLabel = (date: string) => formatter({ month: "long", year: "numeric" }).format(dateObject(date));
+  const dayLabel = (date: string) => formatter({ weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(dateObject(date));
+  const weekdays = () => Array.from({ length: 7 }, (_, index) => {
+    const day = ((props.weekStartsOn ?? 0) + index) % 7;
+    return formatter({ weekday: "short" }).format(dateObject(`2024-01-0${day === 0 ? 7 : day}`));
+  });
+  const available = (date: string) => (props.min === undefined || date >= props.min) && (props.max === undefined || date <= props.max);
+  const months = () => [month(), shiftMonth(month(), 1)].filter((item): item is string => item !== undefined);
+  const weeks = (first: string) => {
+    const offset = (dateObject(first).getUTCDay() - (props.weekStartsOn ?? 0) + 7) % 7;
+    const next = shiftMonth(first, 1);
+    const count = next ? Number(shiftDate(next, -1)!.slice(8, 10)) : 31;
+    const cells = Array.from({ length: Math.ceil((offset + count) / 7) * 7 }, (_, index) => {
+      const day = index - offset + 1;
+      return day > 0 && day <= count ? `${first.slice(0, 8)}${String(day).padStart(2, "0")}` : undefined;
+    });
+    return Array.from({ length: cells.length / 7 }, (_, index) => cells.slice(index * 7, index * 7 + 7));
+  };
+  const monthAvailable = (candidate: string | undefined) => candidate !== undefined && (props.min === undefined || `${candidate.slice(0, 7)}-31` >= props.min) && (props.max === undefined || candidate <= props.max);
+  const moveMonth = (offset: number) => {
+    const next = shiftMonth(month(), offset);
+    if (!monthAvailable(next) || next === undefined) return;
+    setMonth(next);
+    const focusDate = props.min && next < props.min ? props.min : next;
+    setCursor(focusDate);
+  };
+  const focusDay = (date: string | undefined) => {
+    if (!date || !available(date)) return;
+    setCursor(date);
+    if (date.slice(0, 7) !== month().slice(0, 7)) setMonth(`${date.slice(0, 7)}-01`);
+    queueMicrotask(() => { if (!disposed) dialog?.querySelector<HTMLButtonElement>(`[data-date="${date}"]`)?.focus(); });
+  };
+  const selectDay = (date: string) => {
+    if (!choosingEnd()) { setStart(date); setEnd(date); setChoosingEnd(true); }
+    else { const first = start(); setStart(date < first ? date : first); setEnd(date < first ? first : date); setChoosingEnd(false); }
+    setError("");
+  };
+  const navigateDay = (event: KeyboardEvent, date: string) => {
+    if (event.key === "PageUp" || event.key === "PageDown") {
+      event.preventDefault();
+      focusDay(shiftDateMonth(date, (event.key === "PageUp" ? -1 : 1) * (event.shiftKey ? 12 : 1)));
+      return;
+    }
+    const weekday = dateObject(date).getUTCDay();
+    const startOffset = (weekday - (props.weekStartsOn ?? 0) + 7) % 7;
+    const offset = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : event.key === "ArrowUp" ? -7 : event.key === "ArrowDown" ? 7 : event.key === "Home" ? -startOffset : event.key === "End" ? 6 - startOffset : undefined;
+    if (offset === undefined) return;
+    event.preventDefault();
+    focusDay(shiftDate(date, offset));
+  };
+  const editDate = (part: "start" | "end", date: string) => {
+    if (part === "start") setStart(date); else setEnd(date);
+    setChoosingEnd(false);
+    setError("");
+    if (validDate(date) && available(date)) { setMonth(`${date.slice(0, 7)}-01`); setCursor(date); }
   };
   onCleanup(() => { disposed = true; if (frame !== undefined) cancelAnimationFrame(frame); });
   return <div class={["ui-date-range", props.class].filter(Boolean).join(" ")}>
@@ -112,9 +202,20 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
             <button type="button" class="ui-btn ui-btn-small" disabled={!presetAvailable(30)} onClick={() => selectPreset(30)}>Last 30 days</button>
           </div>
         </Show>
+        <div class="ui-date-range-calendar">
+          <div class="ui-field-hint" role="status">{choosingEnd() ? "Choose an end date." : "Choose a start date."}</div>
+          <div class="ui-date-range-month-navigation"><button type="button" class="ui-btn ui-btn-small" disabled={!monthAvailable(shiftMonth(month(), -1))} onClick={() => moveMonth(-1)}>Previous month</button><button type="button" class="ui-btn ui-btn-small" disabled={!monthAvailable(shiftMonth(month(), 1))} onClick={() => moveMonth(1)}>Next month</button></div>
+          <div class="ui-date-range-months">
+            <For each={months()}>{item => <table class="ui-date-range-month" role="grid" aria-label={monthLabel(item)}>
+              <caption>{monthLabel(item)}</caption>
+              <thead><tr><For each={weekdays()}>{weekday => <th scope="col">{weekday}</th>}</For></tr></thead>
+              <tbody><For each={weeks(item)}>{week => <tr><For each={week}>{day => <td><Show when={day}>{date => <button type="button" data-date={date()} aria-label={dayLabel(date())} aria-pressed={date() >= start() && date() <= end() ? "true" : "false"} aria-current={date() === props.today ? "date" : undefined} disabled={!available(date())} tabindex={date() === cursor() ? 0 : -1} onFocus={() => setCursor(date())} onClick={() => selectDay(date())} onKeyDown={event => navigateDay(event, date())}>{Number(date().slice(8, 10))}</button>}</Show></td>}</For></tr>}</For></tbody>
+            </table>}</For>
+          </div>
+        </div>
         <div class="ui-date-range-fields">
-          <label class="ui-field" for={`${id}-start`}><span class="ui-field-label">Start date</span><input id={`${id}-start`} class="ui-text-field" type="date" min={props.min} max={props.max} value={start()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} ref={element => { startInput = element; }} onInput={event => { setStart(event.currentTarget.value); setError(""); }} /></label>
-          <label class="ui-field" for={`${id}-end`}><span class="ui-field-label">End date</span><input id={`${id}-end`} class="ui-text-field" type="date" min={props.min} max={props.max} value={end()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} onInput={event => { setEnd(event.currentTarget.value); setError(""); }} /></label>
+          <label class="ui-field" for={`${id}-start`}><span class="ui-field-label">Start date</span><input id={`${id}-start`} class="ui-text-field" type="date" min={props.min} max={props.max} value={start()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} ref={element => { startInput = element; }} onInput={event => editDate("start", event.currentTarget.value)} /></label>
+          <label class="ui-field" for={`${id}-end`}><span class="ui-field-label">End date</span><input id={`${id}-end`} class="ui-text-field" type="date" min={props.min} max={props.max} value={end()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} onInput={event => editDate("end", event.currentTarget.value)} /></label>
         </div>
         <Show when={error()}><div id={`${id}-error`} role="alert" class="ui-field-error">{error()}</div></Show>
         <div class="ui-date-range-actions"><button type="button" class="ui-btn" onClick={close}>Cancel</button><button type="button" class="ui-btn" onClick={apply}>Apply</button></div>

@@ -27,9 +27,21 @@
 .ui-multi-chip-remove { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .ui-multi-chip-remove:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-multi-chip-remove:disabled { opacity: .5; cursor: not-allowed; }
-.ui-date-range-dialog { box-sizing: border-box; max-width: calc(100vw - 2rem); padding: var(--ui-space-md); border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-text); font-family: var(--ui-font); }
+.ui-date-range-dialog { box-sizing: border-box; width: 42rem; max-width: calc(100vw - 2rem); max-height: calc(100vh - 2rem); padding: var(--ui-space-md); border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-text); font-family: var(--ui-font); }
 .ui-date-range-dialog::backdrop { background: rgb(0 0 0 / .35); }
 .ui-date-range-fields { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); }
 .ui-date-range-presets { display: flex; flex-wrap: wrap; gap: var(--ui-space-xs); margin-bottom: var(--ui-space-sm); }
+.ui-date-range-calendar { container-type: inline-size; margin-bottom: var(--ui-space-sm); }
+.ui-date-range-month-navigation { display: flex; justify-content: space-between; gap: var(--ui-space-xs); }
+.ui-date-range-months { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-sm); }
+.ui-date-range-month { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; }
+.ui-date-range-month caption { padding: var(--ui-space-xs); font-weight: var(--ui-weight-semibold); }
+.ui-date-range-month th { font-size: var(--ui-fs-meta); }
+.ui-date-range-month td { padding: 1px; }
+.ui-date-range-month td button { width: 100%; min-height: 2rem; border: 0; border-radius: var(--ui-radius-sm); background: transparent; color: var(--ui-text); cursor: pointer; }
+.ui-date-range-month td button[aria-pressed="true"] { background: var(--ui-hover); }
+.ui-date-range-month td button:disabled { opacity: .4; cursor: not-allowed; }
+.ui-date-range-month td button:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+@container (max-width: 34rem) { .ui-date-range-months { grid-template-columns: minmax(0, 1fr); } .ui-date-range-month:nth-child(2) { display: none; } }
 .ui-date-range-fields .ui-field { flex: 1 1 10rem; min-width: 0; }
 .ui-date-range-actions { display: flex; justify-content: end; gap: var(--ui-space-sm); margin-top: var(--ui-space-md); }

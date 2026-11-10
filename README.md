@@ -91,7 +91,8 @@ failures; stale search results are ignored.
 `DateRangePicker` edits a host-controlled inclusive date range in a dialog. Apply requests a
 change; Cancel discards the draft. Dates are calendar dates rather than instants. Use two native
 date inputs in a form when JavaScript is unavailable. See the component reference for bounds and
-validation. Supply `today` to enable deterministic date presets.
+validation. Supply `today` to enable deterministic date presets, and `locale` and `weekStartsOn`
+to configure the calendar.
 
 ## Command menu
 
