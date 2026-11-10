@@ -29,7 +29,8 @@ requires a unique `id` and a visible `label`. It forwards native input attribute
 `hint` and `error` add associated descriptions; an error also sets `aria-invalid`. Existing
 `aria-describedby` values are retained. Generated description IDs reserve the `ui-field-description-` prefix; do not use that prefix for application IDs. For multiple independently rendered Solid roots on one page, supply a distinct `renderId` to each server render and its corresponding hydration call. Use `defaultValue` for an uncontrolled input that
 resets with its form; use `value` and `onInput` for parent-controlled state. The control
-classes can also be used directly in static HTML as shown in the README.
+retains the current parent value on form reset. The control classes can also be used directly in
+static HTML as shown in the README.
 
 `Checkbox` and `CheckboxProps` from `forms` require `id` and `label`. Native name, value,
 required, disabled, form, and input attributes are forwarded. `hint` and `error` are associated
