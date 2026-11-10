@@ -9,7 +9,9 @@ See the [component reference](docs/components.md) and [usage patterns](docs/patt
 
 The [AffectUI coverage plan](docs/affectui-plan.md) and [catalog gap matrix](docs/affectui-catalog.md)
 describe the proposed expansion of layouts, forms, data views, chat, and agent workflows.
-They are an implementation backlog, not a list of features already shipped.
+They are an implementation backlog, not a list of features already shipped. The
+[multi-product plan](docs/multi-product-plan.md) takes priority over that backlog. It covers
+scoped theming and Discover as a second consumer.
 
 ## Installation
 
