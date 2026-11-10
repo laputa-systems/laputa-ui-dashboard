@@ -41,7 +41,9 @@ Every other token is an input and is declared only on `:root`. A theme sets inpu
 
 Colors mixed inline in component rules (`color-mix()` in buttons, notices, meters and the error ring) already resolve against the element's tokens and need no derived declaration.
 
-No token was added and no default value changed. The `.ui-theme` hook is the only new public selector.
+`--ui-serif` and `--ui-reading-width` are input tokens added for the optional editorial family.
+They are declared only on `:root`; no existing default changed. `.ui-theme` remains the only new
+public selector, and `styles/editorial.css` adds only `ui-*` classes.
 
 ## Cascade order
 
@@ -121,7 +123,8 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | Soft fills | `--ui-accent-soft`, `--ui-ok-soft`, `--ui-warn-soft`, `--ui-bad-soft` | `color-mix` 15% / 12% | design, derived | Recompute under a scoped theme. |
 | Scrim | `--ui-scrim`, `--ui-scrim-filter` | `rgb(20 20 18 / 28%)`, `blur(2px)` | design; stacking is structural | No. |
 | Visualization | `--ui-viz-blue`, `--ui-viz-ghost`, `--ui-s0`–`--ui-s4` | `#2a78d6`, `#9a9992`, `#2a78d6`, `#1baf7a`, `#6250d6`, `#e87ba4`, `#eb6834` | design | No. |
-| Type families | `--ui-font`, `--ui-mono` | Inter stack, mono stack | design | Discover's serif reading family has no library rule that would use it; it stays a Discover variable until a library primitive sets reading type. |
+| Type families | `--ui-font`, `--ui-mono`, `--ui-serif` | Inter stack, mono stack, system serif stack | design | `ui-reading-serif` reads `--ui-serif`; Discover overrides it with Georgia without changing control text. |
+| Reading measure | `--ui-reading-width` | `48rem` | design | `ui-reading-column` reads it. |
 | Type scale | `--ui-fs-label`, `--ui-fs-meta`, `--ui-fs-body`, `--ui-fs-title`, `--ui-fs-page` | `11px`, `12px`, `13px`, `14px`, `22px` | design | Discover editorial scale can override these. |
 | Weight and tracking | `--ui-weight-medium`, `--ui-weight-semibold`, `--ui-tracking-*`, `--ui-caps-tracking` | `500`, `600`, `-.01em`, `-.02em`, `.06em` | design | No. |
 | Spacing | `--ui-space-*`, `--ui-inset` | `2px`–`64px`; inset defaults to `--ui-space-lg` | design | Discover's gutter maps nearest to `--ui-inset`; the responsive gutter itself has no equivalent. |
@@ -143,7 +146,7 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | `table.css:11` | `260px` | search width | design | `--ui-search-width` | No. |
 | `meter.css:1` | `44px × 6px` | meter size | design | `--ui-meter-width`, `--ui-meter-height` | No. |
 | `skeleton.css:4,5-7` | `140px`, `2.4s`, `opacity: .4` | skeleton shape and pulse | design / motion | `--ui-skeleton-height`, `--ui-skeleton-duration` | No. |
-| `layout.css:134,136` | `15rem`, `48rem` | page-frame sidebar, reading measure | design | `--ui-page-frame-sidebar`, `--ui-reading-width` | Discover reading measure; future token. |
+| `layout.css:146,148` | `15rem`, `48rem` | page-frame sidebar, reading measure | design | `--ui-page-frame-sidebar`, `--ui-reading-width` | Tokenized as `--ui-reading-width`; the sidebar stays literal. |
 | `layout.css:141` | dashboard card minimum and gap | now `--ui-dashboard-min` (18rem) and `--ui-dashboard-gap` | design | tokenized | repomod sets a 260px minimum and a 12px gap. |
 | `layout.css:60-63,66` | `3.5rem`, `15rem`, `20rem`, `22rem` | workbench columns and drawer | design / structural mechanics | `--ui-workbench-rail`, `--ui-workbench-secondary`, `--ui-workbench-workspace`, `--ui-workbench-drawer` | No. |
 | `layout.css:89-90` | `24px` | split separator target | structural hit area | `--ui-split-separator` | No. |
@@ -199,7 +202,7 @@ Read-only inventory of `~/d/discover/site/site.css` (`:root` inside `@layer site
 | `--well` | `#ece9e1` | `--ui-hover` (`#f5f4f1`) | nearest; there is no dedicated well token. |
 | `--link` | `#2c4d6e` | `--ui-accent` | Discover's link color is the accent its library controls use. |
 | `--gutter` | `clamp(12px, 2.5vw, 32px)` | `--ui-inset` / `--ui-space-*` | no responsive gutter token. |
-| `--serif` | `Georgia, "Times New Roman", serif` | no equivalent | stays a Discover variable; no library rule sets reading type. |
+| `--serif` | `Georgia, "Times New Roman", serif` | `--ui-serif` | Discover keeps Georgia by overriding `--ui-serif`; `.ui-reading-serif` opts in without changing control text. |
 | `.entity-artist --entity` | `#20432f` | no equivalent | entity marks stay in Discover. |
 | `.entity-source --entity` | `#334a6e` | no equivalent | entity marks stay in Discover. |
 | `.entity-exhibition`/`-publication --entity` | `#7a3f2b` | no equivalent | entity marks stay in Discover. |
@@ -220,7 +223,7 @@ Discover's entity-link colors, art direction and page composition remain consume
 
 ## Top design choices a consumer needs tokenized
 
-1. Serif reading family and a separate link color. Neither is added: no library rule would read them yet. Add them with the first library primitive that sets reading type or link color.
-2. Reading measure (`48rem`) and page gutter (`clamp(12px, 2.5vw, 32px)` in Discover) have no tokens yet; Discover keeps its own or overrides the layout tokens it already has.
+1. Serif reading family and a separate link color. `--ui-serif` is now read by `ui-reading-serif`; Discover overrides it with Georgia. A separate link color remains the consumer's `--ui-accent`.
+2. Reading measure (`48rem`) is now `--ui-reading-width`, read by `ui-reading-column`. The page gutter (`clamp(12px, 2.5vw, 32px)` in Discover) still has no token; Discover keeps its own or overrides the layout tokens it already has.
 3. Scoped themes need derived tokens to recompute; fixed for the five computed tokens without changing any default value.
 4. Row density is already expressible through `--ui-row-height`; table cells also take `--ui-inset`.

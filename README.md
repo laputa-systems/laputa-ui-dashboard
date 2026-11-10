@@ -258,6 +258,15 @@ serve `styles/forms.css` and load it after `styles.css`. The same field needs no
 </div>
 ```
 
+For editorial pages, also serve `styles/editorial.css` and load it after `styles.css`:
+
+```html
+<link rel="stylesheet" href="/ui/styles/editorial.css">
+```
+
+It adds optional reading, citation, figure, gallery, term, and native-language classes. See the
+[component reference](docs/components.md#editorial-css-only).
+
 ## Tokens
 
 All tokens are `--ui-*` custom properties, each defined once in `tokens.css`. Inputs are on
@@ -265,9 +274,10 @@ All tokens are `--ui-*` custom properties, each defined once in `tokens.css`. In
 region recalculates them: color (`bg`, `surface`, `text`, `text-2`, `muted`, `line`, `line-strong`, `hover`, `accent`,
 `good`/`ok`, `serious`/`warn`, `critical`/`bad`, tinted backgrounds `accent-soft`, `ok-soft`,
 `warn-soft` and `bad-soft`, the `scrim` behind modals and expanded panels, `viz-blue`,
-`viz-ghost`, and the series colors `s0` to `s4`), type (`font`, `mono`, `fs-*`, `weight-*`,
+`viz-ghost`, and the series colors `s0` to `s4`), type (`font`, `mono`, `serif`, `fs-*`, `weight-*`,
 `tracking-*`), spacing (`space-*`, `inset`), sizes (`control*`, `head-height`, `icon-size`,
-`row-height`, `dot*`, `side-*`, `dashboard-min`, `dashboard-gap`), radius, shadow and z-index. Put `.ui-theme` on the element that
+`row-height`, `dot*`, `side-*`, `dashboard-min`, `dashboard-gap`, `reading-width`), radius, shadow
+and z-index. Put `.ui-theme` on the element that
 sets a region's tokens; [the theming contract](docs/theming.md) lists what recomputes.
 
 There is one light scheme. `tokens.css` declares `color-scheme: light` and has no dark

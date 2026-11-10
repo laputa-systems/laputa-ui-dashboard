@@ -145,7 +145,7 @@
 .ui-page-frame-container { container-type: inline-size; min-width: 0; }
 .ui-page-frame { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: var(--ui-space-xl); min-width: 0; }
 .ui-page-frame-sidebar, .ui-page-frame-content { min-width: 0; overflow-wrap: anywhere; }
-.ui-reading-column { width: 100%; max-width: 48rem; margin-inline: auto; }
+.ui-reading-column { width: 100%; max-width: var(--ui-reading-width); margin-inline: auto; }
 @container (max-width: 720px) { .ui-page-frame { grid-template-columns: minmax(0, 1fr); } }
 .ui-page-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-lg); min-width: 0; }
 .ui-page-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-sm); min-width: 0; }

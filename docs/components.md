@@ -316,8 +316,42 @@ For settings and collection/detail pages, wrap `ui-page-frame` in `ui-page-frame
 then provide `ui-page-frame-sidebar` and `ui-page-frame-content` children in reading order. The
 frame places them side by side above 720 pixels of container width and stacks them below that.
 Use a labelled `nav` with real links for navigation and appropriate headings and landmarks for the
-content. `ui-reading-column` limits a content region to 48rem and centers it. These classes work
+content. `ui-reading-column` limits a content region to `--ui-reading-width` (48rem) and centers it. These classes work
 with static HTML and do not alter `Shell`.
+
+## Editorial (CSS-only)
+
+Load `styles/editorial.css` after `styles.css`. It needs no JavaScript and changes no base
+appearance; every rule is scoped to the classes below and to their descendants.
+
+- Use `ui-reading-column` from `styles/layout.css` for the measure. `ui-reading-serif` sets the region's family to `--ui-serif`; the base sheet never sets serif.
+- `ui-cite` goes on the `<sup>` around one or more `<a href="#ref-N">` markers. The links are
+  keyboard-focusable with a visible focus ring. Put `<li id="ref-N">` entries in an
+  `<ol class="ui-references">`; the `:target` entry is highlighted and long URLs wrap.
+- `ui-figure` contains a `ui-figure-media` image, a `ui-figure-caption`, and an optional
+  `ui-figure-credit`. Give the image `width` and `height` attributes so its aspect ratio is
+  preserved; the base rule sets no `object-fit`. `ui-figure-grid` lays out figures and wraps them.
+- `ui-term-list` holds `ui-term` links; `ui-term-count` adds an optional count. Terms are quiet,
+  token-colored pills rather than badges.
+- `ui-native-name` marks a secondary name on a `lang`-attributed span. It sets no font family, so
+  the language's fallback applies.
+
+```html
+<div class="ui-reading-column ui-reading-serif">
+  <p>Archive note.<sup class="ui-cite"><a href="#ref-1">1</a></sup></p>
+  <figure class="ui-figure">
+    <img class="ui-figure-media" src="/vessel.jpg" alt="A stoneware vessel" width="800" height="500">
+    <figcaption class="ui-figure-caption">A vessel from the workshop.</figcaption>
+    <p class="ui-figure-credit">Photograph: archive</p>
+  </figure>
+  <div class="ui-figure-grid"><figure class="ui-figure">...</figure></div>
+  <ul class="ui-term-list">
+    <li><a class="ui-term" href="/terms/mashiko">Mashiko <span class="ui-term-count">12</span></a></li>
+  </ul>
+  <ol class="ui-references"><li id="ref-1"><a href="https://archive.example.org/...">...</a></li></ol>
+  <p><span class="ui-native-name" lang="ja">濱田庄司</span></p>
+</div>
+```
 
 `ChangeSummary`, `ChangeSummaryProps`, `ChangeSummaryItem`, and `ChangeSummaryChange` from `data`
 render a compact description list for a named period. Supply a nonempty `label` and `period`, and

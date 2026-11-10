@@ -56,6 +56,7 @@
       "default": "./dist/recipes.js"
     },
     "./styles/recipes.css": "./dist/styles/recipes.css",
+    "./styles/editorial.css": "./dist/styles/editorial.css",
     "./styles/layout.css": "./dist/styles/layout.css",
     "./styles/data.css": "./dist/styles/data.css",
     "./styles/sortable-header.css": "./dist/styles/sortable-header.css",

@@ -47,6 +47,7 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/recipes.js"), "Missing recipes entry");
       assert.ok(paths.includes("dist/recipes/index.d.ts"), "Missing recipes declarations");
       assert.ok(paths.includes("dist/styles/recipes.css"), "Missing recipes stylesheet");
+      assert.ok(paths.includes("dist/styles/editorial.css"), "Missing editorial stylesheet");
       execFileSync("tar", ["-xzf", join(tmp, tarballInfo.filename), "-C", tmp]);
       const scope = join(tmp, "node_modules/@laputa-systems");
       mkdirSync(scope, { recursive: true });
@@ -84,7 +85,7 @@ if (typeof IntegrationPicker !== "function" || !import.meta.resolve("@laputa-sys
 if (typeof ProfileMenu !== "function") throw new Error("profile menu is missing");
 if (dateRangeComparison({ start: "2024-03-01", end: "2024-03-01", comparison: "previous" }).start !== "2024-02-29") throw new Error("date comparison is wrong");
 if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/forms.js")) throw new Error("browser forms entry is not usable");
-for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/sortable-header.css", "@laputa-systems/ui-dashboard/styles/recipes.css"]) require.resolve(entry);
+for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/sortable-header.css", "@laputa-systems/ui-dashboard/styles/recipes.css", "@laputa-systems/ui-dashboard/styles/editorial.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
       const serverConsumer = `import { BreakdownChart, ChangeSummary, DataTable, SortableHeader } from "@laputa-systems/ui-dashboard/data";
@@ -211,13 +212,22 @@ if (!invalidReveal) throw new Error("revealable requires a password field");
       const formsCss = readFileSync(join(scope, "ui-dashboard/dist/styles/forms.css"), "utf8");
       const layoutCss = readFileSync(join(scope, "ui-dashboard/dist/styles/layout.css"), "utf8");
       const recipesCss = readFileSync(join(scope, "ui-dashboard/dist/styles/recipes.css"), "utf8");
+      const editorialCss = readFileSync(join(scope, "ui-dashboard/dist/styles/editorial.css"), "utf8");
       assert.deepEqual([...baseCss.matchAll(/@import\s+"([^"]+)"/gu)].map(match => match[1]), ["./tokens.css"]);
+      assert.doesNotMatch(baseCss, /\.ui-(?:cite|references|figure|term|native-name|reading)\b/u);
       assert.doesNotMatch(formsCss, /@import/u);
       assert.match(formsCss, /\.ui-text-field/u);
       assert.doesNotMatch(layoutCss, /@import/u);
       assert.match(layoutCss, /\.ui-search-dialog/u);
       assert.doesNotMatch(recipesCss, /@import/u);
       assert.match(recipesCss, /\.ui-integration-dialog/u);
+      assert.doesNotMatch(editorialCss, /@import/u);
+      assert.match(editorialCss, /\.ui-reading-serif\b/u);
+      assert.match(editorialCss, /\.ui-cite\b/u);
+      assert.match(editorialCss, /\.ui-references\b/u);
+      assert.match(editorialCss, /\.ui-figure-media\b/u);
+      assert.match(editorialCss, /\.ui-term\b/u);
+      assert.match(editorialCss, /\.ui-native-name\b/u);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -275,6 +285,8 @@ if (!invalidReveal) throw new Error("revealable requires a password field");
     assert.match(tokens, /--ui-line:/u);
     assert.match(tokens, /--ui-accent:/u);
     assert.match(tokens, /--ui-radius-md:/u);
+    assert.match(tokens, /--ui-serif:/u);
+    assert.match(tokens, /--ui-reading-width:/u);
   });
 
   it("ships styles.css with namespaced .ui-* class rules", () => {

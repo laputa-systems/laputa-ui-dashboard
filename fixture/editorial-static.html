@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maker dossier, CSS only</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/dist/styles/layout.css">
+<link rel="stylesheet" href="/dist/styles/editorial.css">
+<style>
+  body { margin: 0; background: var(--ui-bg); color: var(--ui-text); font: var(--ui-fs-body)/1.55 var(--ui-font); }
+  .editorial-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-xl); min-width: 0; }
+  .editorial-theme {
+    --ui-bg: #f8f7f3;
+    --ui-surface: #fcfbf8;
+    --ui-text: #1f1d19;
+    --ui-text-2: #4c483f;
+    --ui-muted: #6f6b62;
+    --ui-line: #ece9e1;
+    --ui-line-strong: #ddd8cd;
+    --ui-hover: #ece9e1;
+    --ui-accent: #2c4d6e;
+    --ui-ok: #20432f;
+    --ui-warn: #7a5a2b;
+    --ui-bad: #8c3b2e;
+    --ui-serif: Georgia, "Times New Roman", serif;
+    --ui-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --ui-fs-label: 12px;
+    --ui-fs-meta: 13px;
+    --ui-fs-body: 14px;
+    --ui-fs-title: 16px;
+    --ui-fs-page: 26px;
+    --ui-radius-sm: 0px;
+    --ui-radius-md: 2px;
+    --ui-radius-lg: 3px;
+    --ui-radius-xl: 4px;
+    --ui-radius-2xl: 6px;
+    --ui-space-sm: 10px;
+    --ui-space-md: 14px;
+    --ui-space-lg: 20px;
+    --ui-space-xl: 24px;
+    --ui-inset: 28px;
+  }
+  .editorial-theme { padding: var(--ui-inset); }
+  .dossier-kicker { margin: 0 0 var(--ui-space-xs); color: var(--ui-muted); font-size: var(--ui-fs-label); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-caps-tracking); text-transform: uppercase; }
+  .dossier-title { margin: 0 0 var(--ui-space-md); font-size: var(--ui-fs-page); letter-spacing: var(--ui-tracking-tighter); }
+  .dossier-section { margin-block: var(--ui-space-xl) 0; font-size: var(--ui-fs-title); }
+  .plain-region { padding: var(--ui-space-xl); }
+  .plain-region img { max-width: 100%; height: auto; }
+  @media (max-width: 720px) { .editorial-theme { padding: var(--ui-space-md); } }
+</style>
+</head>
+<body>
+<main class="editorial-page">
+  <section class="ui-theme editorial-theme" data-testid="editorial-theme">
+    <div class="ui-reading-column ui-reading-serif" data-testid="reading">
+      <p class="dossier-kicker">Maker dossier</p>
+      <h1 class="dossier-title">Hamada Shōji <span class="ui-native-name" lang="ja">濱田庄司</span> <span class="ui-native-name" lang="ko">하마다 쇼지</span></h1>
+      <p data-testid="lead">A maker working between the kilns of Mashiko and the studio pottery movement. The archive records the workshop, its glazes, and the sources that describe them.<sup class="ui-cite"><a href="#ref-1">1</a>, <a href="#ref-2">2</a></sup></p>
+
+      <figure class="ui-figure" data-testid="figure">
+        <img class="ui-figure-media" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='800'%20height='500'%3E%3Crect%20width='800'%20height='500'%20fill='%23ddd8cd'/%3E%3Ccircle%20cx='400'%20cy='250'%20r='150'%20fill='%232c4d6e'/%3E%3C/svg%3E" alt="A vessel form against a pale ground" width="800" height="500" decoding="async">
+        <figcaption class="ui-figure-caption">A stoneware vessel from the Mashiko workshop, shown in the archive light.</figcaption>
+        <p class="ui-figure-credit">Photograph: Discover archive</p>
+      </figure>
+
+      <div class="ui-figure-grid" data-testid="gallery">
+        <figure class="ui-figure">
+          <img class="ui-figure-media" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='600'%20height='400'%3E%3Crect%20width='600'%20height='400'%20fill='%23ece9e1'/%3E%3C/svg%3E" alt="Glaze test tile" width="600" height="400" decoding="async">
+          <figcaption class="ui-figure-caption">Glaze test tile.</figcaption>
+        </figure>
+        <figure class="ui-figure">
+          <img class="ui-figure-media" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='400'%20height='600'%3E%3Crect%20width='400'%20height='600'%20fill='%23fcfbf8'/%3E%3C/svg%3E" alt="Tall vase profile" width="400" height="600" decoding="async">
+          <figcaption class="ui-figure-caption">Tall vase profile.</figcaption>
+        </figure>
+        <figure class="ui-figure">
+          <img class="ui-figure-media" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='900'%20height='300'%3E%3Crect%20width='900'%20height='300'%20fill='%23ddd8cd'/%3E%3C/svg%3E" alt="Workshop bench" width="900" height="300" decoding="async">
+          <figcaption class="ui-figure-caption">Workshop bench.</figcaption>
+        </figure>
+      </div>
+
+      <h2 class="dossier-section">Terms</h2>
+      <ul class="ui-term-list" data-testid="terms">
+        <li><a class="ui-term" href="#terms">Mashiko <span class="ui-term-count">12</span></a></li>
+        <li><a class="ui-term" href="#terms">Mingei <span class="ui-term-count">8</span></a></li>
+        <li><a class="ui-term" href="#terms">Stoneware <span class="ui-term-count">21</span></a></li>
+      </ul>
+
+      <h2 class="dossier-section">References</h2>
+      <ol class="ui-references" data-testid="references">
+        <li id="ref-1"><a href="https://archive.example.org/collections/studio-pottery/mashiko-workshop/notebooks/1943-glaze-records-and-kiln-logs/transcription-with-commentary-and-provenance-notes">https://archive.example.org/collections/studio-pottery/mashiko-workshop/notebooks/1943-glaze-records-and-kiln-logs/transcription-with-commentary-and-provenance-notes</a>, pp. 42-58.</li>
+        <li id="ref-2"><a href="https://example.org/research/essays/the-mingei-movement-and-twentieth-century-japanese-studio-pottery">https://example.org/research/essays/the-mingei-movement-and-twentieth-century-japanese-studio-pottery</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="plain-region" data-testid="plain">
+    <p>Plain paragraph outside the editorial classes.</p>
+    <a href="#plain">Plain link</a>
+    <figure>
+      <img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='150'%3E%3Crect%20width='240'%20height='150'%20fill='%23e0dfda'/%3E%3C/svg%3E" alt="Plain image" width="240" height="150">
+      <figcaption>Plain caption</figcaption>
+    </figure>
+    <ol>
+      <li>Plain list item</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>
