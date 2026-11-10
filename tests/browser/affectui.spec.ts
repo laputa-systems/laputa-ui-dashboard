@@ -11,6 +11,31 @@ test("@fixture-assets serves built CSS to static pages", async ({ browser }) => 
   await context.close();
 });
 
+test("@P3-page-frame-a lays out settings and collection details with native navigation", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/page-frame-static.html");
+  for (const id of ["settings-frame", "collection-frame"]) {
+    const frame = page.getByTestId(id);
+    let boxes = await frame.locator(".ui-page-frame > *").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+    expect(boxes[1]!.left).toBeGreaterThan(boxes[0]!.right);
+    await frame.evaluate(element => { (element as HTMLElement).style.width = "350px"; (element as HTMLElement).style.maxWidth = "100%"; });
+    boxes = await frame.locator(".ui-page-frame > *").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+    expect(boxes[1]!.top).toBeGreaterThanOrEqual(boxes[0]!.bottom);
+  }
+  await expect(page.getByRole("navigation", { name: "Settings" }).getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/settings/profile");
+  await expect(page.getByRole("navigation", { name: "Records" }).getByRole("link", { name: "Second record" })).toHaveAttribute("href", "/records/two");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+});
+
 test("@P3-description-a keeps description pairs readable at container widths without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

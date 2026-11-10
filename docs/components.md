@@ -279,6 +279,13 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+For settings and collection/detail pages, wrap `ui-page-frame` in `ui-page-frame-container`,
+then provide `ui-page-frame-sidebar` and `ui-page-frame-content` children in reading order. The
+frame places them side by side above 720 pixels of container width and stacks them below that.
+Use a labelled `nav` with real links for navigation and appropriate headings and landmarks for the
+content. `ui-reading-column` limits a content region to 48rem and centers it. These classes work
+with static HTML and do not alter `Shell`.
+
 For a responsive description list, apply `ui-description-list` to a native `dl` and wrap each
 `dt`/`dd` pair in a `ui-description-list-row` div. Values may contain ordinary text or elements
 such as links. Rows stack when the list container is at most 480 pixels wide. The markup works
