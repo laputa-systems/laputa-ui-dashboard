@@ -1,10 +1,11 @@
-import { createMemo, createSignal, For, onCleanup, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js";
 import { isServer, type JSX } from "@solidjs/web";
 
 export interface Toast {
   readonly id: string;
   readonly title: string;
   readonly detail?: string | undefined;
+  readonly durationMs?: number | undefined;
   readonly action?: { readonly label: string; readonly onSelect: () => void } | undefined;
 }
 
@@ -24,6 +25,7 @@ export interface ToasterProps {
 
 function validateToast(toast: Toast): void {
   if (!toast.id || !toast.title || (toast.action && !toast.action.label)) throw new Error("Toast ID, title and action label must be nonempty");
+  if (toast.durationMs !== undefined && (!Number.isInteger(toast.durationMs) || toast.durationMs < 1000 || toast.durationMs > 86400000)) throw new RangeError("Toast durationMs must be between 1000 and 86400000");
 }
 
 export function createToastStore(): ToastStore {
@@ -56,6 +58,31 @@ export function createToastStore(): ToastStore {
   };
 }
 
+function ToastCard(props: { readonly toast: () => Toast; readonly onDismiss: (id: string, origin: HTMLButtonElement) => void; readonly store: ToastStore }): JSX.Element {
+  const [hovered, setHovered] = createSignal(false);
+  const [focused, setFocused] = createSignal(false);
+  const [focusedAction, setFocusedAction] = createSignal<Toast["action"]>();
+  const [hidden, setHidden] = createSignal(isServer ? false : document.hidden);
+  let current: Toast | undefined;
+  let remaining = 0;
+  createEffect(() => true, () => {
+    const changed = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", changed);
+    return () => document.removeEventListener("visibilitychange", changed);
+  });
+  createEffect(() => [props.toast(), hovered(), focused(), hidden()] as const, ([toast, hovering, focusing, pageHidden]) => {
+    if (current !== toast) { current = toast; remaining = toast.durationMs ?? 0; }
+    if (toast.durationMs === undefined || hovering || focusing || pageHidden) return;
+    const started = performance.now();
+    const timer = setTimeout(() => props.store.dismiss(toast.id), remaining);
+    return () => { clearTimeout(timer); remaining = Math.max(0, remaining - (performance.now() - started)); };
+  });
+  return <div class="ui-toast" role="group" aria-label={props.toast().title} onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} onFocusIn={() => setFocused(true)} onFocusOut={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+    <strong>{props.toast().title}</strong><Show when={props.toast().detail}>{detail => <p>{detail()}</p>}</Show>
+    <div class="ui-toast-actions"><Show when={props.toast().action ?? focusedAction()}>{action => <button type="button" class="ui-btn ui-btn-small" aria-disabled={!props.toast().action ? "true" : undefined} onFocus={() => setFocusedAction(props.toast().action)} onBlur={() => setFocusedAction(undefined)} onClick={() => props.toast().action?.onSelect()}>{action().label}</button>}</Show><button type="button" class="ui-btn ui-btn-small" aria-label={`Dismiss ${props.toast().title}`} onClick={event => props.onDismiss(props.toast().id, event.currentTarget)}>Dismiss</button></div>
+  </div>;
+}
+
 export function Toaster(props: ToasterProps): JSX.Element {
   let region: HTMLElement | undefined;
   let previousFocus: HTMLElement | undefined;
@@ -81,10 +108,7 @@ export function Toaster(props: ToasterProps): JSX.Element {
   }}>
     <div aria-live="polite" aria-relevant="additions text"><For each={visible().map(toast => toast.id)}>{id => {
       const toast = () => visible().find(item => item.id === id)!;
-      return <div class="ui-toast" role="group" aria-label={toast().title}>
-        <strong>{toast().title}</strong><Show when={toast().detail}>{detail => <p>{detail()}</p>}</Show>
-        <div class="ui-toast-actions"><Show when={toast().action}>{action => <button type="button" class="ui-btn ui-btn-small" onClick={() => action().onSelect()}>{action().label}</button>}</Show><button type="button" class="ui-btn ui-btn-small" aria-label={`Dismiss ${toast().title}`} onClick={event => dismiss(id, event.currentTarget)}>Dismiss</button></div>
-      </div>;
+      return <ToastCard toast={toast} onDismiss={dismiss} store={props.store} />;
     }}</For></div>
   </section>;
 }

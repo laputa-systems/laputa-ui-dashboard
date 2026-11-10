@@ -1129,6 +1129,75 @@ test("@C085-a isolates queues and promotes waiting notices", async ({ page }) =>
   await expect(page.getByRole("region", { name: "Other notices" }).getByText("Separate")).toBeVisible();
 });
 
+test("@C085-b keeps focus when a background update removes an action", async ({ page }) => {
+  await page.goto("/toaster.html");
+  await page.getByRole("button", { name: "Add notices" }).click();
+  const action = page.getByRole("button", { name: "Undo" });
+  await action.focus();
+  await page.getByRole("button", { name: "Update notice" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(action).toBeFocused();
+  await expect(action).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("html")).not.toHaveAttribute("data-undo", "yes");
+  await page.getByRole("button", { name: "Add separate" }).focus();
+  await expect(action).toHaveCount(0);
+});
+
+test("@C085-b pauses a toast timer while hovered, focused, or hidden", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/toaster.html");
+  const add = page.getByRole("button", { name: "Add timed" });
+  await add.click();
+  const toast = page.getByRole("group", { name: "Timed" });
+  await page.clock.fastForward(400);
+  await toast.hover();
+  await page.clock.fastForward(3000);
+  await expect(toast).toBeVisible();
+  await add.hover();
+  await toast.getByRole("button", { name: "Dismiss Timed" }).focus();
+  await page.clock.fastForward(3000);
+  await expect(toast).toBeVisible();
+  await add.focus();
+  await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: true }); document.dispatchEvent(new Event("visibilitychange")); });
+  await page.clock.fastForward(3000);
+  await expect(toast).toBeVisible();
+  await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, value: false }); document.dispatchEvent(new Event("visibilitychange")); });
+  await page.clock.fastForward(400);
+  await expect(toast).toBeVisible();
+  await page.clock.fastForward(250);
+  await expect(toast).toHaveCount(0);
+  await expect(add).toBeFocused();
+});
+
+test("@C085-b starts queued timers on display and restarts them on update", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/toaster.html");
+  await page.getByRole("button", { name: "Add notices" }).click();
+  await page.getByRole("button", { name: "Add timed" }).click();
+  await page.clock.fastForward(5000);
+  await page.getByRole("button", { name: "Dismiss First" }).click();
+  await page.getByRole("button", { name: "Dismiss Second" }).click();
+  const timed = page.getByRole("group", { name: "Timed" });
+  await expect(timed).toBeVisible();
+  await page.clock.fastForward(500);
+  await page.getByRole("button", { name: "Refresh timed" }).click();
+  const refreshed = page.getByRole("group", { name: "Refreshed" });
+  await page.clock.fastForward(600);
+  await expect(refreshed).toBeVisible();
+  await page.clock.fastForward(500);
+  await expect(refreshed).toHaveCount(0);
+});
+
+test("@C085-b cancels timers when the toaster unmounts", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/toaster.html");
+  await page.getByRole("button", { name: "Add timed" }).click();
+  await page.getByRole("button", { name: "Toggle toaster" }).click();
+  await page.clock.fastForward(5000);
+  await page.getByRole("button", { name: "Toggle toaster" }).click();
+  await expect(page.getByRole("group", { name: "Timed" })).toBeVisible();
+});
+
 test("@C081-a adds decorative affixes and an associated count", async ({ page }) => {
   await page.goto("/text-field-extra.html");
   const field = page.getByRole("textbox", { name: "Project name" });

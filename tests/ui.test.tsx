@@ -34,6 +34,8 @@ describe("@laputa-systems/ui-dashboard", () => {
     first.add({ id: "one", title: "First" });
     expect(second.toasts()).toEqual([]);
     expect(() => first.add({ id: "one", title: "Duplicate" })).toThrow("unique");
+    expect(() => first.add({ id: "short", title: "Short", durationMs: 1 })).toThrow(RangeError);
+    expect(() => first.add({ id: "long", title: "Long", durationMs: 86400001 })).toThrow(RangeError);
     expect(() => first.update("missing", { title: "Missing" })).toThrow("not in the queue");
     first.update("one", { title: "Updated" });
     expect(renderToString(() => <Toaster label="Notices" store={first} />)).toContain("Updated");
