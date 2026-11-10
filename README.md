@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`WorkspaceTabs` from the layout entry presents host-owned artifact tabs, retains inactive pane
+content, and returns focus after a confirmed close.
+
 `SplitPane` from the layout entry provides keyboard- and pointer-resizable horizontal or vertical panes.
 Its size is expressed in pixels and the host may control changes.
 

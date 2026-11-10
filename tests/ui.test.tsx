@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench, WorkspaceTabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -104,6 +104,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render(200, 20, 100)).toThrow(RangeError);
     expect(() => render(20, 200, 201)).toThrow(RangeError);
     expect(() => render(20, 200, Number.NaN)).toThrow(RangeError);
+  });
+  it("validates workspace identities and selection", () => {
+    const render = (tabs: readonly { id: string; label: string; content: string }[], selectedId: string | null) => renderToString(() => <WorkspaceTabs label="Artifacts" tabs={tabs} selectedId={selectedId} onSelect={() => {}} returnFocus={() => null} />);
+    expect(render([{ id: "one", label: "First", content: "Body" }], "one")).toContain('role="tabpanel"');
+    expect(render([], null)).toContain("No open artifacts.");
+    expect(() => render([{ id: "one", label: "First", content: "Body" }, { id: "one", label: "Second", content: "Body" }], "one")).toThrow("unique");
+    expect(() => render([{ id: "one", label: "First", content: "Body" }], null)).toThrow("selectedId");
+    expect(() => render([], "one")).toThrow("selectedId");
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

@@ -279,6 +279,17 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`WorkspaceTabs`, `WorkspaceTabsProps`, and `WorkspaceTab` from `layout` present up to 100
+host-owned artifacts. IDs and labels must be nonempty and IDs unique. `selectedId` must identify an
+open tab, or be `null` for an empty list. `onSelect` and optional `onClose` request host changes;
+`closable: false` removes the selected tab's close action. Inactive panels remain mounted and
+hidden, so switching preserves their contents. `dirty` adds a visible Unsaved marker; the host
+owns drafts and their persistence. The tab strip scrolls horizontally without truncating names.
+After a requested close is acknowledged, focus moves to the selected tab or, after the final
+close, to the element returned by `returnFocus`; an unavailable target falls back to the region.
+Late acknowledgments do not move focus after the user has moved elsewhere. For static pages use
+ordinary artifact links and a content region. Generated IDs reserve the `ui-workspace-tabs-` prefix.
+
 `SplitPane` and `SplitPaneProps` from `layout` accept a `label`, `primary` and `secondary` content,
 `axis` (`horizontal` places panes side by side; `vertical` stacks them), and whole-pixel
 `minSize`, `maxSize`, `minOtherSize`, and `defaultSize`. The default is read once and is also the

@@ -3,6 +3,116 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S17-tabs-a retains drafts when changing artifact tabs", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  const first = page.getByRole("tab", { name: /notes\.txt/u });
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("textbox", { name: "Draft" }).fill("Unsaved draft");
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  const second = page.getByRole("tab", { name: "very-long-artifact-filename-that-must-remain-fully-available.txt" });
+  await expect(second).toHaveAttribute("aria-selected", "true");
+  await expect(second).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByRole("textbox", { name: "Draft" })).toHaveValue("Unsaved draft");
+});
+
+test("@S17-tabs-a returns focus after accepted closes and preserves rejected tabs", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Close notes.txt" }).click();
+  const second = page.getByRole("tab", { name: "very-long-artifact-filename-that-must-remain-fully-available.txt" });
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("button", { name: "Reject close" }).click();
+  const close = page.getByRole("button", { name: "Close very-long-artifact-filename-that-must-remain-fully-available.txt" });
+  await close.click();
+  await expect(close).toBeFocused();
+  await expect(second).toBeVisible();
+  await expect(page.getByTestId("close-requests")).toHaveText("2");
+});
+
+test("@S17-tabs-a returns focus to the opener after closing the last tab", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Close notes.txt" }).click();
+  await page.getByRole("button", { name: "Close very-long-artifact-filename-that-must-remain-fully-available.txt" }).click();
+  await expect(page.getByRole("button", { name: "Open workspace" })).toBeFocused();
+  await expect(page.getByText("No open artifacts.")).toBeVisible();
+});
+
+test("@S17-tabs-a preserves tab identity on reorder and rejected selection", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  const first = page.getByRole("tab", { name: /notes\.txt/u });
+  await page.getByRole("textbox", { name: "Draft" }).fill("Draft survives");
+  await first.focus();
+  await page.getByRole("button", { name: "Reverse tabs" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(first).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "Draft" })).toHaveValue("Draft survives");
+  await page.getByRole("button", { name: "Reject selection" }).click();
+  const second = page.getByRole("tab", { name: "very-long-artifact-filename-that-must-remain-fully-available.txt" });
+  await second.focus();
+  await page.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  await expect(second).toBeFocused();
+});
+
+test("@S17-tabs-a never steals focus for a late close acknowledgment", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Defer close" }).click();
+  await page.getByRole("button", { name: "Close notes.txt" }).click();
+  const confirm = page.getByRole("button", { name: "Confirm close" });
+  await confirm.focus();
+  await confirm.evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("tab", { name: /notes\.txt/u })).toHaveCount(0);
+  await expect(confirm).toBeFocused();
+});
+
+test("@S17-tabs-a keeps long names reachable and ignores a tab-strip swipe", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  const first = page.getByRole("tab", { name: /notes\.txt/u });
+  const second = page.getByRole("tab", { name: "very-long-artifact-filename-that-must-remain-fully-available.txt" });
+  await second.evaluate(element => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 100 }));
+    element.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 30 }));
+    element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 30 }));
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+  });
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@S17-tabs-a hydrates its tab and keeps its panel association", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { WorkspaceTabs } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(WorkspaceTabs, { label: "Artifacts", tabs: [{ id: "first", label: "notes.txt", content: "Artifact body" }], selectedId: "first", onSelect() {}, returnFocus() { return null; } })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/workspace-tabs-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialTab = document.querySelector('[role="tab"]');</script><script type="module" src="/hydrate-workspace-tabs.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/workspace-tabs-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const tab = page.getByRole("tab", { name: "notes.txt" });
+  const panel = page.getByRole("tabpanel", { name: "notes.txt" });
+  await expect(tab).toHaveAttribute("aria-controls", await panel.getAttribute("id") ?? "");
+  await expect(panel).toHaveText("Artifact body");
+  expect(errors).toEqual([]);
+});
+
+test("@S17-tabs-a provides ordinary static artifact links", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/workspace-tabs-static.html");
+  await expect(page.getByRole("link", { name: "build.log" })).toHaveAttribute("href", "/artifacts/log");
+  await expect(page.getByRole("main")).toContainText("Artifact body");
+  await context.close();
+});
+
 test("@S17-split-b previews a drag and requests its final size once", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 1000 });
   await page.goto("/split-pane.html");
