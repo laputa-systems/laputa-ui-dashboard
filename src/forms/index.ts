@@ -6,3 +6,4 @@ export { DateRangePicker, dateRangeComparison, type DateRangePickerProps, type D
 export { Dropzone, type DropzoneProps, type DropzoneFile, type DropzoneUploadState } from "./Dropzone";
 export { RadioGroup, type RadioGroupProps, type RadioOption } from "./RadioGroup";
 export { NativeSelect, type NativeSelectProps, type NativeSelectOption } from "./NativeSelect";
+export { Select, type SelectProps, type SelectOption } from "./Select";

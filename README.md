@@ -118,6 +118,7 @@ provide a static form path.
 The existing `Segmented` button group retains its original behavior.
 
 `NativeSelect` from `forms` provides a labelled native select with form validation and reset.
+`Select` pairs that native control with an enhanced browser for option descriptions and icons.
 
 `IntegrationPicker` from `@laputa-systems/ui-dashboard/recipes` opens a searchable service list
 and details. Load `styles/recipes.css` after the base stylesheet. The host supplies connection

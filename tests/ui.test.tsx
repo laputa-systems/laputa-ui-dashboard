@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
@@ -113,6 +113,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <NativeSelect id="choice" label="Choice" options={[option]} value="missing" onValueChange={() => {}} />)).toThrow("Select value is not in the options");
     expect(() => renderToString(() => <NativeSelect id="choice" label="Choice" options={[option]} value="" onValueChange={() => {}} />)).toThrow("An empty select value requires a placeholder");
     const html = renderToString(() => <NativeSelect id="choice" label="Choice" name="choice" options={[option]} required />);
+    expect(html).toContain("<select");
+    expect(html).toContain('name="choice"');
+    expect(html).toContain("required");
+  });
+  it("bounds enhanced select options and renders a native validation control", () => {
+    const options = Array.from({ length: 101 }, (_, index) => ({ value: String(index), label: String(index) }));
+    expect(() => renderToString(() => <Select id="choice" label="Choice" options={options} value="0" onValueChange={() => {}} />)).toThrow("Select supports at most 100 options");
+    const html = renderToString(() => <Select id="choice" label="Choice" name="choice" options={[{ value: "one", label: "One" }]} value="one" required onValueChange={() => {}} />);
     expect(html).toContain("<select");
     expect(html).toContain('name="choice"');
     expect(html).toContain("required");

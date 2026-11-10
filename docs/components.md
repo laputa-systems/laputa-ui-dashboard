@@ -268,6 +268,16 @@ choice. An empty value with nonempty options requires a placeholder. A value mis
 component supports one selection. Static forms can use native select and option elements with
 the field classes.
 
+`Select`, `SelectProps`, and `SelectOption` from `forms` add an optional rich option browser to a
+visible native select. Supply a controlled value and `onValueChange`, with at most 100 options.
+The native select handles form submission, required validation, disabled state, and reset as in
+`NativeSelect`. The Browse options button opens a collision-aware list with optional descriptions
+and decorative icons. Arrow keys, Home, End, and type-ahead move the active option without changing
+the value. Enter or Space requests a choice; Escape closes without changing it. Tab leaves the list.
+The button retains focus during browsing. A parent may reject a request by retaining its value.
+The enhanced browser requires JavaScript and the Popover API; the native control remains usable in
+server-rendered markup without JavaScript.
+
 Import `IntegrationPicker`, `IntegrationPickerProps`, `Integration`, and `IntegrationConnection`
 from `@laputa-systems/ui-dashboard/recipes`. Load `styles/recipes.css` after the base stylesheet.
 Supply a label and up to 500 services with nonempty unique IDs, names, descriptions, optional

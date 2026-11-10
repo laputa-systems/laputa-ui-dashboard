@@ -728,6 +728,87 @@ test("@C074-a native select preserves validation, control and form reset", async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
+test("@C074-b enhanced options keep native validation and controlled selection", async ({ page }) => {
+  await page.goto("/select.html");
+  const native = page.getByLabel("Rich project", { exact: true });
+  const browse = page.getByRole("combobox", { name: "Browse Rich project" });
+  await page.getByRole("button", { name: "Save rich project" }).click();
+  await expect(native).toBeFocused();
+  await browse.focus();
+  await page.keyboard.press("ArrowDown");
+  const list = page.getByRole("listbox", { name: "Rich project options" });
+  await expect(list.getByRole("option", { name: "Alpha First project" })).toBeVisible();
+  await expect(list.getByRole("option", { name: "Locked" })).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Escape");
+  await expect(browse).toBeFocused();
+  await expect(native).toHaveValue("");
+  await expect(page.getByTestId("rich-calls")).toHaveText("0");
+  await browse.click();
+  await page.keyboard.type("b");
+  await page.keyboard.press("Enter");
+  await expect(native).toHaveValue("beta");
+  await expect(browse).toHaveAccessibleDescription("Beta");
+  await expect(page.getByTestId("rich-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Save rich project" }).click();
+  await expect(page.getByTestId("rich-submitted")).toHaveText("beta");
+  await page.getByRole("button", { name: "Reset rich project" }).click();
+  await expect(native).toHaveValue("beta");
+  await page.getByRole("button", { name: "Disable rich project" }).click();
+  await expect(native).toBeDisabled();
+  await expect(browse).toBeDisabled();
+  await page.getByRole("button", { name: "Save rich project" }).click();
+  await expect(page.getByTestId("rich-submitted")).toHaveText("null");
+});
+
+test("@C074-b rejects stale and dragged options and fits at viewport edges", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 400 });
+  await page.goto("/select.html");
+  const browse = page.getByRole("combobox", { name: "Browse Rich project" });
+  await browse.scrollIntoViewIfNeeded();
+  await browse.click();
+  const list = page.getByRole("listbox", { name: "Rich project options" });
+  const beta = list.getByRole("option", { name: "Beta Second project" });
+  await beta.evaluate(element => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", pointerId: 7, clientY: 100 }));
+    element.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "touch", pointerId: 7, clientY: 30 }));
+    element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch", pointerId: 7, clientY: 30 }));
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+  });
+  await expect(page.getByTestId("rich-calls")).toHaveText("0");
+  await page.keyboard.type("b");
+  await expect(browse).toHaveAttribute("aria-activedescendant", await beta.getAttribute("id") ?? "");
+  await page.getByRole("button", { name: "Toggle beta option" }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(browse).not.toHaveAttribute("aria-activedescendant");
+  await expect(beta).toHaveCount(0);
+  const rect = await list.boundingBox();
+  expect(rect).not.toBeNull();
+  expect(rect!.x).toBeGreaterThanOrEqual(0);
+  expect(rect!.x + rect!.width).toBeLessThanOrEqual(320);
+  expect(rect!.y).toBeGreaterThanOrEqual(0);
+  expect(rect!.y + rect!.height).toBeLessThanOrEqual(400);
+  await page.keyboard.press("Tab");
+  await expect(list).toBeHidden();
+  await page.getByRole("button", { name: "Toggle beta option" }).evaluate(button => (button as HTMLButtonElement).click());
+  await page.getByRole("button", { name: "Reject rich project" }).click();
+  await browse.click();
+  await page.getByRole("option", { name: "Beta Second project" }).click();
+  await expect(page.getByLabel("Rich project", { exact: true })).toHaveValue("");
+  await expect(page.getByTestId("rich-calls")).toHaveText("1");
+});
+
+test("@C074-b server-rendered native control submits without JavaScript", async ({ browser }) => {
+  const markup = execFileSync("node", ["--input-type=module", "-e", 'import { renderToString } from "@solidjs/web"; import { Select } from "./dist/ssr/forms.js"; console.log(renderToString(() => Select({ id: "ssr-choice", label: "SSR choice", name: "choice", value: "one", required: true, options: [{ value: "one", label: "One" }, { value: "two", label: "Two" }], onValueChange() {} })));'], { encoding: "utf8" });
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/forms-static.html");
+  await page.setContent(`<form action="/choose" method="get">${markup}<button type="submit">Submit choice</button></form>`);
+  await page.getByLabel("SSR choice", { exact: true }).selectOption("two");
+  await page.getByRole("button", { name: "Submit choice" }).click();
+  await expect(page).toHaveURL(/\/choose\?choice=two$/u);
+  await context.close();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
