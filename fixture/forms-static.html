@@ -2,6 +2,7 @@
 <html lang="en">
   <head><meta charset="utf-8"><title>Static forms fixture</title><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/forms.css"><link rel="stylesheet" href="/dist/styles/feedback.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head>
   <body>
+    <form action="/choose-many" method="get"><label for="static-multi">Static multiple choice</label><select id="static-multi" name="projects" multiple><option value="alpha">Alpha</option><option value="gamma">Gamma</option></select><button type="submit">Choose many</button></form>
     <form action="/choose" method="get"><label for="static-choice">Static choice</label><select id="static-choice" name="project"><optgroup label="Projects"><option value="alpha">Alpha</option><option value="gamma">Gamma</option></optgroup></select><button type="submit">Choose</button></form>
     <label class="ui-choice ui-choice-card" for="static-check"><input class="ui-checkbox" id="static-check" type="checkbox" name="static-check"><span class="ui-choice-content"><span class="ui-field-label">Static checkbox</span></span></label>
     <form id="retry-form" action="/retry" method="get"><div class="ui-action-status"><span class="ui-action-status-error" role="alert">Save failed</span><button class="ui-btn ui-btn-small" type="submit">Retry request</button></div></form>

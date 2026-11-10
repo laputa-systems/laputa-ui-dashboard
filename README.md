@@ -82,10 +82,10 @@ and mixed presentations. Use `defaultChecked` for local state, or `checked` with
 `<legend>`. The mixed presentation requires JavaScript to set the native indeterminate property.
 
 `Combobox` from `forms` provides a controlled, searchable single selection with optional
-option groups. Supply stable option IDs and at most 500 options. The host owns the selected ID;
-this slice does not provide multi-select, creation, or an async query contract. It needs
-JavaScript and the browser Popover API. Use a native `<select>` when JavaScript or native
-required-field validation is needed.
+option groups. `MultiCombobox` selects multiple IDs with removable chips. Supply stable option
+IDs and at most 500 options; the host owns each selection. Both need JavaScript and the browser
+Popover API. Use a native `<select>` or `<select multiple>` for no-JavaScript or native
+required-field validation. Option creation and async query coordination are not yet supported.
 
 ## Progress
 

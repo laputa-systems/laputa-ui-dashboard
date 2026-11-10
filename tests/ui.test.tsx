@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, TextField } from "../src/forms";
+import { Checkbox, Combobox, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -59,6 +59,9 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Combobox id="choice" label="Choice" options={duplicate} value={null} onChange={() => {}} />)).toThrow("Duplicate combobox option ID: same");
     const many = Array.from({ length: 501 }, (_, index) => ({ id: String(index), label: String(index) }));
     expect(() => renderToString(() => <Combobox id="choice" label="Choice" options={many} value={null} onChange={() => {}} />)).toThrow(RangeError);
+  });
+  it("rejects duplicate selected IDs in a multi combobox", () => {
+    expect(() => renderToString(() => <MultiCombobox id="tags" label="Tags" options={[]} value={["same", "same"]} onChange={() => {}} />)).toThrow("Duplicate selected combobox ID: same");
   });
   it("renders combobox option IDs for arbitrary UTF-16 strings", () => {
     const html = renderToString(() => <Combobox id="choice" label="Choice" options={[{ id: "\ud800", label: "Unpaired" }]} value={null} onChange={() => {}} />);

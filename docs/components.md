@@ -52,8 +52,17 @@ shown as unavailable. An optional `name` submits the selected ID in a hidden inp
 selection and a disabled control submit nothing. Hidden inputs do not provide native required
 validation. Reset discards a search draft and retains the current parent value. The control
 requires JavaScript and the browser Popover API. Use a native `<select>` for a no-JavaScript or
-native-validation path. Multi-select, option creation, and async query/result coordination are
-not yet supported. Generated IDs reserve the `ui-combobox-` prefix.
+native-validation path. Generated IDs reserve the `ui-combobox-` prefix.
+
+`MultiCombobox` and `MultiComboboxProps` use the same option model and a controlled array of
+selected IDs. The host supplies `value` and `onChange`; duplicate IDs and more than 500 selected
+IDs throw. The picker adds one available option at a time. Selected chips can be removed with
+their buttons, Backspace or Delete; Left and Right move between chips, and Left at the start of
+the search moves to the last chip. Missing option IDs remain visible and submitted until the
+host removes them. With `name`, each selected ID is submitted as a separate hidden input with
+the same name. A disabled control submits nothing. The host owns reset and rejected changes;
+hidden inputs do not provide native required validation. Use `<select multiple>` for a static
+fallback. Option creation and async query/result coordination are not yet supported.
 
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a

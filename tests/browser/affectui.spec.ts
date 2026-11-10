@@ -35,8 +35,12 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByLabel("Static multiple choice").selectOption(["alpha", "gamma"]);
+  await page.getByRole("button", { name: "Choose many" }).click();
+  await expect(page).toHaveURL(/\/choose-many\?projects=alpha&projects=gamma$/u);
+  await page.goto("/forms-static.html");
   await page.getByLabel("Static choice").selectOption("gamma");
-  await page.getByRole("button", { name: "Choose" }).click();
+  await page.getByRole("button", { name: "Choose", exact: true }).click();
   await expect(page).toHaveURL(/\/choose\?project=gamma$/u);
   await page.goto("/forms-static.html");
   await page.getByText("Static checkbox").click();
@@ -873,4 +877,137 @@ test("@C030-a keeps long options within a narrow viewport", async ({ page }) => 
   await expect(option).toBeVisible();
   const fits = await option.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth);
   expect(fits).toBe(true);
+});
+
+test("@C030-b adds and removes selected IDs with keyboard and form submission", async ({ page }) => {
+  await page.goto("/multicombobox.html");
+  const input = page.getByRole("combobox", { name: "Projects", exact: true });
+  await expect(page.getByRole("button", { name: "Remove Alpha (alpha) from Projects" })).toBeVisible();
+  await input.click();
+  await expect(page.getByRole("option", { name: "Alpha" })).toHaveCount(0);
+  await page.getByRole("option", { name: "Beta" }).click();
+  await expect(page.getByRole("button", { name: "Remove Beta (beta) from Projects" })).toBeVisible();
+  await expect(page.getByTestId("multi-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Submit projects" }).click();
+  await expect(page.getByTestId("multi-submitted")).toHaveText("alpha,beta");
+  expect(await page.locator("form").evaluate(form => new FormData(form as HTMLFormElement).getAll("archived"))).toEqual([]);
+  await expect(page.getByRole("status").first()).toHaveText("2 selected");
+  await input.focus();
+  await input.press("ArrowLeft");
+  const beta = page.getByRole("button", { name: "Remove Beta (beta) from Projects" });
+  await expect(beta).toBeFocused();
+  await beta.press("ArrowLeft");
+  await expect(page.getByRole("button", { name: "Remove Alpha (alpha) from Projects" })).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(beta).toBeFocused();
+  await page.keyboard.press("Backspace");
+  await expect(beta).toHaveCount(0);
+  await expect(input).toBeFocused();
+  await expect(page.getByTestId("multi-calls")).toHaveText("2");
+  await page.getByRole("button", { name: "Submit projects" }).click();
+  await expect(page.getByTestId("multi-submitted")).toHaveText("alpha");
+});
+
+test("@C030-b retains missing IDs and rejected changes", async ({ page }) => {
+  await page.goto("/multicombobox.html");
+  await page.getByRole("button", { name: "Remove Alpha option" }).click();
+  await expect(page.getByRole("button", { name: "Remove unavailable alpha from Projects" })).toBeVisible();
+  await page.getByRole("button", { name: "Submit projects" }).click();
+  await expect(page.getByTestId("multi-submitted")).toHaveText("alpha");
+  await page.getByRole("button", { name: "Reject project changes" }).click();
+  await page.getByRole("button", { name: "Remove unavailable alpha from Projects" }).click();
+  await expect(page.getByRole("button", { name: "Remove unavailable alpha from Projects" })).toBeVisible();
+  await expect(page.getByTestId("multi-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent changes projects" }).click();
+  await expect(page.getByRole("button", { name: "Remove Gamma (gamma) from Projects" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove unavailable alpha from Projects" })).toBeVisible();
+  await expect(page.getByTestId("multi-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Reset projects" }).click();
+  await page.getByRole("button", { name: "Submit projects" }).click();
+  await expect(page.getByTestId("multi-submitted")).toHaveText("gamma,alpha");
+});
+
+test("@C030-b keeps a focused chip when the parent reorders selections", async ({ page }) => {
+  await page.goto("/multicombobox.html");
+  const alpha = page.getByRole("button", { name: "Remove Alpha (alpha) from Projects" });
+  await alpha.focus();
+  await alpha.evaluate(element => { (window as Window & { initialChip?: Element }).initialChip = element; });
+  await page.getByRole("button", { name: "Parent changes projects" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(alpha).toBeFocused();
+  expect(await alpha.evaluate(element => element === (window as Window & { initialChip?: Element }).initialChip)).toBe(true);
+  await expect(page.getByTestId("multi-calls")).toHaveText("0");
+});
+
+test("@C030-a retains an active option node when unrelated options change", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.press("ArrowDown");
+  const alpha = page.getByRole("option", { name: "Alpha" });
+  await alpha.evaluate(element => { (window as Window & { initialOption?: Element }).initialOption = element; });
+  await page.getByRole("button", { name: "Remove Gamma" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(alpha).toHaveAttribute("id", await input.getAttribute("aria-activedescendant") ?? "");
+  expect(await alpha.evaluate(element => element === (window as Window & { initialOption?: Element }).initialOption)).toBe(true);
+  await expect(input).toBeFocused();
+});
+
+
+test("@C030-b preserves a focused chip when its option label changes", async ({ page }) => {
+  await page.goto("/multicombobox.html");
+  const alpha = page.getByRole("button", { name: "Remove Alpha (alpha) from Projects" });
+  await alpha.focus();
+  await alpha.evaluate(element => { (window as Window & { initialChip?: Element }).initialChip = element; });
+  await page.getByRole("button", { name: "Rename Alpha option" }).evaluate(element => (element as HTMLButtonElement).click());
+  const renamed = page.getByRole("button", { name: "Remove Renamed (alpha) from Projects" });
+  await expect(renamed).toBeFocused();
+  expect(await renamed.evaluate(element => element === (window as Window & { initialChip?: Element }).initialChip)).toBe(true);
+  await expect(page.getByTestId("multi-calls")).toHaveText("0");
+  await expect(page.getByRole("combobox", { name: "Archived projects" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Remove Beta (beta) from Archived projects" })).toBeDisabled();
+});
+
+
+test("@C030-b preserves ordinary editing and composition shortcuts", async ({ page }) => {
+  await page.goto("/multicombobox.html");
+  const input = page.getByRole("combobox", { name: "Projects", exact: true });
+  await input.click();
+  await input.fill("gam");
+  await input.press("ArrowLeft");
+  await expect(input).toBeFocused();
+  expect(await input.evaluate(element => (element as HTMLInputElement).selectionStart)).toBe(2);
+  await input.fill("");
+  await input.dispatchEvent("keydown", { key: "ArrowLeft", isComposing: true, bubbles: true });
+  await expect(input).toBeFocused();
+  await expect(page.getByTestId("multi-calls")).toHaveText("0");
+});
+
+
+test("@C030-b hydrates selected chips and the input", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { MultiCombobox } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(MultiCombobox, { id: "projects", label: "Projects", options: [{ id: "a", label: "Alpha" }, { id: "b", label: "Beta" }], value: ["a"], onChange() {} })));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/multicombobox-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialInput = document.getElementById("projects"); window.initialChip = document.querySelector(".ui-multi-chip-remove");</script><script type="module" src="/hydrate-multicombobox.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/multicombobox-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("combobox", { name: "Projects" }).click();
+  await page.getByRole("option", { name: "Beta" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-selected", "a,b");
+  await expect(page.getByRole("button", { name: "Remove Alpha (a) from Projects" })).toBeVisible();
+});
+
+
+test("@C030-b wraps long selected IDs within a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/multicombobox.html");
+  await page.getByRole("button", { name: "Set long project ID" }).click();
+  const chip = page.locator(".ui-multi-chip").first();
+  await expect(chip).toContainText("Unavailable:");
+  expect(await chip.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

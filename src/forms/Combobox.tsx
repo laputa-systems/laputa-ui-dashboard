@@ -1,21 +1,10 @@
-import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, untrack } from "solid-js";
+import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { createAnchoredPopover } from "../internal/anchoredPopover";
 import { createFieldDescriptions } from "./fieldDescriptions";
 
-export interface ComboboxOption {
-  readonly id: string;
-  readonly label: string;
-  readonly disabled?: boolean | undefined;
-}
-
-export interface ComboboxGroup {
-  readonly id: string;
-  readonly label: string;
-  readonly options: readonly ComboboxOption[];
-}
-
-export type ComboboxEntry = ComboboxOption | ComboboxGroup;
+import { validatedComboboxOptions, type ComboboxEntry, type ComboboxOption } from "./comboboxOptions";
+export type { ComboboxEntry, ComboboxGroup, ComboboxOption } from "./comboboxOptions";
 
 export interface ComboboxProps {
   readonly id: string;
@@ -47,25 +36,11 @@ export function Combobox(props: ComboboxProps): JSX.Element {
   let touch: { id: string; pointerId: number; x: number; y: number; moved: boolean } | undefined;
   let suppressClick = false;
   const positioner = createAnchoredPopover(() => input, () => popup);
+  const allOptions = createMemo(() => validatedComboboxOptions(props.options));
   const groups = createMemo(() => {
-    const ids = new Set<string>();
-    const groupIds = new Set<string>();
-    let count = 0;
-    return props.options.map(entry => {
-      const grouped = "options" in entry;
-      if (grouped && groupIds.has(entry.id)) throw new Error(`Duplicate combobox group ID: ${entry.id}`);
-      if (grouped) groupIds.add(entry.id);
-      const options = grouped ? entry.options : [entry];
-      for (const option of options) {
-        if (ids.has(option.id)) throw new Error(`Duplicate combobox option ID: ${option.id}`);
-        ids.add(option.id);
-        count++;
-        if (count > 500) throw new RangeError("Combobox supports at most 500 options");
-      }
-      return { label: grouped ? entry.label : undefined, options };
-    });
+    allOptions();
+    return props.options.map(entry => "options" in entry ? { key: `group:${entry.id}`, label: entry.label, options: entry.options } : { key: `option:${entry.id}`, label: undefined, options: [entry] });
   });
-  const allOptions = createMemo(() => groups().flatMap(group => group.options));
   const selected = () => allOptions().find(option => option.id === props.value);
   const missing = () => props.value !== null && selected() === undefined;
   const visible = createMemo(() => {
@@ -105,28 +80,28 @@ export function Combobox(props: ComboboxProps): JSX.Element {
     close();
     input?.focus();
   };
-  const renderOption = (option: ComboboxOption) => (
+  const renderOption = (option: () => ComboboxOption) => (
     <div
-      id={optionId(option.id)}
+      id={optionId(option().id)}
       role="option"
       class="ui-combobox-option"
-      aria-selected={props.value === option.id ? "true" : "false"}
-      aria-disabled={option.disabled ? "true" : undefined}
-      data-active={active() === option.id ? "" : undefined}
+      aria-selected={props.value === option().id ? "true" : "false"}
+      aria-disabled={option().disabled ? "true" : undefined}
+      data-active={active() === option().id ? "" : undefined}
       onPointerDown={event => {
         suppressClick = false;
         if (event.pointerType === "mouse") event.preventDefault();
-        else if (event.pointerType === "touch" || event.pointerType === "pen") touch = { id: option.id, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+        else if (event.pointerType === "touch" || event.pointerType === "pen") touch = { id: untrack(option).id, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
       }}
       onPointerUp={event => {
-        if ((event.pointerType !== "touch" && event.pointerType !== "pen") || touch?.pointerId !== event.pointerId || touch.id !== option.id) return;
+        if ((event.pointerType !== "touch" && event.pointerType !== "pen") || touch?.pointerId !== event.pointerId || touch.id !== untrack(option).id) return;
         const moved = touch.moved;
         touch = undefined;
         if (moved) suppressClick = true;
-        else if (!option.disabled) { event.preventDefault(); suppressClick = true; select(option); }
+        else if (!untrack(option).disabled) { event.preventDefault(); suppressClick = true; select(untrack(option)); }
       }}
-      onClick={() => { pointerInPopup = false; if (suppressClick) { suppressClick = false; return; } select(option); }}
-    >{option.label}</div>
+      onClick={() => { pointerInPopup = false; if (suppressClick) { suppressClick = false; return; } select(untrack(option)); }}
+    >{option().label}</div>
   );
   createEffect(() => [props.options, query()] as const, () => {
     if (untrack(open)) queueMicrotask(() => { if (!disposed) positioner.position(); });
@@ -211,7 +186,7 @@ export function Combobox(props: ComboboxProps): JSX.Element {
         onToggle={event => { if (event.newState === "closed" && !popup?.matches(":popover-open")) { setOpen(false); setActive(null); pointerInPopup = false; touch = undefined; positioner.stop(); } }}
       >
         <div id={listId} role="listbox" aria-label={props.label}>
-          <For each={visible()}>{group => group.label === undefined ? <For each={group.options}>{renderOption}</For> : <div role="group" aria-label={group.label}><div class="ui-combobox-group-label" aria-hidden="true">{group.label}</div><For each={group.options}>{renderOption}</For></div>}</For>
+          <For each={visible()} keyed={group => group.key}>{group => <Show when={group().label !== undefined} fallback={<For each={group().options} keyed={option => option.id}>{renderOption}</For>}><div role="group" aria-label={group().label}><div class="ui-combobox-group-label" aria-hidden="true">{group().label}</div><For each={group().options} keyed={option => option.id}>{renderOption}</For></div></Show>}</For>
         </div>
         {visible().length === 0 ? <div role="status" class="ui-combobox-empty">No matching options</div> : null}
       </div>
