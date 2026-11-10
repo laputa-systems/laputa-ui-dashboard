@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, createUniqueId, Show } from "solid-js";
+import { createEffect, createMemo, createRenderEffect, createSignal, createUniqueId, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 
 export interface WorkbenchPane {
@@ -6,9 +6,17 @@ export interface WorkbenchPane {
   readonly content: JSX.Element;
 }
 
+export interface WorkbenchNavigationCollapse {
+  readonly label: string;
+  readonly open?: boolean | undefined;
+  readonly defaultOpen?: boolean | undefined;
+  readonly onOpenChange?: ((open: boolean) => void) | undefined;
+}
+
 export interface WorkbenchProps {
   readonly navigation: JSX.Element;
   readonly secondaryNavigation?: JSX.Element | undefined;
+  readonly secondaryNavigationCollapse?: WorkbenchNavigationCollapse | undefined;
   readonly workspace?: (WorkbenchPane & { readonly drawer?: boolean | undefined }) | undefined;
   readonly diagnostics?: WorkbenchPane | undefined;
   readonly appearance?: "flat" | "inset" | undefined;
@@ -112,6 +120,31 @@ export function Workbench(props: WorkbenchProps): JSX.Element {
   let container: HTMLDivElement | undefined;
   let grid: HTMLDivElement | undefined;
   let main: HTMLElement | undefined;
+  let secondaryDetails: HTMLDetailsElement | undefined;
+  let secondarySummary: HTMLElement | undefined;
+  const [localSecondaryOpen, setLocalSecondaryOpen] = createSignal(untrack(() => props.secondaryNavigationCollapse?.defaultOpen ?? true));
+  const hasSecondary = () => {
+    const present = props.secondaryNavigation !== undefined;
+    if (!present && props.secondaryNavigationCollapse !== undefined) throw new Error("Workbench navigation collapse requires secondary navigation");
+    return present;
+  };
+  const secondaryOpen = () => props.secondaryNavigationCollapse?.open ?? localSecondaryOpen();
+  const secondaryLocked = () => props.secondaryNavigationCollapse?.open !== undefined && props.secondaryNavigationCollapse?.onOpenChange === undefined;
+  const secondaryLabel = () => {
+    const label = props.secondaryNavigationCollapse?.label;
+    if (label !== undefined && !label.trim()) throw new Error("Workbench navigation collapse label must be nonempty");
+    return label;
+  };
+  createRenderEffect(secondaryOpen, open => {
+    if (!open && secondaryDetails?.contains(document.activeElement) && document.activeElement !== secondarySummary) secondarySummary?.focus();
+  });
+  const toggleSecondary = (event: MouseEvent) => {
+    event.preventDefault();
+    if (secondaryLocked()) return;
+    const next = !secondaryOpen();
+    if (props.secondaryNavigationCollapse?.open === undefined) setLocalSecondaryOpen(next);
+    props.secondaryNavigationCollapse?.onOpenChange?.(next);
+  };
   const navigation = createWorkbenchDrawer(() => props.navigationDrawer !== undefined, () => true, () => container, () => grid, () => main);
   const workspace = createWorkbenchDrawer(() => props.workspace?.drawer === true, () => props.workspace !== undefined, () => container, () => grid, () => main);
   const drawerLabel = () => {
@@ -124,10 +157,10 @@ export function Workbench(props: WorkbenchProps): JSX.Element {
     return pane.label;
   };
   return <div class={["ui-workbench-container", props.class].filter(Boolean).join(" ")} ref={element => { container = element; }}>
-    <div class="ui-workbench" data-secondary={props.secondaryNavigation !== undefined ? "" : undefined} data-workspace={props.workspace !== undefined ? "" : undefined} data-appearance={props.appearance ?? "flat"} ref={element => { grid = element; }}>
+    <div class="ui-workbench" data-secondary={hasSecondary() ? "" : undefined} data-workspace={props.workspace !== undefined ? "" : undefined} data-appearance={props.appearance ?? "flat"} ref={element => { grid = element; }}>
       <button type="button" class="ui-btn ui-workbench-open" hidden={!navigation.active() || !navigation.ready() || !navigation.narrow()} aria-haspopup="dialog" aria-controls={navigation.id} aria-expanded={navigation.open() ? "true" : "false"} ref={element => { navigation.refs.opener = element; }} onClick={navigation.show}>Open {drawerLabel()}</button>
       <div class="ui-workbench-navigation-group" ref={element => { navigation.refs.content = element; }}><div class="ui-workbench-navigation">{props.navigation}</div>
-        <Show when={props.secondaryNavigation !== undefined}><div class="ui-workbench-secondary">{props.secondaryNavigation}</div></Show>
+        <Show when={hasSecondary()}><div class="ui-workbench-secondary"><Show when={props.secondaryNavigationCollapse !== undefined} fallback={props.secondaryNavigation}><details class="ui-workbench-secondary-disclosure" open={secondaryOpen()} ref={element => { secondaryDetails = element; }}><summary aria-disabled={secondaryLocked() ? "true" : undefined} ref={element => { secondarySummary = element; }} onClick={toggleSecondary}>{secondaryLabel()}</summary>{props.secondaryNavigation}</details></Show></div></Show>
       </div>
       <dialog id={navigation.id} class="ui-workbench-drawer" aria-label={drawerLabel()} onClose={navigation.closed} ref={element => { navigation.refs.modal = element; }} onCancel={event => { event.preventDefault(); navigation.close(); }} onClick={event => { if (event.target === event.currentTarget) navigation.close(); }}><button type="button" class="ui-btn" ref={element => { navigation.refs.closer = element; }} onClick={navigation.close}>Close {drawerLabel()}</button></dialog>
       <main class="ui-workbench-main" tabindex="-1" ref={element => { main = element; }}>{props.children}</main>

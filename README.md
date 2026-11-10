@@ -179,7 +179,8 @@ Its size is expressed in pixels and the host may control changes.
 `Workbench` from the layout entry arranges host-supplied navigation, content, workspace and
 diagnostics. It uses container width to stack the same content in narrow spaces. Opt in to a
 combined navigation drawer with `navigationDrawer={{ label: "Navigation" }}` and a workspace
-drawer with `workspace={{ label: "Workspace", content, drawer: true }}`.
+drawer with `workspace={{ label: "Workspace", content, drawer: true }}`. A secondary
+navigation pane can opt into a native collapse control with `secondaryNavigationCollapse`.
 
 `Tooltip` from the same layout entry adds optional, keyboard-accessible explanatory text to a
 named button. Keep required instructions visible on the page.

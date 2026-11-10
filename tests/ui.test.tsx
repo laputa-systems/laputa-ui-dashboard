@@ -98,6 +98,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Workbench navigation={<nav />} workspace={{ label: " ", content: "Details" }}>Main</Workbench>)).toThrow("nonempty");
     expect(() => renderToString(() => <Workbench navigation={<nav />} navigationDrawer={{ label: " " }}>Main</Workbench>)).toThrow("nonempty");
   });
+  it("validates collapsible secondary navigation", () => {
+    expect(() => renderToString(() => <Workbench navigation="Primary" secondaryNavigationCollapse={{ label: "Project" }}>Main</Workbench>)).toThrow("requires secondary navigation");
+    expect(() => renderToString(() => <Workbench navigation="Primary" secondaryNavigation="Links" secondaryNavigationCollapse={{ label: " " }}>Main</Workbench>)).toThrow("nonempty");
+    const html = renderToString(() => <Workbench navigation="Primary" secondaryNavigation="Links" secondaryNavigationCollapse={{ label: "Project", open: false }}>Main</Workbench>);
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain("Links");
+  });
   it("requires meaningful settings labels and save messages", () => {
     expect(() => renderToString(() => <SettingsRow label=" ">Content</SettingsRow>)).toThrow("nonempty");
     expect(() => renderToString(() => <SaveBar state={{ kind: "failed", message: " " }} />)).toThrow("nonempty");

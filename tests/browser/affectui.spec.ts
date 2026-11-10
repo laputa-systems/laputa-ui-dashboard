@@ -169,6 +169,84 @@ test("@P3-settings-a keeps a static form usable without JavaScript", async ({ br
   await context.close();
 });
 
+test("@P3-collapse-a controls and locally initializes secondary navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/collapsible-navigation.html");
+  const toggle = page.getByText("Project navigation", { exact: true });
+  const project = page.getByRole("navigation", { name: "Project" });
+  const main = page.getByRole("main").first();
+  const before = await main.boundingBox();
+  await expect(project.getByRole("link", { name: "Alpha" })).toBeVisible();
+  await toggle.click();
+  await expect(project).toBeHidden();
+  await expect(page.getByTestId("requests")).toHaveText("1");
+  const after = await main.boundingBox();
+  expect(after!.x).toBeLessThan(before!.x);
+  await toggle.press("Enter");
+  await expect(project).toBeVisible();
+  await expect(page.getByTestId("requests")).toHaveText("2");
+  const local = page.getByText("Local navigation", { exact: true });
+  await expect(page.getByRole("navigation", { name: "Local project", includeHidden: true })).toBeHidden();
+  await local.click();
+  await expect(page.getByRole("navigation", { name: "Local project" })).toBeVisible();
+  const locked = page.getByText("Locked navigation", { exact: true });
+  await expect(locked).toHaveAttribute("aria-disabled", "true");
+  await locked.click();
+  await expect(page.getByRole("navigation", { name: "Locked project", includeHidden: true })).toBeHidden();
+});
+
+test("@P3-collapse-a restores focus when the host closes focused navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/collapsible-navigation.html");
+  await page.getByRole("link", { name: "Alpha" }).focus();
+  await page.getByRole("button", { name: "Close externally" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByText("Project navigation", { exact: true })).toBeFocused();
+  await expect(page.getByTestId("requests")).toHaveText("0");
+});
+
+test("@P3-collapse-a keeps secondary navigation operable in the mobile drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/collapsible-navigation.html");
+  const opener = page.getByRole("button", { name: "Open Navigation" });
+  await opener.click();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  const toggle = drawer.getByText("Project navigation", { exact: true });
+  await toggle.click();
+  await expect(drawer.getByRole("navigation", { name: "Project", includeHidden: true })).toBeHidden();
+  await toggle.click();
+  await expect(drawer.getByRole("link", { name: "Alpha" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(opener).toBeFocused();
+});
+
+test("@P3-collapse-a hydrates the native disclosure and supports no-JavaScript use", async ({ browser }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Workbench, { navigation: "Navigation", secondaryNavigation: "Project links", secondaryNavigationCollapse: { label: "Project navigation", defaultOpen: false }, children: "Main content" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route("**/collapse-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialDetails = document.querySelector('.ui-workbench-secondary-disclosure');</script><script type="module" src="/hydrate-collapsible-navigation.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/collapse-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByText("Project navigation", { exact: true }).click();
+  await expect(page.locator(".ui-workbench-secondary-disclosure")).toHaveAttribute("open", "");
+  await expect(page.locator(".ui-workbench-secondary-disclosure")).toContainText("Project links");
+  expect(errors).toEqual([]);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.route("**/collapse-static", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body>${html}</body></html>` }));
+  await staticPage.goto("/collapse-static");
+  await staticPage.getByText("Project navigation", { exact: true }).click();
+  await expect(staticPage.locator(".ui-workbench-secondary-disclosure")).toHaveAttribute("open", "");
+  await expect(staticPage.locator(".ui-workbench-secondary-disclosure")).toContainText("Project links");
+  await staticContext.close();
+});
+
 test("@P3-canvas-journey links selection and resizes the bottom trace", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const errors: string[] = [];
