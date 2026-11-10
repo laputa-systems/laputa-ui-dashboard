@@ -35,6 +35,11 @@ test("a scoped theme leaves a sibling region and the page on default values", as
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--ui-inset").trim())).toBe("16px");
 });
 
+test("a scoped theme recolors components through the semantic status tokens", async ({ page }) => {
+  await page.goto("/theme.html");
+  expect(await style(page, "scoped-notice", "background-color")).not.toBe(await style(page, "plain-notice", "background-color"));
+});
+
 test("a scoped theme keeps tokens it does not set from its ancestors", async ({ page }) => {
   await page.goto("/theme.html");
   expect(await custom(page, "inner-soft", "--ui-accent")).toBe("#123456");

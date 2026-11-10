@@ -1,4 +1,4 @@
 .ui-notice { display: flex; align-items: center; gap: var(--ui-space-sm); padding: var(--ui-space-sm) var(--ui-space-md); border-radius: var(--ui-radius-lg); background: color-mix(in srgb, var(--ui-accent) 6%, transparent); color: var(--ui-text-2); font: var(--ui-fs-body)/1.45 var(--ui-font); }
 .ui-notice-warn { background: color-mix(in srgb, var(--ui-warn) 10%, transparent); }
 .ui-notice-bad { background: color-mix(in srgb, var(--ui-bad) 10%, transparent); }
-.ui-notice-ok { background: color-mix(in srgb, var(--ui-good) 10%, transparent); }
+.ui-notice-ok { background: color-mix(in srgb, var(--ui-ok) 10%, transparent); }

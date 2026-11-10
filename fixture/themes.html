@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two themes on the same controls</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/dist/styles/forms.css">
+<link rel="stylesheet" href="/dist/styles/layout.css">
+<link rel="stylesheet" href="/dist/styles/data.css">
+<style>
+  body { margin: 0; }
+  .themes-page { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .fixture-region { min-width: 0; padding: var(--ui-inset); background: var(--ui-bg); color: var(--ui-text); }
+  .fixture-region-title { margin: 0 0 var(--ui-space-lg); font: var(--ui-weight-semibold) var(--ui-fs-page) var(--ui-font); letter-spacing: var(--ui-tracking-tighter); }
+  .fixture-stack { display: grid; gap: var(--ui-space-lg); min-width: 0; }
+  .fixture-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-sm); min-width: 0; }
+  .fixture-editorial {
+    --ui-bg: #f8f7f3;
+    --ui-surface: #fcfbf8;
+    --ui-text: #1f1d19;
+    --ui-text-2: #4c483f;
+    --ui-muted: #6f6b62;
+    --ui-line: #ece9e1;
+    --ui-line-strong: #ddd8cd;
+    --ui-hover: #ece9e1;
+    --ui-accent: #2c4d6e;
+    --ui-ok: #20432f;
+    --ui-warn: #7a5a2b;
+    --ui-bad: #8c3b2e;
+    --ui-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --ui-fs-label: 12px;
+    --ui-fs-meta: 13px;
+    --ui-fs-body: 14px;
+    --ui-fs-title: 16px;
+    --ui-fs-page: 26px;
+    --ui-radius-sm: 0px;
+    --ui-radius-md: 2px;
+    --ui-radius-lg: 3px;
+    --ui-radius-xl: 4px;
+    --ui-radius-2xl: 6px;
+    --ui-shadow-card: none;
+    --ui-shadow-pop: 0 0 0 1px var(--ui-line-strong), 0 10px 24px rgb(31 29 25 / 10%);
+    --ui-shadow-modal: 0 0 0 1px var(--ui-line-strong), 0 24px 60px rgb(31 29 25 / 18%);
+    --ui-outline: inset 0 0 0 1px #ddd8cd;
+    --ui-space-sm: 10px;
+    --ui-space-md: 14px;
+    --ui-space-lg: 20px;
+    --ui-space-xl: 24px;
+    --ui-inset: 28px;
+  }
+  .fixture-editorial .fixture-region-title,
+  .fixture-editorial .ui-modal-title { font-family: Georgia, "Times New Roman", serif; }
+  @media (max-width: 900px) { .themes-page { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/themes.tsx"></script>
+</body>
+</html>

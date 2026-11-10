@@ -28,6 +28,6 @@
 .ui-change-summary-list { display: grid; gap: var(--ui-space-sm); margin: var(--ui-space-md) 0 0; }
 .ui-change-summary-item { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-sm); min-width: 0; overflow-wrap: anywhere; }
 .ui-change-summary-item dd { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); min-width: 0; margin: 0; }
-.ui-change-summary-change[data-interpretation="good"] { color: var(--ui-good); }
+.ui-change-summary-change[data-interpretation="good"] { color: var(--ui-ok); }
 .ui-change-summary-change[data-interpretation="bad"] { color: var(--ui-bad); }
 .ui-change-summary-change[data-interpretation="neutral"] { color: var(--ui-muted); }

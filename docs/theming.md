@@ -61,6 +61,14 @@ An `app`-layer rule beats every `ui`-layer rule regardless of specificity, so a 
 
 Without layers, load the library first and the theme rule after it. A theme rule in the app layer or in a later unlayered sheet beats the library's zero-specificity `.ui-theme` defaults.
 
+## Two themes on the same controls
+
+`fixture/themes.html` and `fixture/themes.tsx` render one set of Solid controls twice: once under the default dashboard theme and once inside a `.ui-theme` region carrying a fixture editorial theme modeled on Discover. The controls cover Button appearances (default, primary, danger, ghost, small, busy and disabled), IconButton, every Badge tone, Notice, TextField, Checkbox, RadioGroup, NativeSelect, Tabs, Disclosure, Pagination, a DataTable and a Modal. The editorial rule sets input tokens only: Discover's paper, panel, ink, muted, rule, well and link colors, a sans body at 14px, a larger type scale, square radii, quieter shadows and a looser spacing scale. Consumer fixture CSS supplies `Georgia` for headings; no component rule is overridden.
+
+`fixture/themes-static.html` carries the CSS-only subset with the same two regions for the no-JavaScript check. `tests/browser/themes.spec.ts` proves that both regions expose the same accessible tree and Tab order, that arrow keys move within Tabs and RadioGroup in each theme, and that Escape closes each dialog and returns focus to its opener. Focused controls keep a visible outline under normal and forced-colors media. The same controls stay inside a 640px viewport at `deviceScaleFactor` 2 without horizontal page overflow. The editorial region's computed tokens differ from the default region, which still equals the plain `:root` values, so the theme is scoped rather than leaked. The spec also asserts that `.ui-icon-btn` resolves `font-family` from `--ui-font` like `.ui-btn`, so a consumer does not need to re-add `font: inherit`.
+
+Screenshots at 1440px and 390px are written to `.work/tmp/t3-shots/` and are not committed. They show the limit of tokens: palette, type scale, radii and density change, but the two regions still read as one product. Distinct character comes from the consumer's own composition and type, as on the Discover reader, not from library tokens. Links inside library tables keep the browser's link color because no library rule styles plain links.
+
 ## Structural invariants
 
 Themes may change colors, type family and scale, radii, shadows, control and row density, spacing scale, side-navigation width and panel chrome. These remain structural and a theme must not change them:
