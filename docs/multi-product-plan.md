@@ -6,12 +6,15 @@
 - **Library releases:** 0.7.0 (scoped themes, Button forwarding), 0.8.0 (dashboard grid density tokens, `ui-dashboard-grid-fill`), 0.9.0 (`SearchDialog`), 0.9.1 (search rows size to content), 0.10.0 (accent table links, CSS-only editorial family), 0.11.0 (opt-in dark theme). All are published on the stuff npm registry.
 - **Consumers:** Stats, repomod and Niceforge depend on 0.9.0; Discover depends on 0.11.0 and marks its reader citations, references, figures, term lists and native names with the editorial classes, pixel-identical to before. Niceforge pins Node 26.13.0 with re-verified CI image digests and regenerated material locks.
 - **Shared behavior now in the library:** themes scoped by `.ui-theme`; CSS-only form, button, notice and settings markup in Discover's admin review; the search dialog in Discover's reader; the dashboard grid in repomod; editorial focus, target and forced-colors rules in Discover's reader.
-- **Open:** paired timing measurements, run when the host is quiet.
+- **Open:** paired timing measurements, run when the host is quiet; the Discover search focus ring.
 
 ## Follow-up plan
 
 1. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`.
 2. **Dark theme adoption** waits for a product that wants it; the sheet ships and is contrast-tested.
+3. **Discover search focus ring.** `site/client/search.css` sets `outline: none` on `.ui-search-dialog-search:focus-visible` with no replacement indicator, which breaks the theming contract's focus-ring invariant. Restore a visible indicator in Discover.
+4. **Visual regression gallery.** Theme screenshots live only in `.work/tmp`. A small committed gallery of real Stats and Discover pages would track visual quality across releases.
+5. **After these, shift effort to products.** Treat the foundation as stable and let Discover's browsing, image presentation, research navigation and review desk surface any missing shared primitives.
 
 ## Goal
 

@@ -104,9 +104,10 @@ Discover adoption remains pending H3 on its `main`. This fixture does not edit D
 
 ## Structural invariants
 
-Themes may change colors, type family and scale, radii, shadows, control and row density, spacing scale, side-navigation width and panel chrome. These remain structural and a theme must not change them:
+Themes may change colors, type family and scale, radii, shadows, density, spacing scale, side-navigation width and panel chrome. Density means the four density tokens: `--ui-control`, `--ui-control-sm`, `--ui-row-height` and `--ui-side-link-height`. These remain structural and a theme must not change them:
 
-- **Hit areas:** `--ui-control`, `--ui-control-sm`, `--ui-row-height`, `--ui-side-link-height`, the 44px switch row, and the 24px split separator.
+- **Minimum target size:** a theme that changes density keeps `--ui-control` and `--ui-side-link-height` at 24px or more, the WCAG 2.2 minimum target size. `--ui-control-sm` sizes compact controls such as badges, segments and small buttons and may go lower, as its 20px default does. `--ui-row-height` sets table row height, not a target.
+- **Fixed hit areas:** the 44px switch row and the 24px split separator are not density tokens and do not change with density.
 - **Focus ring:** every interactive element keeps a visible `:focus-visible` outline (2px in `--ui-accent`, with its offset). A theme must keep accent contrast against the surrounding fill.
 - **Overlay stacking:** `--ui-z-veil` (40) sits below `--ui-z-modal` (50); dialogs, popovers and menus use the browser top layer; `--ui-scrim` dims what is behind them.
 - **Scroll ownership:** the table scroll wrapper, split panes, modal body, command menu, popover, tooltip content, side navigation, workbench drawer and artifact preview own their overflow.
@@ -130,10 +131,10 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | Type scale | `--ui-fs-label`, `--ui-fs-meta`, `--ui-fs-body`, `--ui-fs-title`, `--ui-fs-page` | `11px`, `12px`, `13px`, `14px`, `22px` | design | Discover editorial scale can override these. |
 | Weight and tracking | `--ui-weight-medium`, `--ui-weight-semibold`, `--ui-tracking-*`, `--ui-caps-tracking` | `500`, `600`, `-.01em`, `-.02em`, `.06em` | design | No. |
 | Spacing | `--ui-space-*`, `--ui-inset` | `2px`–`64px`; inset defaults to `--ui-space-lg` | design | Discover's gutter maps nearest to `--ui-inset`; the responsive gutter itself has no equivalent. |
-| Control sizes | `--ui-control-sm`, `--ui-control`, `--ui-head-height`, `--ui-row-height`, `--ui-icon-size`, `--ui-dot`, `--ui-dot-sm` | `20px`, `24px`, `40px`, `44px`, `16px`, `8px`, `6px` | structural for hit areas; icon/dot design | Discover row density can use `--ui-row-height`; no new token. |
+| Control sizes | `--ui-control-sm`, `--ui-control`, `--ui-head-height`, `--ui-row-height`, `--ui-icon-size`, `--ui-dot`, `--ui-dot-sm` | `20px`, `24px`, `40px`, `44px`, `16px`, `8px`, `6px` | density for control and row tokens, with a 24px floor on `--ui-control`; head height, icon and dot design | Discover sets `--ui-control: 26px`; its row density can use `--ui-row-height`; no new token. |
 | Radius | `--ui-radius-sm` … `--ui-radius-pill` | `4px`–`16px`, `99px` | design | Themes may override. |
 | Outline and shadows | `--ui-outline`, `--ui-shadow-card`, `--ui-shadow-pop`, `--ui-shadow-modal` | inset ring; layered shadows | design inputs with defaults from line colors | A theme that changes line colors sets them too. |
-| Side navigation | `--ui-side-width`, `--ui-side-gap`, `--ui-side-link-height` | `236px`, `12px`, `34px` | design width; structural hit area | Themes may change width, not the link height. |
+| Side navigation | `--ui-side-width`, `--ui-side-gap`, `--ui-side-link-height` | `236px`, `12px`, `34px` | design width; link height is density with a 24px floor | Themes may change width and link height. |
 | Stacking | `--ui-z-veil`, `--ui-z-modal` | `40`, `50` | structural | No. |
 | Color scheme | `color-scheme: light` | `light` | structural | The base sheet stays light; the opt-in `themes/dark.css` adds a dark scheme. |
 
@@ -142,7 +143,7 @@ Themes may change colors, type family and scale, radii, shadows, control and row
 | File:line | Literal | Decision | Class | Token it would become | Consumer need |
 | --- | --- | --- | --- | --- | --- |
 | `shell.css:15` | `28px`, `clamp(20px, 4vw, 56px)`, `64px` | main padding | design | `--ui-main-pad-start`, `--ui-main-pad-inline`, `--ui-main-pad-end` | Discover page gutter; future token. |
-| `shell.css:23` | `30px` | compact side-link height | structural hit area | compact value of `--ui-side-link-height` | No. |
+| `shell.css:23` | `30px` | compact side-link height | density | compact value of `--ui-side-link-height` | No. |
 | `shell.css:1,15` | `100vh`, `calc(100vh - 2 * var(--ui-space-sm))` | page frame height | structural layout | none | No. |
 | `table.css:3-4` | `nowrap`, `--ui-row-height`, `--ui-inset` | table density | structural readability | existing `--ui-row-height`, `--ui-inset` | Discover reading tables can change row height. |
 | `table.css:11` | `260px` | search width | design | `--ui-search-width` | No. |
