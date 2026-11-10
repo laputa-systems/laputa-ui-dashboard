@@ -34,3 +34,9 @@
 .ui-filter-chip { max-width: 100%; padding: var(--ui-space-xs); border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius-sm); background: var(--ui-surface); color: var(--ui-text); font: inherit; overflow-wrap: anywhere; cursor: pointer; }
 .ui-filter-chip:focus-visible, .ui-filter-group summary:focus-visible, .ui-filter-group input:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-filter-error { color: var(--ui-bad); overflow-wrap: anywhere; }
+.ui-tabs { min-width: 0; }
+.ui-tabs-list { display: flex; gap: var(--ui-space-xs); min-width: 0; overflow-x: auto; touch-action: pan-x; }
+.ui-tabs-tab { display: inline-flex; flex: 0 0 auto; align-items: center; gap: var(--ui-space-xs); padding: var(--ui-space-sm); border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); cursor: pointer; }
+.ui-tabs-tab[aria-selected="true"] { border-bottom-color: var(--ui-accent); }
+.ui-tabs-tab:disabled { opacity: .5; cursor: not-allowed; }
+.ui-tabs-tab:focus-visible, .ui-tabs [role="tabpanel"]:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }

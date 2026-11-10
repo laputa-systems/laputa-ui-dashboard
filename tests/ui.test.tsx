@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, RadioGroup, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
-import { Accordion, ActionMenu, Disclosure, FilterMenu } from "../src/layout";
+import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -96,6 +96,16 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain('href="/account"');
     expect(html).toContain('value="0"');
     expect(() => renderToString(() => <ProfileMenu label="Account" account={{ name: "Ada" }} items={[{ id: "bad", label: "Bad", href: "javascript:alert(1)" }]} />)).toThrow("Invalid action menu URL");
+  });
+  it("validates tab and radio identities and preserves native semantics", () => {
+    const tab = { id: "one", label: "One", content: "Content" };
+    const option = { id: "one", label: "One" };
+    expect(() => renderToString(() => <Tabs label="Sections" value="one" tabs={[tab, tab]} onChange={() => {}} />)).toThrow("Tab IDs must be nonempty and unique");
+    expect(() => renderToString(() => <RadioGroup label="Choice" name="choice" value="one" options={[option, option]} onChange={() => {}} />)).toThrow("Radio option IDs must be nonempty and unique");
+    const html = renderToString(() => <RadioGroup label="Choice" name="choice" value="one" options={[option]} required onChange={() => {}} />);
+    expect(html).toContain('type="radio"');
+    expect(html).toContain('name="choice"');
+    expect(html).toContain("required");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

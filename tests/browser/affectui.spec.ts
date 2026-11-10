@@ -611,6 +611,90 @@ test("@C064-a keeps links usable when actions are unavailable and fits narrow vi
   await staticContext.close();
 });
 
+test("@C073-a uses semantic tabs and roving keyboard focus", async ({ page }) => {
+  await page.goto("/tabs-radio.html");
+  const tabs = page.getByRole("tablist", { name: "Workspace" });
+  const overview = tabs.getByRole("tab", { name: "Overview" });
+  const activity = tabs.getByRole("tab", { name: "Activity 0" });
+  await expect(overview).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel", { name: "Overview" })).toHaveText("Overview panel");
+  await expect(overview).toHaveAttribute("aria-controls", await page.getByRole("tabpanel", { name: "Overview" }).getAttribute("id") ?? "");
+  await overview.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(activity).toBeFocused();
+  await expect(activity).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel", { name: "Activity 0" })).toHaveText("Activity panel");
+  await expect(page.getByTestId("tab-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent choices" }).click();
+  await expect(page.getByTestId("tab-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject choices" }).click();
+  await overview.focus();
+  await page.keyboard.press("End");
+  await expect(activity).toBeFocused();
+  await expect(overview).toHaveAttribute("aria-selected", "true");
+});
+
+test("@C073-b uses native radio serialization, reset and controlled requests", async ({ page }) => {
+  await page.goto("/tabs-radio.html");
+  const group = page.getByRole("group", { name: "Frequency" });
+  const daily = group.getByRole("radio", { name: "Daily" });
+  const weekly = group.getByRole("radio", { name: "Weekly" });
+  await expect(group.getByRole("radio", { name: "Locked" })).toBeDisabled();
+  await daily.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(weekly).toBeChecked();
+  await expect(page.getByTestId("radio-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Save frequency" }).click();
+  await expect(page.getByTestId("radio-submitted")).toHaveText("weekly");
+  await page.getByRole("button", { name: "Reset frequency" }).click();
+  await expect(weekly).toBeChecked();
+  await expect(page.getByTestId("radio-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent choices" }).click();
+  await expect(daily).toBeChecked();
+  await page.getByRole("button", { name: "Reset frequency" }).click();
+  await expect(daily).toBeChecked();
+  await weekly.click();
+  await page.getByRole("button", { name: "Reject choices" }).click();
+  await daily.click();
+  await expect(weekly).toBeChecked();
+  await expect(page.getByTestId("radio-calls")).toHaveText("3");
+});
+
+test("@C073-a supports manual activation and does not select during a swipe", async ({ page }) => {
+  await page.goto("/tabs-radio.html");
+  const manual = page.getByRole("tablist", { name: "Manual tabs" });
+  const first = manual.getByRole("tab", { name: "First" });
+  const second = manual.getByRole("tab", { name: "Second" });
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(second).toBeFocused();
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Enter");
+  await expect(second).toHaveAttribute("aria-selected", "true");
+  await first.evaluate(element => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", pointerId: 5, clientX: 100 }));
+    element.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "touch", pointerId: 5, clientX: 30 }));
+    element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch", pointerId: 5, clientX: 30 }));
+  });
+  await first.click();
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  await second.click();
+  await first.evaluate(element => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 100 }));
+    element.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 30 }));
+    element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch", pointerId: 4, clientX: 30 }));
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+  });
+  await expect(second).toHaveAttribute("aria-selected", "true");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -643,6 +727,11 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByRole("group", { name: "Static frequency" }).getByLabel("Weekly").check();
+  await page.getByRole("button", { name: "Choose frequency" }).click();
+  await expect(page).toHaveURL(/\/frequency\?frequency=weekly$/u);
+  await page.goto("/forms-static.html");
+  await expect(page.getByRole("navigation", { name: "Static sections" }).getByRole("link", { name: "Overview" })).toHaveAttribute("href", "/overview");
   await expect(page.getByRole("region", { name: "Static notifications" }).getByRole("link", { name: "Open notification inbox" })).toHaveAttribute("href", "/inbox");
   await page.getByRole("group", { name: "Static status filters" }).getByLabel("Open").check();
   await page.getByRole("button", { name: "Apply filters" }).click();

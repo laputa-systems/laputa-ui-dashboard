@@ -2,6 +2,8 @@
 <html lang="en">
   <head><meta charset="utf-8"><title>Static forms fixture</title><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/forms.css"><link rel="stylesheet" href="/dist/styles/feedback.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head>
   <body>
+    <form action="/frequency" method="get"><fieldset><legend>Static frequency</legend><label><input type="radio" name="frequency" value="daily" required> Daily</label><label><input type="radio" name="frequency" value="weekly"> Weekly</label></fieldset><button type="submit">Choose frequency</button></form>
+    <nav aria-label="Static sections"><a href="/overview">Overview</a><a href="/activity">Activity</a></nav>
     <section aria-label="Static notifications"><p>Review the pending request.</p><a href="/inbox">Open notification inbox</a></section>
     <form action="/filter" method="get"><fieldset><legend>Static status filters</legend><label><input type="checkbox" name="status" value="open"> Open</label><label><input type="checkbox" name="status" value="closed"> Closed</label></fieldset><button type="submit">Apply filters</button></form>
     <form action="/attach" method="get"><label class="ui-field ui-file-field" for="static-file"><span class="ui-field-label">Static attachment</span><input id="static-file" name="attachment" type="file" accept=".txt" required></label><button type="submit">Attach file</button></form>

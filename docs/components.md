@@ -240,6 +240,23 @@ move between chips. Escape closes the filter disclosure and focuses its summary.
 restores focus after the parent removes it; a rejected request retains focus on the chip. A static
 form can use native fieldsets and named checkboxes for server-side filtering.
 
+`Tabs`, `TabsProps`, and `Tab` from `layout` provide semantic tabs and associated panels. Supply
+a label, at most 100 tabs with nonempty unique IDs, a controlled `value`, and `onChange`.
+Arrow keys, Home, and End move focus among enabled tabs. Automatic activation requests a selection
+on movement; set `activation="manual"` to select with Enter or Space. Parent updates do not invoke
+the callback. A missing selected ID displays no panel. Disabled tabs cannot be activated. Optional
+icons are decorative and counts must be nonnegative integers. The tab strip scrolls when needed;
+touch drags do not select a tab. Use distinct Solid `renderId` values for independently hydrated
+roots. For static pages, use navigation links and server-rendered content.
+
+`RadioGroup`, `RadioGroupProps`, and `RadioOption` from `forms` use native radios in a fieldset.
+Supply a label, a form `name`, a controlled value or `null`, at most 100 options with nonempty
+unique IDs, and `onChange`. Optional icons are decorative and counts must be nonnegative integers.
+`required` and `disabled` retain native semantics. User changes request one value; parent changes
+do not call the callback. Native form submission uses the selected ID. Form reset retains the
+current parent value. If the selected ID is absent, no radio is checked. Give different groups
+different names. Static forms can use ordinary fieldsets and radio inputs.
+
 Import `IntegrationPicker`, `IntegrationPickerProps`, `Integration`, and `IntegrationConnection`
 from `@laputa-systems/ui-dashboard/recipes`. Load `styles/recipes.css` after the base stylesheet.
 Supply a label and up to 500 services with nonempty unique IDs, names, descriptions, optional

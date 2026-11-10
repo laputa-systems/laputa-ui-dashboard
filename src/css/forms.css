@@ -56,3 +56,8 @@
 .ui-dropzone-progress { max-width: 100%; }
 .ui-dropzone-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-xs); }
 .ui-dropzone-preview { width: 4rem; height: 4rem; max-width: 100%; object-fit: contain; }
+.ui-radio-group { min-width: 0; margin: 0; padding: 0; border: 0; color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); }
+.ui-radio-options { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); }
+.ui-radio-option { display: inline-flex; align-items: center; gap: var(--ui-space-xs); min-width: 0; overflow-wrap: anywhere; }
+.ui-radio-option input { accent-color: var(--ui-accent); }
+.ui-radio-option input:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
