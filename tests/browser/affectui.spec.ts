@@ -1325,6 +1325,25 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   expect(errors).toEqual([]);
 });
 
+test("a controlled workspace hydrates and responds to its host", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Workbench, { navigation: "Navigation content", workspace: { label: "Workspace", content: "Workspace content", drawer: { open: false, onOpenChange() {} } }, children: "Main content" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/controlled-workspace-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialWorkspace = document.querySelector(".ui-workbench-workspace");</script><script type="module" src="/hydrate-controlled-workspace.tsx"></script></body></html>` }));
+  await page.setViewportSize({ width: 390, height: 800 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/controlled-workspace-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace" })).toContainText("Workspace content");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Open Workspace" })).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
 test("@S16-a keeps opted-in workspace content visible without JavaScript", async ({ browser }) => {
   const script = `import { createComponent, renderToString } from "@solidjs/web";
 import { Workbench } from "./dist/ssr/layout.js";
