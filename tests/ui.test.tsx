@@ -115,6 +115,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain("Click");
   });
 
+  it("keeps button appearance separate from size and hides decorative icon slots", () => {
+    const html = renderToString(() => <Button variant="small" appearance="primary" leadingIcon={<span>Icon</span>} name="action" value="create">Create</Button>);
+    expect(html).toContain("ui-btn-small");
+    expect(html).toContain("ui-button-primary");
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('name="action"');
+    expect(html).not.toContain('appearance="primary"');
+  });
   it("renders busy buttons as labelled, disabled controls", () => {
     const html = renderToString(() => <><Button busy>Save</Button><IconButton ariaLabel="Refresh" busy>R</IconButton></>);
     expect(html.match(/aria-busy="true"/gu)).toHaveLength(2);

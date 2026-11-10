@@ -522,3 +522,31 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   await page.getByRole("menuitem", { name: "Open" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-selected", "open");
 });
+
+
+test("@C024 button appearance and decorative icons preserve size and names", async ({ page }) => {
+  await page.goto("/forms.html");
+  const create = page.getByRole("button", { name: "Create", exact: true });
+  await expect(create).toHaveClass(/ui-btn-small/u);
+  await expect(create).toHaveClass(/ui-button-primary/u);
+  await expect(create).toHaveAttribute("name", "action");
+  await expect(create).toHaveAttribute("value", "create");
+  await expect(create.locator('[aria-hidden="true"]')).toHaveCount(2);
+  const contrast = await create.evaluate(element => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext("2d");
+    if (context === null) throw new Error("canvas is unavailable");
+    const rgb = (color: string) => { context.fillStyle = color; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3); };
+    const luminance = (values: number[]) => values.map(value => { const channel = value / 255; return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4; }).reduce((sum, value, index) => sum + value * ([0.2126, 0.7152, 0.0722][index] ?? 0), 0);
+    const style = getComputedStyle(element);
+    const values = [luminance(rgb(style.color)), luminance(rgb(style.backgroundColor))].sort((a, b) => b - a);
+    return ((values[0] ?? 0) + 0.05) / ((values[1] ?? 0) + 0.05);
+  });
+  expect(contrast).toBeGreaterThanOrEqual(4.5);
+  await create.click();
+  await expect(page.getByTestId("submitted-action")).toHaveText("create");
+  await expect(page.getByRole("button", { name: "Delete" })).toHaveClass(/ui-button-danger/u);
+  await expect(page.getByRole("button", { name: "Cancel" })).toHaveClass(/ui-button-ghost/u);
+  await expect(page.getByRole("button", { name: "More" })).toHaveClass(/ui-button-ghost/u);
+});

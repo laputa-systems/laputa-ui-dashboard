@@ -9,6 +9,7 @@ type ModalReturnFocus = Assert<Includes<ModalProps["returnFocus"], HTMLElement>>
 type ButtonNativeName = Assert<Includes<ButtonProps["name"], string>>;
 type ButtonNativeAria = Assert<Includes<ButtonProps["aria-describedby"], string>>;
 type ButtonNativeForm = Assert<Includes<ButtonProps["form"], string>>;
+type ButtonAppearances = Assert<Excludes<ButtonProps["appearance"], "huge">>;
 type ButtonVariants = Assert<Excludes<ButtonProps["variant"], "primary">>;
 type IconButtonNeedsName = Assert<Excludes<IconButtonProps, { children: null }>>;
 type IconLabel = Assert<Includes<IconProps["label"], string>>;
@@ -20,4 +21,4 @@ type TextFieldNeedsId = Assert<Excludes<TextFieldProps, { label: string }>>;
 type TextFieldNeedsLabel = Assert<Excludes<TextFieldProps, { id: string }>>;
 type TextFieldName = Assert<Includes<TextFieldProps["name"], string>>;
 
-export type TypeChecks = ModalReturnFocus | TextFieldNeedsId | TextFieldNeedsLabel | TextFieldName | ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel | PanelInitial | PanelInitiallyCollapsed;
+export type TypeChecks = ButtonAppearances | ModalReturnFocus | TextFieldNeedsId | TextFieldNeedsLabel | TextFieldName | ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel | PanelInitial | PanelInitiallyCollapsed;

@@ -11,6 +11,7 @@ function Fixture() {
   const [submitted, setSubmitted] = createSignal("");
   const [busy, setBusy] = createSignal(false);
   const [actions, setActions] = createSignal(0);
+  const [submittedAction, setSubmittedAction] = createSignal("");
   return (
     <>
       <form onSubmit={event => { event.preventDefault(); setSubmitted(String(new FormData(event.currentTarget).get("repository"))); }}>
@@ -23,6 +24,13 @@ function Fixture() {
       <Button busy={busy()} onClick={() => { setActions(count => count + 1); setBusy(true); }}>Save changes</Button>
       <button type="button" onClick={() => setBusy(false)}>Finish saving</button>
       <output data-testid="actions">{actions()}</output>
+      <form onSubmit={event => { event.preventDefault(); setSubmittedAction(String(new FormData(event.currentTarget, event.submitter).get("action"))); }}>
+        <Button type="submit" appearance="primary" variant="small" leadingIcon={<span>decorative leading</span>} trailingIcon={<span>decorative trailing</span>} name="action" value="create">Create</Button>
+      </form>
+      <output data-testid="submitted-action">{submittedAction()}</output>
+      <Button appearance="danger">Delete</Button>
+      <Button appearance="ghost">Cancel</Button>
+      <IconButton ariaLabel="More" appearance="ghost">...</IconButton>
       <Button busy={false} disabled>Disabled action</Button>
       <IconButton ariaLabel="Refresh" busy>R</IconButton>
       <TextField id="project" label="Project" hint="Project hint" />

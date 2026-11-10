@@ -52,6 +52,10 @@ import {
 } from "@laputa-systems/ui-dashboard";
 ```
 
+`Button` and `IconButton` accept `appearance="primary"`, `"danger"`, or `"ghost"` without
+changing the existing `variant` sizes. `Button` accepts decorative `leadingIcon` and
+`trailingIcon` slots. Both buttons accept `busy` to block activation while keeping their label.
+
 Components render only `ui-*` class names. To style an instance from your app, pass `class`
 (and `bodyClass` or `slotClass` on panels) and select that, or select the `ui-*` name.
 
