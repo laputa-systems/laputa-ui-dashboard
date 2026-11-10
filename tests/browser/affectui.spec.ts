@@ -21,18 +21,162 @@ test("@S10-a presents navigation, content and workspace across container widths"
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    await expect(secondary.getByRole("link", { name: "Alpha" })).toBeVisible();
+    if (width > 900) await expect(secondary.getByRole("link", { name: "Alpha" })).toBeVisible();
     await expect(workspace).toBeVisible();
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator("#root").evaluate(element => { (element as HTMLElement).style.width = "480px"; });
-  const nestedPrimary = await primary.boundingBox();
-  const nestedSecondary = await secondary.boundingBox();
-  expect(nestedSecondary!.y).toBeGreaterThanOrEqual(nestedPrimary!.y + nestedPrimary!.height);
+  await expect(page.getByRole("button", { name: "Open Navigation" })).toBeVisible();
   await page.locator("#root").evaluate(element => { (element as HTMLElement).style.width = ""; });
   await page.setViewportSize({ width: 390, height: 900 });
   await page.evaluate(() => { document.body.style.zoom = "2"; });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@S10-b combines navigation in a narrow modal drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench.html");
+  const open = page.getByRole("button", { name: "Open Navigation" });
+  await expect(open).toBeVisible();
+  await expect(open).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
+  await open.click();
+  await expect(open).toHaveAttribute("aria-expanded", "true");
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  await expect(drawer.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Projects" })).toBeVisible();
+  await expect(drawer.getByRole("navigation", { name: "Project" }).getByRole("link", { name: "Alpha" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(open).toBeFocused();
+  await expect(open).toHaveAttribute("aria-expanded", "false");
+});
+
+test("@S10-b closes a nested popover before its drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench.html");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  await drawer.getByRole("button", { name: "Help" }).click();
+  const help = page.getByRole("dialog", { name: "Project help" });
+  await expect(help).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(help).toBeHidden();
+  await expect(drawer).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole("button", { name: "Open Navigation" })).toBeFocused();
+});
+
+test("@S10-b fits the open drawer at narrow widths and zoom", async ({ page }) => {
+  await page.goto("/workbench.html");
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.getByRole("button", { name: "Open Navigation" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation" });
+    expect(await drawer.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await drawer.getByRole("button", { name: "Close Navigation" }).click();
+  }
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  expect(await drawer.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@S10-b retains navigation focus when the workbench resizes", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/workbench.html");
+  const link = page.getByRole("link", { name: "Alpha" });
+  await link.focus();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
+  await expect(link).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.getByRole("dialog", { name: "Navigation" })).toBeHidden();
+  await expect(link).toBeVisible();
+  await expect(link).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
+test("@S10-b preserves focused links when the host disables the drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench.html");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  const link = page.getByRole("link", { name: "Alpha" });
+  await link.focus();
+  await page.getByRole("button", { name: "Disable drawer", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(link).toBeVisible();
+  await expect(link).toBeFocused();
+  await expect(page.getByRole("button", { name: "Open Navigation" })).toHaveCount(0);
+});
+
+test("@S10-b retains an open drawer when its label changes", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench.html");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  const link = page.getByRole("link", { name: "Alpha" });
+  await link.focus();
+  await page.getByRole("button", { name: "Rename drawer", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("dialog", { name: "Workspace navigation" })).toBeVisible();
+  await expect(link).toBeFocused();
+});
+
+test("@S10-b restores navigation when the host removes an open drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench.html");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  await expect(page.getByRole("button", { name: "Close Navigation" })).toBeFocused();
+  await page.getByRole("button", { name: "Disable drawer", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("link", { name: "Projects" })).toBeFocused();
+});
+
+test("@S10-b hydrates a drawer without replacing its navigation", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Workbench, { navigationDrawer: { label: "Navigation" }, navigation: "Navigation content", children: "Main content" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/workbench-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialNavigation = document.querySelector(".ui-workbench-navigation");</script><script type="module" src="/hydrate-workbench.tsx"></script></body></html>` }));
+  await page.setViewportSize({ width: 390, height: 800 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/workbench-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  await expect(page.getByRole("dialog", { name: "Navigation" })).toContainText("Navigation content");
+  expect(errors).toEqual([]);
+});
+
+test("@S10-b keeps opted-in navigation visible without JavaScript", async ({ browser }) => {
+  const script = `import { createComponent, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(renderToString(() => createComponent(Workbench, { navigationDrawer: { label: "Navigation" }, navigation: "Navigation content", children: "Main content" })));`;
+  const html = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
+  const page = await context.newPage();
+  await page.route("**/workbench-nojs", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body>${html}</body></html>` }));
+  await page.goto("/workbench-nojs");
+  await expect(page.getByText("Navigation content")).toBeVisible();
+  await expect(page.getByRole("main")).toHaveText("Main content");
+  await expect(page.getByRole("button", { name: "Open Navigation" })).toHaveCount(0);
+  await context.close();
+});
+
+test("@S10-b releases its resize observer on unmount", async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = window.ResizeObserver;
+    const state = window as Window & { workbenchDisconnects?: number };
+    state.workbenchDisconnects = 0;
+    window.ResizeObserver = class extends original { disconnect() { state.workbenchDisconnects! += 1; super.disconnect(); } };
+  });
+  await page.goto("/workbench.html");
+  await page.getByRole("button", { name: "Unmount workbench" }).click();
+  await expect(page.getByRole("main")).toHaveCount(0);
+  expect(await page.evaluate(() => (window as Window & { workbenchDisconnects?: number }).workbenchDisconnects)).toBe(1);
 });
 
 test("@S10-a keeps a static workbench navigable without JavaScript", async ({ browser }) => {

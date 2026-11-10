@@ -282,9 +282,11 @@ not moved elsewhere. Background removal never restores focus. Static HTML can us
 `Workbench`, `WorkbenchProps`, and `WorkbenchPane` from `layout` arrange supplied `navigation`,
 optional `secondaryNavigation`, main `children`, and optional labelled `workspace` and
 `diagnostics` panes. `appearance` is `flat` by default or `inset`; pane labels must contain text.
-The container stacks the same content below 900 CSS pixels of available width. Supply real links
-and named navigation landmarks in the navigation slots. The CSS classes also support static HTML;
-this layout does not yet add a mobile drawer or resizable panes.
+The container stacks the same content at 900 CSS pixels of available width or less. Supply real links
+and named navigation landmarks in the navigation slots. `navigationDrawer={{ label }}` opts into a
+combined modal drawer at that width. Escape closes it and returns focus to its opener; resizing
+preserves focus within navigation. Without JavaScript, the navigation remains visible and stacked.
+The CSS classes also support static HTML. Resizable panes remain separate work.
 
 `Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
 strings and noninteractive `children`. The label names the button independently of its tooltip;

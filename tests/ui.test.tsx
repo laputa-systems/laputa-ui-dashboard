@@ -96,6 +96,7 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain("Details");
     expect(html).not.toContain("ui-workbench-secondary");
     expect(() => renderToString(() => <Workbench navigation={<nav />} workspace={{ label: " ", content: "Details" }}>Main</Workbench>)).toThrow("nonempty");
+    expect(() => renderToString(() => <Workbench navigation={<nav />} navigationDrawer={{ label: " " }}>Main</Workbench>)).toThrow("nonempty");
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);
