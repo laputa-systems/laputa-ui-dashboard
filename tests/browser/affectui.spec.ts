@@ -1341,3 +1341,42 @@ test("@C031-a leaves ordinary navigation available without JavaScript", async ({
   await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
   await context.close();
 });
+
+
+test("@C031-b opens only from its shortcut scope and preserves text editing", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  const trigger = page.getByRole("button", { name: "Commands", exact: true });
+  await expect(trigger).toHaveAttribute("aria-keyshortcuts", "Control+K");
+  await page.getByRole("textbox", { name: "Outside input" }).focus();
+  await page.keyboard.press("Control+k");
+  await expect(page.getByRole("dialog", { name: "Commands" })).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Scope input" }).focus();
+  await page.keyboard.press("Control+k");
+  await expect(page.getByRole("dialog", { name: "Commands" })).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Scope editor" }).focus();
+  await page.keyboard.press("Control+k");
+  await expect(page.getByRole("dialog", { name: "Commands" })).toHaveCount(0);
+  const scopeAction = page.getByRole("button", { name: "Scope action", exact: true });
+  await scopeAction.focus();
+  await page.keyboard.press("Control+Shift+k");
+  await expect(page.getByRole("dialog", { name: "Commands" })).toHaveCount(0);
+  await scopeAction.dispatchEvent("keydown", { key: "k", ctrlKey: true, isComposing: true, bubbles: true });
+  await expect(page.getByRole("dialog", { name: "Commands" })).toHaveCount(0);
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  await expect(dialog.getByRole("combobox", { name: "Search commands" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(scopeAction).toBeFocused();
+});
+
+
+test("@C031-b returns focus to the trigger if the shortcut opener disappears", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Scope action", exact: true }).focus();
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  await page.getByRole("button", { name: "Remove scope action" }).evaluate(element => (element as HTMLButtonElement).click());
+  await dialog.getByRole("combobox", { name: "Search commands" }).press("Escape");
+  await expect(page.getByRole("button", { name: "Commands", exact: true })).toBeFocused();
+});

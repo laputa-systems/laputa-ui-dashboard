@@ -93,8 +93,8 @@ failures; stale search results are ignored.
 `CommandMenu` from `@laputa-systems/ui-dashboard/layout` opens a searchable dialog for grouped,
 host-supplied actions. Load `styles/layout.css` after the base stylesheet. Supply stable command
 IDs, labels, optional keywords, and `onSelect`; disabled commands cannot execute. Keep ordinary
-navigation available alongside the menu. Scoped shortcuts and integration submenus are not yet
-supported.
+navigation available alongside the menu. An optional shortcut works only inside the menu’s
+child scope and leaves editable fields alone. Integration submenus are not yet supported.
 
 ## Progress
 

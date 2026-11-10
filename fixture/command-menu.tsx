@@ -6,6 +6,7 @@ import { Modal } from "@laputa-systems/ui-dashboard";
 import { CommandMenu, type CommandGroup } from "@laputa-systems/ui-dashboard/layout";
 
 function Fixture() {
+  const [scopePresent, setScopePresent] = createSignal(true);
   const [modal, setModal] = createSignal(false);
   const [removed, setRemoved] = createSignal(false);
   const [selected, setSelected] = createSignal("");
@@ -19,7 +20,8 @@ function Fixture() {
   ];
   return <>
     <label>Outside input <input /></label>
-    <CommandMenu label="Commands" groups={groups()} onSelect={setSelected} />
+    <CommandMenu label="Commands" groups={groups()} onSelect={setSelected} shortcut={{ key: "k", modifier: "Control" }}><Show when={scopePresent()}><button type="button">Scope action</button></Show><label>Scope input <input /></label><div contentEditable tabindex="0" role="textbox" aria-label="Scope editor">Editable</div></CommandMenu>
+    <button type="button" onClick={() => setScopePresent(false)}>Remove scope action</button>
     <button type="button" onClick={() => setRemoved(true)}>Remove projects command</button>
     <button type="button" onClick={() => setModal(true)}>Open parent</button>
     <Show when={modal()}><Modal title="Parent" label="Parent" onClose={() => setModal(false)}><CommandMenu label="Nested commands" groups={groups()} onSelect={setSelected} /></Modal></Show>

@@ -92,7 +92,12 @@ in the input while Up and Down move the active enabled command; Enter requests t
 Escape first clears a query, then closes the dialog and returns focus to the trigger. A Close
 button provides the same exit for pointer and touch users. The host performs actions and supplies
 unavailable commands as disabled. This JavaScript-enhanced menu supplements ordinary navigation;
-scoped shortcuts and integration submenus are not yet implemented.
+integration submenus are not yet implemented. An optional `shortcut` takes one ASCII letter or
+digit, a `Control`, `Meta`, or `Alt` modifier, and optional `shift`. It opens the menu only when
+focus is within its children or trigger. It does not intercept editable fields, composition,
+repeats, or extra modifiers. A shortcut-opened dialog restores focus to the invoking control, or
+the trigger if that control has disappeared. Choose a shortcut appropriate to the host platform;
+the visible trigger remains available.
 
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
