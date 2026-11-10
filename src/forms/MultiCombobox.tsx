@@ -1,6 +1,6 @@
 import { createMemo, For, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { ComboboxControl, type ComboboxCreate } from "./Combobox";
+import { ComboboxControl, type ComboboxCreate, type ComboboxSearch } from "./Combobox";
 import { validatedComboboxOptions, type ComboboxEntry } from "./comboboxOptions";
 
 export interface MultiComboboxProps {
@@ -10,6 +10,7 @@ export interface MultiComboboxProps {
   readonly value: readonly string[];
   readonly onChange: (ids: readonly string[]) => void;
   readonly create?: ComboboxCreate | undefined;
+  readonly search?: ComboboxSearch | undefined;
   readonly name?: string | undefined;
   readonly hint?: string | undefined;
   readonly error?: string | undefined;
@@ -85,7 +86,7 @@ export function MultiCombobox(props: MultiComboboxProps): JSX.Element {
         )}</For>
       </ul>
       <span class="ui-sr-only" role="status">{selected().length} selected</span>
-      <ComboboxControl creationOptions={props.options} id={props.id} label={props.label} create={props.create} options={available()} value={null} onChange={add} hint={[props.hint, "Press Left Arrow at the start to review selections."].filter(Boolean).join(" ")} error={props.error} disabled={props.disabled} />
+      <ComboboxControl excludedIds={props.value} search={props.search} creationOptions={props.options} id={props.id} label={props.label} create={props.create} options={available()} value={null} onChange={add} hint={[props.hint, "Press Left Arrow at the start to review selections."].filter(Boolean).join(" ")} error={props.error} disabled={props.disabled} />
       {props.name ? <For each={props.value}>{id => <input type="hidden" name={props.name} value={id} disabled={props.disabled} />}</For> : null}
     </div>
   );

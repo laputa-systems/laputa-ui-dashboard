@@ -16,6 +16,22 @@ export interface ComboboxCreate {
   readonly onCreate: (query: string) => void;
 }
 
+export interface ComboboxSearchRequest {
+  readonly id: string;
+  readonly query: string;
+}
+
+export type ComboboxSearchState =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly request: ComboboxSearchRequest }
+  | { readonly kind: "ready"; readonly request: ComboboxSearchRequest; readonly options: readonly ComboboxEntry[] }
+  | { readonly kind: "failed"; readonly request: ComboboxSearchRequest; readonly message: string };
+
+export interface ComboboxSearch {
+  readonly state: ComboboxSearchState;
+  readonly onSearch: (request: ComboboxSearchRequest) => void;
+}
+
 export interface ComboboxProps {
   readonly id: string;
   readonly label: string;
@@ -23,6 +39,7 @@ export interface ComboboxProps {
   readonly value: string | null;
   readonly onChange: (id: string | null) => void;
   readonly create?: ComboboxCreate | undefined;
+  readonly search?: ComboboxSearch | undefined;
   readonly name?: string | undefined;
   readonly hint?: string | undefined;
   readonly error?: string | undefined;
@@ -34,7 +51,7 @@ export function Combobox(props: ComboboxProps): JSX.Element {
   return <ComboboxControl {...props} />;
 }
 
-export function ComboboxControl(props: ComboboxProps & { readonly creationOptions?: readonly ComboboxEntry[] | undefined }): JSX.Element {
+export function ComboboxControl(props: ComboboxProps & { readonly creationOptions?: readonly ComboboxEntry[] | undefined; readonly excludedIds?: readonly string[] | undefined }): JSX.Element {
   const popupId = `ui-combobox-${createUniqueId()}`;
   const listId = `${popupId}-list`;
   const missingId = `${popupId}-missing`;
@@ -42,34 +59,56 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
   const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const [active, setActive] = createSignal<string | null>(null);
+  const [searchRequest, setSearchRequest] = createSignal<ComboboxSearchRequest>();
+  const searchResult = createMemo<ComboboxSearchState>(previous => {
+    const request = searchRequest();
+    if (!request) return { kind: "idle" };
+    const state = props.search?.state;
+    if (previous && (previous.kind === "ready" || previous.kind === "failed") && previous.request.id === request.id) return previous;
+    if (state && state.kind !== "idle" && state.request.id === request.id && state.request.query === request.query) return state;
+    if (previous && previous.kind !== "idle" && previous.request.id === request.id) return previous;
+    return { kind: "pending", request };
+  });
+  let requestNumber = 0;
   let input: HTMLInputElement | undefined;
   let popup: HTMLDivElement | undefined;
   let createButton: HTMLButtonElement | undefined;
+  let retryButton: HTMLButtonElement | undefined;
   let disposed = false;
-  let composing = false;
+  const [composing, setComposing] = createSignal(false);
   let openOnPointerDown = false;
   let pointerInPopup = false;
   let touch: { id: string; pointerId: number; x: number; y: number; moved: boolean } | undefined;
   let suppressClick = false;
   const positioner = createAnchoredPopover(() => input, () => popup);
   const allOptions = createMemo(() => validatedComboboxOptions(props.options));
+  const searchOptions = () => { const result = searchResult(); return result.kind === "ready" ? result.options : []; };
   const groups = createMemo(() => {
-    allOptions();
-    return props.options.map(entry => "options" in entry ? { key: `group:${entry.id}`, label: entry.label, options: entry.options } : { key: `option:${entry.id}`, label: undefined, options: [entry] });
+    const entries = props.search ? (composing() ? [] : searchOptions()) : props.options;
+    validatedComboboxOptions(entries);
+    const excluded = new Set(props.excludedIds ?? []);
+    return entries.map(entry => "options" in entry ? { key: `group:${entry.id}`, label: entry.label, options: entry.options.filter(option => !excluded.has(option.id)) } : { key: `option:${entry.id}`, label: undefined, options: excluded.has(entry.id) ? [] : [entry] });
   });
-  const selected = () => allOptions().find(option => option.id === props.value);
+  const selected = () => allOptions().find(option => option.id === props.value) ?? (props.search ? validatedComboboxOptions(searchOptions()).find(option => option.id === props.value) : undefined);
   const missing = () => props.value !== null && selected() === undefined;
   const visible = createMemo(() => {
     const text = query().trim().toLocaleLowerCase();
-    return groups().map(group => ({ ...group, options: group.options.filter(option => option.label.toLocaleLowerCase().includes(text)) })).filter(group => group.options.length > 0);
+    return groups().map(group => ({ ...group, options: props.search ? group.options : group.options.filter(option => option.label.toLocaleLowerCase().includes(text)) })).filter(group => group.options.length > 0);
   });
   const creationQuery = () => query().trim();
-  const canCreate = () => props.create !== undefined && creationQuery() !== "" && !(props.creationOptions ? validatedComboboxOptions(props.creationOptions) : allOptions()).some(option => option.label.trim().toLocaleLowerCase() === creationQuery().toLocaleLowerCase());
+  const canCreate = () => props.create !== undefined && !composing() && creationQuery() !== "" && (!props.search || searchResult().kind === "ready") && ![...validatedComboboxOptions(props.creationOptions ?? props.options), ...(props.search ? validatedComboboxOptions(searchOptions()) : [])].some(option => option.label.trim().toLocaleLowerCase() === creationQuery().toLocaleLowerCase());
   const creationState = () => {
     const state = props.create?.state;
     return state && state.kind !== "idle" && state.query === creationQuery() ? state : undefined;
   };
   const creationError = () => { const state = creationState(); return state?.kind === "failed" ? state.message : undefined; };
+  const searchError = () => { const state = searchResult(); return state.kind === "failed" ? state.message : undefined; };
+  const requestSearch = (text: string, force = false) => {
+    if (!props.search || (!force && searchRequest()?.query === text)) return;
+    const request = { id: `${popupId}-request-${++requestNumber}`, query: text };
+    setSearchRequest(request);
+    props.search.onSearch(request);
+  };
   const enabled = () => visible().flatMap(group => group.options).filter(option => !option.disabled);
   const activeOption = () => enabled().find(option => option.id === active());
   const optionId = (id: string) => `${popupId}-option-${Array.from({ length: id.length }, (_, index) => id.charCodeAt(index).toString(16)).join("-")}`;
@@ -96,6 +135,7 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
     setOpen(true);
     setActive(null);
     positioner.start();
+    if (!composing()) requestSearch(resetQuery ? "" : query(), true);
   };
   const select = (option: ComboboxOption) => {
     if (option.disabled) return;
@@ -126,6 +166,13 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
       onClick={() => { pointerInPopup = false; if (suppressClick) { suppressClick = false; return; } select(untrack(option)); }}
     >{option().label}</div>
   );
+  const SearchFailure = () => {
+    onCleanup(() => { if (typeof document !== "undefined" && document.activeElement === retryButton && !disposed) input?.focus(); });
+    return <div class="ui-combobox-create">
+      <span role="alert">{searchError()}</span>
+      <button type="button" class="ui-btn ui-btn-small" ref={element => { retryButton = element; }} onClick={() => { input?.focus(); requestSearch(query(), true); }} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); input?.focus(); } }}>Retry search</button>
+    </div>;
+  };
   const CreateAction = () => {
     onCleanup(() => { if (typeof document !== "undefined" && document.activeElement === createButton && !disposed) input?.focus(); });
     return <div class="ui-combobox-create">
@@ -134,7 +181,7 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
       {creationState()?.kind === "failed" ? <span role="alert">{creationError()}</span> : null}
     </div>;
   };
-  createEffect(() => [props.options, query()] as const, () => {
+  createEffect(() => [props.options, query(), searchResult()] as const, () => {
     if (untrack(open)) queueMicrotask(() => { if (!disposed) positioner.position(); });
   });
   createEffect(() => props.disabled, disabled => { if (disabled && untrack(open)) close(); });
@@ -178,14 +225,15 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
             openOnPointerDown = false;
             if (!popup?.matches(":popover-open")) show(!wasOpen);
           }}
-          onInput={event => { setQuery(event.currentTarget.value); setActive(null); if (!open()) show(false); }}
-          onCompositionStart={() => { composing = true; }}
-          onCompositionEnd={() => { composing = false; }}
+          onInput={event => { const text = event.currentTarget.value; setQuery(text); setActive(null); if (!open()) show(false); else if (!composing() && !event.isComposing) requestSearch(text); }}
+          onCompositionStart={() => { setComposing(true); }}
+          onCompositionEnd={event => { setComposing(false); if (open()) requestSearch(event.currentTarget.value); }}
           onBlur={() => { queueMicrotask(() => { if (!disposed && !pointerInPopup && open() && document.activeElement !== input && !popup?.contains(document.activeElement)) close(); }); }}
           onKeyDown={event => {
-            if (event.isComposing || composing) return;
+            if (event.isComposing || composing()) return;
             if (event.key === "Tab") {
               pointerInPopup = false;
+              if (open() && !event.shiftKey && props.search && searchResult().kind === "failed" && retryButton !== undefined) { event.preventDefault(); retryButton.focus(); return; }
               if (open() && !event.shiftKey && canCreate() && createButton !== undefined) { event.preventDefault(); createButton.focus(); return; }
             }
             if (event.key === "Escape" && open()) { event.preventDefault(); event.stopPropagation(); close(); return; }
@@ -223,7 +271,9 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
         <div id={listId} role="listbox" aria-label={props.label}>
           <For each={visible()} keyed={group => group.key}>{group => <Show when={group().label !== undefined} fallback={<For each={group().options} keyed={option => option.id}>{renderOption}</For>}><div role="group" aria-label={group().label}><div class="ui-combobox-group-label" aria-hidden="true">{group().label}</div><For each={group().options} keyed={option => option.id}>{renderOption}</For></div></Show>}</For>
         </div>
-        {visible().length === 0 ? <div role="status" class="ui-combobox-empty">No matching options</div> : null}
+        {props.search && searchResult().kind === "pending" ? <div role="status" class="ui-combobox-empty">Searching…</div> : null}
+        <Show when={props.search && searchResult().kind === "failed"}><SearchFailure /></Show>
+        {visible().length === 0 && (!props.search || (!composing() && searchResult().kind === "ready")) ? <div role="status" class="ui-combobox-empty">No matching options</div> : null}
         <Show when={canCreate()}><CreateAction /></Show>
       </div>
     </div>

@@ -1115,3 +1115,99 @@ test("@C030-c keeps a long creation action within a narrow viewport", async ({ p
   await expect(create).toBeVisible();
   expect(await create.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("@C030-d ignores late search results and retains the current result", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("a");
+  await input.fill("ab");
+  await expect(page.getByText("Searching…")).toBeVisible();
+  await page.getByRole("button", { name: "Resolve latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await page.getByRole("button", { name: "Resolve old" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Old result" })).toHaveCount(0);
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await page.getByRole("button", { name: "Fail latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(input).toHaveValue("ab");
+  await page.getByRole("option", { name: "Remote result" }).click();
+  await page.locator("form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+  await expect(page.locator("html")).toHaveAttribute("data-submitted", "remote");
+});
+
+test("@C030-d reports a failed search and keeps the draft without selecting", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("missing");
+  await page.getByRole("button", { name: "Fail latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("alert")).toHaveText("Search failed");
+  await expect(input).toHaveValue("missing");
+  await input.press("Enter");
+  await page.locator("form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+  await expect(page.locator("html")).toHaveAttribute("data-submitted", "alpha");
+  await input.press("Tab");
+  const retry = page.getByRole("button", { name: "Retry search" });
+  await expect(retry).toBeFocused();
+  await retry.press("Enter");
+  await expect(input).toBeFocused();
+  await expect(page.getByText("Searching…")).toBeVisible();
+  await expect(page.getByTestId("search-calls")).toHaveText("3");
+});
+
+test("@C030-d excludes selected IDs from asynchronous multi results", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Projects" });
+  await input.click();
+  await expect(page.getByRole("option", { name: "Alpha" })).toHaveCount(0);
+  await page.getByRole("option", { name: "Remote result" }).click();
+  await expect(page.getByRole("button", { name: "Remove unavailable remote from Projects" })).toBeVisible();
+});
+
+
+test("@C030-d waits for composition and never offers stale results during editing", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await page.getByRole("button", { name: "Resolve latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await expect(page.getByTestId("search-calls")).toHaveText("1");
+  await input.dispatchEvent("compositionstart");
+  await input.fill("候");
+  await expect(page.getByRole("option", { name: "Remote result" })).toHaveCount(0);
+  await expect(page.getByTestId("search-calls")).toHaveText("1");
+  await input.dispatchEvent("compositionend");
+  await expect(page.getByTestId("search-calls")).toHaveText("2");
+  await input.dispatchEvent("input");
+  await expect(page.getByTestId("search-calls")).toHaveText("2");
+});
+
+test("@C030-d distinguishes repeated searches for the same query", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("a");
+  await input.fill("b");
+  await input.fill("a");
+  await page.getByRole("button", { name: "Resolve latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await page.getByRole("button", { name: "Resolve old" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("option", { name: "Remote result" })).toBeVisible();
+  await expect(page.getByRole("option", { name: "Old result" })).toHaveCount(0);
+});
+
+
+test("@C030-d offers creation only after current search results arrive", async ({ page }) => {
+  await page.goto("/combobox-search.html");
+  const input = page.getByRole("combobox", { name: "Project", exact: true });
+  await input.click();
+  await input.fill("Fresh");
+  await expect(page.getByRole("button", { name: "Create Fresh" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Resolve latest" }).evaluate(element => (element as HTMLButtonElement).click());
+  await page.getByRole("button", { name: "Create Fresh" }).click();
+  await expect(page.getByTestId("search-create")).toHaveText("Fresh");
+  await page.locator("form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+  await expect(page.locator("html")).toHaveAttribute("data-submitted", "alpha");
+});

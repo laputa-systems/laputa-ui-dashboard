@@ -85,8 +85,8 @@ and mixed presentations. Use `defaultChecked` for local state, or `checked` with
 option groups. `MultiCombobox` selects multiple IDs with removable chips. Supply stable option
 IDs and at most 500 options; the host owns each selection. Both need JavaScript and the browser
 Popover API. Use a native `<select>` or `<select multiple>` for no-JavaScript or native
-required-field validation. Optional creation requests expose host-owned pending and failure states;
-async query coordination is not yet supported.
+required-field validation. Optional creation and async search requests expose host-owned results, pending states, and
+failures; stale search results are ignored.
 
 ## Progress
 

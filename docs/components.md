@@ -71,8 +71,18 @@ trimmed, case-insensitive label. Tab reaches the create button; Escape returns f
 Pending prevents duplicate activation. Failure remains available for retry, and states for other
 drafts are not shown. A request does not create or select an option: the host adds the acknowledged
 option and updates the selected value. The host must correlate requests and ignore late responses,
-including repeated requests with identical text. Async search result coordination is not yet
-supported.
+including repeated requests with identical text.
+
+For remote search, pass `search` with an `onSearch(request)` callback and a
+`ComboboxSearchState`. Opening the picker requests the empty query; edits request the current
+text after composition completes. Each request carries a unique `id` and its `query`. The host
+supplies `pending`, `ready` with grouped or individual options, or `failed` with a message, each
+carrying the original request. The control shows only results for the latest request and retains
+the first terminal result for it; retry issues a fresh request. Remote results are displayed in
+host order without local filtering and obey the same ID and 500-option limits. Creation is offered
+only after the current search succeeds. The host fetches data, handles cancellation and retains
+selected option records in `options` so their labels remain available across searches. No search is
+started by server rendering.
 
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
