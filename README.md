@@ -122,6 +122,13 @@ executing an action when it opens.
 Its selected group and option IDs can be serialized in a URL. Native fieldsets and checkboxes
 provide a static form path.
 
+`SearchDialog` from `layout` presents host-controlled navigation results in a modal search dialog.
+Each result is a real link whose content comes from `renderResult`; supply a controlled query and
+state, with at most 200 uniquely identified results carrying relative or HTTP(S) URLs. Escape,
+Close, and backdrop activation request closing and return focus to the opener or `returnFocus`.
+An optional document-scoped shortcut with a one-character key opens it outside text fields and
+composition. Use it instead of `CommandMenu` when results navigate rather than execute actions.
+
 `Tabs` from `layout` and `RadioGroup` from `forms` provide separate tab and radio semantics.
 The existing `Segmented` button group retains its original behavior.
 

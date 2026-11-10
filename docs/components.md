@@ -234,6 +234,30 @@ repeats, or extra modifiers. A shortcut-opened dialog restores focus to the invo
 the trigger if that control has disappeared. Choose a shortcut appropriate to the host platform;
 the visible trigger remains available.
 
+`SearchDialog`, `SearchDialogProps`, `SearchDialogState`, `SearchResult`,
+`SearchResultRenderState`, and `SearchDialogShortcut` are exported from `layout`. It is a modal
+navigation-results dialog separate from `CommandMenu` because each result is a link. Load
+`styles/layout.css` after the base stylesheet. Supply `label`, controlled `open` with
+`onOpenChange`, controlled `query` with `onQueryChange`, and a discriminated `state` of `idle`,
+`loading`, `results`, or `error`. A results state carries at most 200 uniquely identified results
+with nonempty relative or HTTP(S) `href` values; more results throw `RangeError`, and duplicate IDs
+or invalid URLs throw. `renderResult(result, { active })` supplies noninteractive content inside the
+component-owned link. The host owns filtering, fetching, cancellation, and empty results; an empty
+results array displays “No results”. Loading and error messages use a polite status.
+
+Escape, the Close button, and a backdrop activation request close through `onOpenChange(false)`;
+parent updates do not call it. Focus returns to the element focused before opening, or to the
+element returned by `returnFocus`. The input is a combobox with `aria-controls`, `aria-expanded`,
+and `aria-activedescendant`; results form a listbox of links with `aria-selected` on the active
+result. ArrowDown and ArrowUp wrap at the ends, while Home and End select the first and last result.
+Enter follows the active link. Results keep the active ID while it remains and otherwise select the
+first result. An optional `shortcut: { key, scope: "document" }` with a one-character key opens the
+dialog from anywhere in the document when that character is typed without Control, Meta or Alt.
+Shift is allowed because some keyboard layouts need it to type the character. Text entry,
+contenteditable, composition and repeated keys do not open it; its listener is removed on unmount. Generated IDs reserve the
+`ui-search-dialog-` prefix. The component requires JavaScript and never fetches, filters, or stores
+results.
+
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
 native `<progress>` element. A missing `value` means indeterminate progress; zero is a measured
