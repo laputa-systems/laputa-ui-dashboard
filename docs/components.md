@@ -36,7 +36,13 @@ static HTML as shown in the README.
 `showCount` associates a UTF-16 character count with the field and displays `maxlength` when
 supplied. These options are additive; fields without affixes retain their original markup. The
 native `prefix` attribute remains available. Static markup can wrap an input with
-`ui-text-field-control` and use `ui-text-field-affix` for decorative spans.
+`ui-text-field-control` and use `ui-text-field-affix` for decorative spans. `clearable` adds a
+clear button that dispatches one native input event and respects `disabled` and `readonly`;
+controlled fields retain the parent value if the parent rejects the edit. `copyable` copies the
+current value only on activation and reports success or failure in a live status. Clipboard
+access requires browser support and permission; an edit invalidates an outstanding result.
+`revealable` requires `type="password"` and toggles visibility while retaining the input and
+selection. Copy and reveal controls respect `disabled`.
 
 `Checkbox` and `CheckboxProps` from `forms` require `id` and `label`. Native name, value,
 required, disabled, form, and input attributes are forwarded. `hint` and `error` are associated

@@ -86,6 +86,6 @@
 .ui-textarea { line-height: 1.5; resize: vertical; }
 .ui-textarea[data-autosize] { resize: none; }
 .ui-textarea-expand { justify-self: start; }
-.ui-text-field-control { display: flex; align-items: center; gap: var(--ui-space-xs); min-width: 0; }
-.ui-text-field-control .ui-text-field { flex: 1 1 auto; }
+.ui-text-field-control { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-xs); min-width: 0; }
+.ui-text-field-control .ui-text-field { flex: 1 1 8rem; }
 .ui-text-field-affix { min-width: 0; color: var(--ui-muted); font: var(--ui-fs-body) var(--ui-font); overflow-wrap: anywhere; }

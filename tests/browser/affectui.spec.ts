@@ -1136,7 +1136,7 @@ test("@C081-a adds decorative affixes and an associated count", async ({ page })
 test("@C081-a hydrates an affixed field and its count", async ({ page }) => {
   const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
 import { TextField } from "./dist/ssr/forms.js";
-process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(TextField, { id: "project", label: "Project", defaultValue: "abc", leadingContent: "https://", hint: "Help", showCount: true, onInput() {} })));`;
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(TextField, { id: "project", label: "Project", defaultValue: "abc", leadingContent: "https://", hint: "Help", showCount: true, clearable: true, copyable: true, onInput() {} })));`;
   const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
   await page.route("**/extra-field-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialField = document.getElementById("project");</script><script type="module" src="/hydrate-text-field-extra.tsx"></script></body></html>` }));
   const errors: string[] = [];
@@ -1149,7 +1149,71 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   await field.fill("new value");
   await expect(field).toHaveAccessibleDescription("Help 9");
   await expect(page.locator("html")).toHaveAttribute("data-edited", "new value");
+  await page.getByRole("button", { name: "Clear Project" }).click();
+  await expect(field).toHaveValue("");
   expect(errors).toEqual([]);
+});
+
+test("@C081-b clears native and controlled fields without losing focus", async ({ page }) => {
+  await page.goto("/text-field-actions.html");
+  const project = page.getByRole("textbox", { name: "Project" });
+  await page.getByRole("button", { name: "Clear Project" }).click();
+  await expect(project).toHaveValue("");
+  await expect(project).toBeFocused();
+  await expect(project).toHaveAccessibleDescription("0");
+  await expect(page.getByTestId("input-events")).toHaveText("1");
+  await page.getByRole("button", { name: "Set parent" }).click();
+  await page.getByRole("button", { name: "Reject edits" }).click();
+  await page.getByRole("button", { name: "Clear Project" }).click();
+  await expect(project).toHaveValue("parent");
+  await expect(page.getByTestId("input-events")).toHaveText("2");
+  await page.getByRole("button", { name: "Clear Local" }).click();
+  await expect(page.getByRole("textbox", { name: "Local" })).toHaveValue("");
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.getByRole("textbox", { name: "Local" })).toHaveValue("local");
+  await expect(page.getByRole("button", { name: "Clear Read only" })).toBeDisabled();
+});
+
+test("@C081-b reveals a password without replacing its input or selection", async ({ page }) => {
+  await page.goto("/text-field-actions.html");
+  const field = page.locator("#password-action");
+  await field.evaluate((input: HTMLInputElement) => { input.focus(); input.setSelectionRange(1, 4); (window as any).originalPassword = input; });
+  await page.getByRole("button", { name: "Show Password" }).click();
+  await expect(field).toHaveAttribute("type", "text");
+  await expect(field).toBeFocused();
+  expect(await field.evaluate((input: HTMLInputElement) => [input === (window as any).originalPassword, input.selectionStart, input.selectionEnd, input.value])).toEqual([true, 1, 4, "secret"]);
+  await page.getByRole("button", { name: "Hide Password" }).click();
+  await expect(field).toHaveAttribute("type", "password");
+});
+
+test("@C081-b reports clipboard success, failure, and stale results", async ({ page }) => {
+  await page.addInitScript(() => {
+    const state = window as any;
+    state.clipboardWrites = [];
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText(value: string) { state.clipboardWrites.push(value); return new Promise<void>((resolve, reject) => { state.resolveCopy = resolve; state.rejectCopy = reject; }); } } });
+  });
+  await page.goto("/text-field-actions.html");
+  const copy = page.getByRole("button", { name: "Copy Project" });
+  await copy.click();
+  await expect(copy).toBeDisabled();
+  await expect(page.getByRole("textbox", { name: "Project" })).toBeFocused();
+  expect(await page.evaluate(() => (window as any).clipboardWrites)).toEqual(["controlled"]);
+  await page.evaluate(() => (window as any).resolveCopy());
+  await expect(page.locator("span[role=status]")).toHaveText("Copied");
+  await copy.click();
+  await page.evaluate(() => (window as any).rejectCopy(new Error("denied")));
+  await expect(page.locator("span[role=status]")).toHaveText("Copy failed");
+  await copy.click();
+  await page.getByRole("textbox", { name: "Project" }).fill("new value");
+  await page.evaluate(() => (window as any).resolveCopy());
+  await expect(page.locator("span[role=status]")).toHaveText("");
+});
+
+test("@C081-b reports an unavailable clipboard", async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined }); });
+  await page.goto("/text-field-actions.html");
+  await page.getByRole("button", { name: "Copy Project" }).click();
+  await expect(page.locator("span[role=status]")).toHaveText("Copy failed");
 });
 
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {

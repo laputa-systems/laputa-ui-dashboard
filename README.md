@@ -68,6 +68,7 @@ For multiple server-rendered roots, use a distinct Solid `renderId` for each roo
 The forms entry supports server rendering and browser use. Native input attributes, `value`, `defaultValue`, and input events
 are forwarded. Use `defaultValue` for native form reset and `value` for parent-owned state.
 Optional decorative `leadingContent` and `trailingContent` slots and a character count are available.
+Use `clearable`, `copyable`, and `revealable` to add field actions.
 
 ```tsx
 import "@laputa-systems/ui-dashboard/styles.css";
