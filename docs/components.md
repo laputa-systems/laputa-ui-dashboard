@@ -286,8 +286,9 @@ reset target. `size` with `onSizeChange` is controlled; a controlled pane withou
 read-only. Arrow keys adjust by 10 pixels, Shift by 50, and Home/End choose the available bounds.
 Horizontal keys follow the writing direction. Container changes clamp the displayed size without
 notifying the host; if both minimums cannot fit, the primary minimum shrinks to the available
-maximum. Invalid bounds throw. Give vertical panes a definite container height. The separator is
-keyboard-operated in this slice; pointer resizing remains open. Static markup can use
+maximum. Invalid bounds throw. Give vertical panes a definite container height. Pointer and touch drags preview the size and issue one request on release. Escape, pointer
+cancellation, or a parent size/axis change discards the preview. The separator has a 24 CSS-pixel
+target. Static markup can use
 `ui-split`, `ui-split-panes`, `ui-split-primary`, `ui-split-secondary`, and `ui-split-separator`.
 Generated control IDs reserve the `ui-split-primary-` prefix.
 

@@ -158,7 +158,7 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
-`SplitPane` from the layout entry provides keyboard-resizable horizontal or vertical panes.
+`SplitPane` from the layout entry provides keyboard- and pointer-resizable horizontal or vertical panes.
 Its size is expressed in pixels and the host may control changes.
 
 `Workbench` from the layout entry arranges host-supplied navigation, content, workspace and

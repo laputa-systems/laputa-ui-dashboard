@@ -3,6 +3,173 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S17-split-b previews a drag and requests its final size once", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 75, y);
+  await expect(separator).toHaveAttribute("aria-valuenow", "315");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "315");
+  await expect(page.getByTestId("split-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject resize" }).click();
+  const next = (await separator.boundingBox())!;
+  await page.mouse.move(next.x + next.width / 2, next.y + next.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(next.x + next.width / 2 + 40, next.y + next.height / 2);
+  await expect(separator).toHaveAttribute("aria-valuenow", "355");
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "315");
+  await expect(page.getByTestId("split-calls")).toHaveText("2");
+});
+
+test("@S17-split-b cancels pointer resizing without a request", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 60, y);
+  await expect(separator).toHaveAttribute("aria-valuenow", "300");
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+});
+
+test("@S17-split-b resizes a vertical split by pointer", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Timeline split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + 35);
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "135");
+});
+
+test("@S17-split-b discards a drag when the host changes the saved size", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  expect(bounds.width).toBeGreaterThanOrEqual(24);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 60, y);
+  await expect(separator).toHaveAttribute("aria-valuenow", "300");
+  await page.getByRole("button", { name: "Update split size" }).evaluate((button: HTMLButtonElement) => button.click());
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "350");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+});
+
+test("@S17-split-b ignores a preview after the host changes and restores its size", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 60, y);
+  await page.getByRole("button", { name: "Update split size" }).evaluate((button: HTMLButtonElement) => button.click());
+  await page.getByRole("button", { name: "Restore split size" }).evaluate((button: HTMLButtonElement) => button.click());
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+});
+
+test("@S17-split-b cancels on pointer cancellation and unmount", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 60, y);
+  await separator.dispatchEvent("pointercancel", { pointerId: 1, bubbles: true });
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 30, y);
+  await page.getByRole("button", { name: "Unmount split" }).evaluate((button: HTMLButtonElement) => button.click());
+  await page.mouse.up();
+  await expect(separator).toHaveCount(0);
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+  expect(errors).toEqual([]);
+});
+
+test("@S17-split-b follows right-to-left direction and forced colors", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1000 });
+  await page.goto("/split-pane.html");
+  await page.getByTestId("split-container").evaluate(element => { element.setAttribute("dir", "rtl"); });
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 40, y);
+  await page.mouse.up();
+  await expect(separator).toHaveAttribute("aria-valuenow", "280");
+  await page.emulateMedia({ forcedColors: "active" });
+  if (await page.evaluate(() => matchMedia("(forced-colors: active)").matches)) {
+    const expected = await page.evaluate(() => { const sample = document.createElement("span"); sample.style.backgroundColor = "ButtonText"; document.body.append(sample); const color = getComputedStyle(sample).backgroundColor; sample.remove(); return color; });
+    await expect(separator).toHaveCSS("background-color", expected);
+  }
+});
+
+test("@S17-split-b supports a touch drag", async ({ browser, browserName }) => {
+  test.skip(browserName !== "chromium", "Touch drag injection uses Chromium DevTools Protocol");
+  const context = await browser.newContext({ hasTouch: true, viewport: { width: 1200, height: 1000 } });
+  const page = await context.newPage();
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  const bounds = (await separator.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  const session = await context.newCDPSession(page);
+  await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await session.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + 50, y }] });
+  await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(separator).toHaveAttribute("aria-valuenow", "290");
+  await expect(page.getByTestId("split-calls")).toHaveText("1");
+  await context.close();
+});
+
+test("@S17-split-b does not resize on a touch tap", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, viewport: { width: 1200, height: 1000 } });
+  const page = await context.newPage();
+  await page.goto("/split-pane.html");
+  const separator = page.getByRole("separator", { name: "Project split" });
+  await separator.tap();
+  await expect(separator).toHaveAttribute("aria-valuenow", "240");
+  await expect(page.getByTestId("split-calls")).toHaveText("0");
+  await context.close();
+});
+
 test("@S17-split-a resizes with the keyboard and restores the initial size", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto("/split-pane.html");
@@ -32,8 +199,8 @@ test("@S17-split-a clamps a saved size to available container space", async ({ p
   await page.goto("/split-pane.html");
   const separator = page.getByRole("separator", { name: "Project split" });
   await page.getByRole("button", { name: "Narrow split" }).click();
-  await expect(separator).toHaveAttribute("aria-valuemax", "152");
-  await expect(separator).toHaveAttribute("aria-valuenow", "152");
+  await expect(separator).toHaveAttribute("aria-valuemax", "136");
+  await expect(separator).toHaveAttribute("aria-valuenow", "136");
   await expect(page.getByTestId("split-calls")).toHaveText("0");
   await page.getByRole("button", { name: "Expand split" }).click();
   await expect(separator).toHaveAttribute("aria-valuenow", "240");
