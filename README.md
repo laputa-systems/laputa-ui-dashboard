@@ -168,7 +168,7 @@ The layout stylesheet also provides responsive description-list styles for nativ
 save state and requests save or discard through callbacks.
 
 `BreakdownChart` from the data entry displays host-aggregated signed category values with an
-accessible numeric table. Its dimension controls and selectable legend are still in progress.
+accessible numeric table, with optional host-controlled dimensions and legend selection.
 
 `DataTable` from the data entry renders bounded, semantic read-only tables with a caption,
 optional row headers and keyboard-scrollable overflow. Its host supplies record IDs and cell renderers.

@@ -292,7 +292,8 @@ content. `ui-reading-column` limits a content region to 48rem and centers it. Th
 with static HTML and do not alter `Shell`.
 
 `BreakdownChart`, `BreakdownChartProps`, `BreakdownSeries`, `BreakdownCategory`, and
-`BreakdownValue` from `data` display host-aggregated signed stacks and an accompanying numeric
+`BreakdownValue`, `BreakdownDimensionOption`, `BreakdownDimension`, `BreakdownDimensions`, and
+`BreakdownSeriesSelection` from `data` display host-aggregated signed stacks and an accompanying numeric
 table. Import `styles/data.css` after the base stylesheet. Supply a nonempty `label`, up to five
 series and 40 categories, and a `formatValue` callback that includes the desired unit and returns
 nonempty text. Series and category IDs must be unique and nonempty; each category supplies exactly
@@ -303,8 +304,14 @@ A focusable bar names its category, series and formatted value, and highlights t
 cell. Reordering or replacing records with the same IDs preserves focused bars; if a focused bar
 disappears, focus returns to the chart. Background updates do not move outside focus. The numeric
 table remains available without relying on color, and a static page can provide the same values
-using the native table markup below. Measure/category/stack selectors and a selectable legend are
-not yet implemented; the host supplies the currently aggregated data.
+using the native table markup below. Optional `dimensions` supplies `measure`, `category`, and
+`stack` controls. Each has a nonempty `label`, a selected option ID, one to 100 uniquely identified
+and labelled options, and an optional `onChange` callback. Optional `seriesSelection` supplies
+unique selected series IDs and an `onChange` callback. Legend selection dims other bars and marks
+selected table values; it never removes the numeric values. The host owns selections and aggregation,
+and callbacks request changes rather than changing host data. Parent updates do not call them.
+Controls without callbacks are disabled. Server-rendered controls remain disabled until hydration;
+static pages can expose filtering with ordinary GET forms.
 
 `DataTable`, `DataTableProps<Row>`, and `DataColumn<Row>` from `data` render a semantic read-only
 table. Import `styles/data.css` after the base stylesheet. Supply a nonempty `caption`, one to 32

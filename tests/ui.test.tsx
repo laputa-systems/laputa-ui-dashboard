@@ -46,6 +46,17 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render(Array.from({ length: 41 }, (_, index) => ({ ...categories[0]!, id: String(index) })))).toThrow(RangeError);
     expect(() => renderToString(() => <BreakdownChart label="Builds" series={series} categories={categories} formatValue={() => " "} />)).toThrow("nonempty");
   });
+  it("validates breakdown dimension choices and legend selection", () => {
+    const dimension = { label: "Measure", value: "one", options: [{ id: "one", label: "One" }] };
+    const series = [{ id: "built", label: "Built" }];
+    const render = (measure: typeof dimension, selectedIds: readonly string[]) => renderToString(() => <BreakdownChart label="Builds" series={series} categories={[]} formatValue={String} dimensions={{ measure, category: { ...dimension, label: "Category" }, stack: { ...dimension, label: "Stack" } }} seriesSelection={{ selectedIds }} />);
+    const html = render(dimension, ["built"]);
+    expect(html).toContain('aria-pressed="true"');
+    expect(() => render({ ...dimension, value: "missing" }, [])).toThrow("identify an option");
+    expect(() => render({ ...dimension, options: [...dimension.options, ...dimension.options] }, [])).toThrow("unique");
+    expect(() => render(dimension, ["missing"])).toThrow("identify a series");
+    expect(() => render(dimension, ["built", "built"])).toThrow("unique");
+  });
   it("renders bounded semantic data tables and validates identities", () => {
     const columns = [{ id: "name", label: "Name", rowHeader: true as const, cell: (row: () => { id: string; name: string }) => row().name }];
     const render = (rows: readonly { id: string; name: string }[]) => renderToString(() => <DataTable caption="Projects" columns={columns} rows={rows} getRowId={row => row.id} />);

@@ -3,6 +3,93 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@C023-b requests dimension and legend changes from the host", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/breakdown-controls.html");
+  const chart = page.getByRole("region", { name: "Builds", exact: true });
+  await chart.getByRole("combobox", { name: "Measure" }).selectOption("seconds");
+  await chart.getByRole("combobox", { name: "Group by" }).selectOption("team");
+  await chart.getByRole("combobox", { name: "Stack by" }).selectOption("runner");
+  await expect(chart.getByRole("cell", { name: "24 seconds" })).toBeVisible();
+  await expect(page.getByTestId("requests")).toHaveText("3");
+  const built = chart.getByRole("button", { name: "Built" });
+  const failed = chart.getByRole("button", { name: "Failed" });
+  await expect(built).toHaveAttribute("aria-pressed", "true");
+  await failed.focus();
+  await page.keyboard.press("Space");
+  await expect(failed).toBeFocused();
+  await expect(failed).toHaveAttribute("aria-pressed", "false");
+  await expect(chart.getByRole("img", { name: "Team Alpha, Failed: 2 seconds" })).toHaveAttribute("data-dimmed", "");
+  await expect(chart.getByRole("cell", { name: "24 seconds" }).locator("[data-selected]")).toBeVisible();
+  await expect(page.getByTestId("requests")).toHaveText("4");
+  await page.getByRole("button", { name: "Select failed externally" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(built).toHaveAttribute("aria-pressed", "false");
+  await expect(failed).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("requests")).toHaveText("4");
+  await page.getByRole("button", { name: "Reject changes" }).evaluate((button: HTMLButtonElement) => button.click());
+  await chart.getByRole("combobox", { name: "Measure" }).selectOption("jobs");
+  await expect(chart.getByRole("combobox", { name: "Measure" })).toHaveValue("seconds");
+  await expect(page.getByTestId("requests")).toHaveText("5");
+  await built.click();
+  await expect(built).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByTestId("requests")).toHaveText("6");
+  await page.getByRole("button", { name: "Set measure externally" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(chart.getByRole("combobox", { name: "Measure" })).toHaveValue("jobs");
+  await expect(page.getByTestId("requests")).toHaveText("6");
+  expect(errors).toEqual([]);
+});
+
+test("@C023-b keeps touch controls reachable in a narrow chart", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 800 } });
+  const page = await context.newPage();
+  await page.goto("/breakdown-controls.html");
+  const chart = page.getByRole("region", { name: "Builds", exact: true });
+  await chart.evaluate(element => { (element as HTMLElement).style.width = "240px"; (element as HTMLElement).style.maxWidth = "100%"; });
+  await chart.getByRole("button", { name: "Built" }).tap();
+  await expect(chart.getByRole("button", { name: "Built" })).toHaveAttribute("aria-pressed", "false");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+});
+
+test("@C023-b hydrates controls and leaves unavailable controls disabled", async ({ browser }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { BreakdownChart } from "./dist/ssr/data.js";
+const options = [{ id: "one", label: "One" }, { id: "two", label: "Two" }];
+const dimension = { value: "one", options };
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(BreakdownChart, { label: "Builds", series: [{ id: "built", label: "Built" }], categories: [{ id: "first", label: "First", values: [{ seriesId: "built", value: 3 }] }], formatValue: value => String(value), dimensions: { measure: { ...dimension, label: "Measure", onChange() {} }, category: { ...dimension, label: "Category" }, stack: { ...dimension, label: "Stack" } }, seriesSelection: { selectedIds: ["built"], onChange() {} } })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.route("**/breakdown-controls-static", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><body>${html}</body></html>` }));
+  await staticPage.goto("/breakdown-controls-static");
+  await expect(staticPage.getByRole("combobox", { name: "Measure" })).toBeDisabled();
+  await expect(staticPage.getByRole("button", { name: "Built" })).toBeDisabled();
+  await expect(staticPage.getByRole("cell", { name: "3" })).toBeVisible();
+  await staticContext.close();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route("**/breakdown-controls-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTable = document.querySelector('table');</script><script type="module" src="/hydrate-breakdown-controls.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/breakdown-controls-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await expect(page.getByRole("combobox", { name: "Category" })).toBeDisabled();
+  await page.getByRole("combobox", { name: "Measure" }).selectOption("two");
+  await expect(page.getByRole("combobox", { name: "Measure" })).toHaveValue("two");
+  await page.getByRole("button", { name: "Built" }).click();
+  await expect(page.getByRole("button", { name: "Built" })).toHaveAttribute("aria-pressed", "false");
+  expect(errors).toEqual([]);
+  await context.close();
+});
+
 test("@C023-a links focused signed bars to exact values", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
