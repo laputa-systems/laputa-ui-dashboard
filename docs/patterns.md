@@ -72,6 +72,42 @@ The table scrolls inside its panel on a narrow screen.
 </section>
 ```
 
+## Review a queue without JavaScript
+
+Render one native `POST` form per queue row. Link a visible field error with `aria-describedby`
+and `aria-invalid`, and keep the server's hidden values. Approve and Reject share a `name` and
+differ by `value`, so the server reads one `status` field. The page owns the row gap and action
+row; library components set no outer margin.
+
+```html
+<form method="post" action="/admin/review">
+  <input type="hidden" name="csrf" value="...">
+  <input type="hidden" name="subject_id" value="artist:ada-lovelace">
+  <input type="hidden" name="expected_data_epoch" value="...">
+  <input type="hidden" name="idempotency_key" value="...">
+  <div class="ui-field">
+    <label class="ui-field-label" for="review-score">Score</label>
+    <input class="ui-text-field" id="review-score" name="score" type="number" min="1" max="10" step="0.1" inputmode="decimal" aria-describedby="review-score-hint review-score-error" aria-invalid="true">
+    <div class="ui-field-hint" id="review-score-hint">1 to 10, one decimal place.</div>
+    <div class="ui-field-error" id="review-score-error">Enter a score between 1 and 10.</div>
+  </div>
+  <div class="ui-field">
+    <label class="ui-field-label" for="review-note">Note</label>
+    <textarea class="ui-text-field ui-textarea" id="review-note" name="note" rows="2" maxlength="4000"></textarea>
+  </div>
+  <div class="review-actions">
+    <button class="ui-btn ui-button-primary" type="submit" name="status" value="approved">Approve</button>
+    <button class="ui-btn ui-button-danger" type="submit" name="status" value="rejected">Reject</button>
+  </div>
+</form>
+```
+
+For a setting, wrap a `fieldset.ui-radio-group` in `ui-settings-row-container` and
+`ui-settings-row` markup and submit it with an ordinary button. The
+[review fixture](../fixture/review-static.html) is the complete CSS-only page;
+`tests/browser/review.spec.ts` checks its labels, error association, keyboard order, live-region
+roles, and narrow-screen overflow.
+
 ## Navigate to details and open a dialog
 
 Use real links for navigation. The current route is marked in the sidebar. Mount the dialog

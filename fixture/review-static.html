@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research review, CSS only</title>
+<link rel="stylesheet" href="/dist/styles.css">
+<link rel="stylesheet" href="/dist/styles/forms.css">
+<link rel="stylesheet" href="/dist/styles/layout.css">
+<style>
+  body { margin: 0; background: var(--ui-bg); color: var(--ui-text); font: var(--ui-fs-body)/1.55 var(--ui-font); }
+  .review-theme {
+    --ui-bg: #f8f7f3;
+    --ui-surface: #fcfbf8;
+    --ui-text: #1f1d19;
+    --ui-text-2: #4c483f;
+    --ui-muted: #6f6b62;
+    --ui-line: #ece9e1;
+    --ui-line-strong: #ddd8cd;
+    --ui-hover: #ece9e1;
+    --ui-accent: #2c4d6e;
+    --ui-ok: #20432f;
+    --ui-warn: #7a5a2b;
+    --ui-bad: #8c3b2e;
+    --ui-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --ui-fs-label: 12px;
+    --ui-fs-meta: 13px;
+    --ui-fs-body: 14px;
+    --ui-fs-title: 16px;
+    --ui-fs-page: 26px;
+    --ui-radius-sm: 0px;
+    --ui-radius-md: 2px;
+    --ui-radius-lg: 3px;
+    --ui-radius-xl: 4px;
+    --ui-radius-2xl: 6px;
+    --ui-shadow-card: none;
+    --ui-shadow-pop: 0 0 0 1px var(--ui-line-strong), 0 10px 24px rgb(31 29 25 / 10%);
+    --ui-shadow-modal: 0 0 0 1px var(--ui-line-strong), 0 24px 60px rgb(31 29 25 / 18%);
+    --ui-outline: inset 0 0 0 1px #ddd8cd;
+    --ui-space-sm: 10px;
+    --ui-space-md: 14px;
+    --ui-space-lg: 20px;
+    --ui-space-xl: 24px;
+    --ui-inset: 28px;
+  }
+  .review-theme :is(h1, h2, h3) { font-family: Georgia, "Times New Roman", serif; }
+  .review-page { box-sizing: border-box; display: grid; gap: var(--ui-space-xl); width: 100%; max-width: 78rem; margin-inline: auto; padding: var(--ui-inset); min-width: 0; }
+  .review-header { justify-content: space-between; align-items: baseline; min-width: 0; }
+  .review-title { display: grid; gap: var(--ui-space-2xs); min-width: 0; }
+  .review-kicker { margin: 0; color: var(--ui-muted); font-size: var(--ui-fs-label); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-caps-tracking); text-transform: uppercase; }
+  .review-nav { display: flex; flex-wrap: wrap; gap: var(--ui-space-md); font-size: var(--ui-fs-meta); }
+  .review-nav a { color: var(--ui-accent); }
+  .review-notices { display: grid; gap: var(--ui-space-sm); min-width: 0; }
+  .review-counts { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); margin: 0; padding: 0; list-style: none; min-width: 0; }
+  .review-page h1, .review-page h2, .review-page h3 { margin: 0; }
+  .review-page h2 { font-size: var(--ui-fs-page); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-tracking-tighter); }
+  .review-toolbar-note { margin: 0; color: var(--ui-muted); font-size: var(--ui-fs-meta); }
+  .review-queue { display: grid; gap: var(--ui-space-lg); margin: 0; padding: 0; list-style: none; min-width: 0; }
+  .review-row { display: grid; gap: var(--ui-space-md); min-width: 0; padding: var(--ui-space-lg); background: var(--ui-surface); border-radius: var(--ui-radius-lg); box-shadow: var(--ui-outline); }
+  .review-summary { display: grid; gap: var(--ui-space-xs); min-width: 0; }
+  .review-summary h3 { font-size: var(--ui-fs-title); font-weight: var(--ui-weight-semibold); overflow-wrap: anywhere; }
+  .review-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-sm); margin: 0; min-width: 0; color: var(--ui-muted); font-size: var(--ui-fs-meta); overflow-wrap: anywhere; }
+  .review-fit { color: var(--ui-warn); }
+  .review-form { display: grid; gap: var(--ui-space-md); min-width: 0; }
+  .review-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); }
+  .review-setting-actions { margin-top: var(--ui-space-md); }
+</style>
+</head>
+<body class="ui-theme review-theme" data-testid="review-theme">
+<main class="review-page">
+  <header class="ui-page-header review-header">
+    <div class="review-title">
+      <p class="review-kicker">Discover</p>
+      <h1>Admin</h1>
+    </div>
+    <nav class="review-nav" aria-label="Admin">
+      <a href="/reader">Open the reader</a>
+      <a href="/admin/desk">Research desk</a>
+    </nav>
+  </header>
+
+  <div class="review-notices">
+    <div class="ui-notice ui-notice-ok" role="status">Saved the review for Ada Lovelace.</div>
+    <div class="ui-notice ui-notice-bad" role="alert">The previous save could not be recorded. Try again.</div>
+  </div>
+
+  <ul class="review-counts" aria-label="Pending work">
+    <li><span class="ui-badge ui-badge-info">2 pending makers</span></li>
+    <li><span class="ui-badge ui-badge-neutral">1 pending source</span></li>
+  </ul>
+
+  <section class="ui-page-section" aria-labelledby="queue-heading">
+    <div class="ui-page-toolbar">
+      <h2 id="queue-heading">Review queue</h2>
+      <p class="review-toolbar-note">Pending makers and sources, best predicted fit first.</p>
+    </div>
+    <ol class="review-queue">
+      <li class="review-row">
+        <div class="review-summary">
+          <h3>Ada Lovelace</h3>
+          <p class="review-meta">
+            <span class="ui-badge ui-badge-info">Maker</span>
+            <span>Analytical engine notes</span>
+            <span class="review-fit">Predicted fit 8.4</span>
+          </p>
+        </div>
+        <form class="review-form" method="post" action="/admin/review">
+          <input type="hidden" name="csrf" value="fixture-csrf-token">
+          <input type="hidden" name="subject_id" value="artist:ada-lovelace">
+          <input type="hidden" name="expected_data_epoch" value="fixture-epoch">
+          <input type="hidden" name="idempotency_key" value="fixture-review-ada-lovelace">
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-ada-score">Score</label>
+            <input class="ui-text-field" id="review-ada-score" name="score" type="number" min="1" max="10" step="0.1" inputmode="decimal" aria-describedby="review-ada-score-hint review-ada-score-error" aria-invalid="true">
+            <div class="ui-field-hint" id="review-ada-score-hint">1 to 10, one decimal place.</div>
+            <div class="ui-field-error" id="review-ada-score-error">Enter a score between 1 and 10.</div>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-ada-note">Note</label>
+            <textarea class="ui-text-field ui-textarea" id="review-ada-note" name="note" rows="2" maxlength="4000" aria-describedby="review-ada-note-hint"></textarea>
+            <div class="ui-field-hint" id="review-ada-note-hint">Optional. Up to 4000 characters.</div>
+          </div>
+          <div class="review-actions">
+            <button class="ui-btn ui-button-primary" type="submit" name="status" value="approved">Approve</button>
+            <button class="ui-btn ui-button-danger" type="submit" name="status" value="rejected">Reject</button>
+          </div>
+        </form>
+      </li>
+      <li class="review-row">
+        <div class="review-summary">
+          <h3>The International Society for Analytical Engine Studies</h3>
+          <p class="review-meta">
+            <span class="ui-badge ui-badge-neutral">Source</span>
+            <span>Exhibition catalogue</span>
+            <span class="review-fit">Predicted fit 7.1</span>
+          </p>
+        </div>
+        <form class="review-form" method="post" action="/admin/review">
+          <input type="hidden" name="csrf" value="fixture-csrf-token">
+          <input type="hidden" name="subject_id" value="source:society-analytical-engine-studies">
+          <input type="hidden" name="expected_data_epoch" value="fixture-epoch">
+          <input type="hidden" name="idempotency_key" value="fixture-review-society-analytical-engine-studies">
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-society-score">Score</label>
+            <input class="ui-text-field" id="review-society-score" name="score" type="number" min="1" max="10" step="0.1" inputmode="decimal" aria-describedby="review-society-score-hint">
+            <div class="ui-field-hint" id="review-society-score-hint">1 to 10, one decimal place.</div>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-society-note">Note</label>
+            <textarea class="ui-text-field ui-textarea" id="review-society-note" name="note" rows="2" maxlength="4000" aria-describedby="review-society-note-hint"></textarea>
+            <div class="ui-field-hint" id="review-society-note-hint">Optional. Up to 4000 characters.</div>
+          </div>
+          <div class="review-actions">
+            <button class="ui-btn ui-button-primary" type="submit" name="status" value="approved">Approve</button>
+            <button class="ui-btn ui-button-danger" type="submit" name="status" value="rejected">Reject</button>
+          </div>
+        </form>
+      </li>
+      <li class="review-row">
+        <div class="review-summary">
+          <h3>Kenji Nakamura</h3>
+          <p class="review-meta">
+            <span class="ui-badge ui-badge-info">Maker</span>
+            <span>Studio ceramics</span>
+            <span class="review-fit">Predicted fit 6.3</span>
+          </p>
+        </div>
+        <form class="review-form" method="post" action="/admin/review">
+          <input type="hidden" name="csrf" value="fixture-csrf-token">
+          <input type="hidden" name="subject_id" value="artist:kenji-nakamura">
+          <input type="hidden" name="expected_data_epoch" value="fixture-epoch">
+          <input type="hidden" name="idempotency_key" value="fixture-review-kenji-nakamura">
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-kenji-score">Score</label>
+            <input class="ui-text-field" id="review-kenji-score" name="score" type="number" min="1" max="10" step="0.1" inputmode="decimal" aria-describedby="review-kenji-score-hint">
+            <div class="ui-field-hint" id="review-kenji-score-hint">1 to 10, one decimal place.</div>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field-label" for="review-kenji-note">Note</label>
+            <textarea class="ui-text-field ui-textarea" id="review-kenji-note" name="note" rows="2" maxlength="4000" aria-describedby="review-kenji-note-hint"></textarea>
+            <div class="ui-field-hint" id="review-kenji-note-hint">Optional. Up to 4000 characters.</div>
+          </div>
+          <div class="review-actions">
+            <button class="ui-btn ui-button-primary" type="submit" name="status" value="approved">Approve</button>
+            <button class="ui-btn ui-button-danger" type="submit" name="status" value="rejected">Reject</button>
+          </div>
+        </form>
+      </li>
+    </ol>
+  </section>
+
+  <section class="ui-page-section" aria-labelledby="naming-heading">
+    <h2 id="naming-heading">Public maker names</h2>
+    <form class="ui-settings-row-container" method="post" action="/admin/settings/naming">
+      <input type="hidden" name="csrf" value="fixture-csrf-token">
+      <input type="hidden" name="expected_data_epoch" value="fixture-epoch">
+      <input type="hidden" name="idempotency_key" value="fixture-public-maker-names">
+      <div class="ui-settings-row">
+        <div class="ui-settings-row-heading">
+          <p class="ui-settings-row-description">Choose how pending and mixed maker names appear on public pages.</p>
+        </div>
+        <div class="ui-settings-row-content">
+          <fieldset class="ui-radio-group">
+            <legend>Public maker names</legend>
+            <div class="ui-radio-options">
+              <label class="ui-radio-option"><input type="radio" name="public_maker_names" value="pending-plain" checked> Pending and mixed makers appear as plain names</label>
+              <label class="ui-radio-option"><input type="radio" name="public_maker_names" value="approved-only"> Only approved makers appear</label>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <div class="review-setting-actions">
+        <button class="ui-btn ui-button-primary" type="submit">Save setting and re-render</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

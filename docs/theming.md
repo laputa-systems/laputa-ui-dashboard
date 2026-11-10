@@ -69,6 +69,35 @@ Without layers, load the library first and the theme rule after it. A theme rule
 
 Screenshots at 1440px and 390px are written to `.work/tmp/t3-shots/` and are not committed. They show the limit of tokens: palette, type scale, radii and density change, but the two regions still read as one product. Distinct character comes from the consumer's own composition and type, as on the Discover reader, not from library tokens. Links inside library tables keep the browser's link color because no library rule styles plain links.
 
+## Review surface
+
+`fixture/review-static.html` renders Discover's admin maker review as a CSS-only page inside one `.ui-theme` region. It carries the desk surface: a page header with two navigation links, a success flash and an error, pending counts, three queue rows each with its review form, and the public-maker-names setting. Every user-facing control and message uses a library static class. The editorial rule sets the same input tokens as `fixture/themes.html`; headings take Georgia from fixture CSS because the reading face stays consumer-owned and no library rule sets it.
+
+The fixture proves the review flow needs no JavaScript. Native `POST` forms keep `method`, `action`, server-provided hidden values, and `name`/`value` pairs. The score number field and note textarea keep visible labels, hints, and an error linked through `aria-describedby`. Approve and Reject are separate submit buttons with the same `name` and different values. Keyboard order inside a row is score, note, Approve, Reject, and each stop has a visible focus outline. Flash is `role=status`, the error is `role=alert`, and the page has no horizontal overflow at 390px or at 640px with `deviceScaleFactor` 2. `tests/browser/review.spec.ts` is the check; screenshots at 1440px and 390px go to `.work/tmp/t5-shots/`.
+
+The fixture replaces Discover's admin classes where an equivalent exists. The rest stay page composition.
+
+| Discover admin element (`cloudflare/src/site/admin.ts`) | Library equivalent used | Gap |
+| --- | --- | --- |
+| `.admin-header`, `.admin-nav` | `ui-page-header` with ordinary links | No admin header or navigation component; the page composes them. |
+| `.admin-flash` | `ui-notice ui-notice-ok` plus `role=status` | None. |
+| `.admin-error` | `ui-notice ui-notice-bad` plus `role=alert` | None. |
+| `.admin-counts` | `ui-badge` list | No count or statistic primitive; the badge carries the text. |
+| `.admin-queue`, `.admin-row` | Semantic `<ol>`/`<li>` with fixture layout | No static collection or card component. |
+| `.admin-summary` | `ui-badge` for kind, meta text for label and fit | No record-summary primitive; art direction stays with the consumer. |
+| `.admin-review` | Native `<form method="post">` with fixture layout | No form container component; native form semantics are retained. |
+| Hidden `csrf`, `subject_id`, `expected_data_epoch`, `idempotency_key` | Native hidden inputs | No library equivalent and none needed; hidden controls are not in the accessibility tree. |
+| Score field | `ui-field`, `ui-field-label`, `ui-field-hint`, `ui-field-error`, `ui-text-field` with `type="number"` | No number-specific control; native `min`, `max`, `step`, and `inputmode` carry the constraints. |
+| Note field | `ui-field`, `ui-text-field ui-textarea`, native `maxlength` | `TextArea`'s `showCount` needs JavaScript, so a static character count has no equivalent. |
+| `.admin-actions`, `.admin-reject` | `ui-btn ui-button-primary` and `ui-btn ui-button-danger` | None. |
+| `.admin-setting` | `ui-settings-row-container`, `ui-settings-row`, `ui-settings-row-heading`, `ui-settings-row-description`, `ui-settings-row-content` | No gap for the labelled group; the wrapping form is page composition. |
+| Naming radios | `ui-radio-group`, `ui-radio-options`, `ui-radio-option` with native `fieldset` and `legend` | None. |
+| Naming save button | `ui-btn ui-button-primary` | None. |
+| `.admin-empty` | Not rendered; a plain paragraph or `ui-notice` | `EmptyState` is a Solid component with no documented static markup. |
+| `.admin-kicker`, `.admin-fit` | Fixture `.review-kicker` and `.review-fit` text | No library class; type and metadata composition stay with the consumer. |
+
+Discover adoption remains pending H3 on its `main`. This fixture does not edit Discover; the table is the proposed mapping, not a landed change.
+
 ## Structural invariants
 
 Themes may change colors, type family and scale, radii, shadows, control and row density, spacing scale, side-navigation width and panel chrome. These remain structural and a theme must not change them:
