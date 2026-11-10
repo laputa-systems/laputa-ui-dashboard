@@ -57,6 +57,28 @@ test("@P2-journey-b retains composed form values through a failed save", async (
   await expect(page.getByRole("region", { name: "Notifications" }).getByText("Settings could not be saved")).toBeVisible();
 });
 
+test("@P2-journey-c combines enhanced selection, tabs, and failure notices", async ({ page }) => {
+  await page.goto("/p2-journey.html");
+  const owner = page.getByRole("combobox", { name: "Owner" });
+  await owner.fill("Be");
+  await page.getByRole("option", { name: "Beatrice" }).click();
+  await expect(owner).toHaveValue("Beatrice");
+  const browse = page.getByRole("combobox", { name: "Browse Environment" });
+  await browse.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.getByRole("option", { name: "Production Live environment" }).click();
+  await expect(page.getByLabel("Environment", { exact: true })).toHaveValue("production");
+  const listTab = page.getByRole("tab", { name: "List" });
+  await listTab.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Activity" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel", { name: "Activity" })).toHaveText("No recent activity.");
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(owner).toHaveValue("Beatrice");
+  await expect(page.getByLabel("Environment", { exact: true })).toHaveValue("production");
+  await expect(page.getByRole("region", { name: "Transient notices" }).getByText("Settings save failed")).toBeVisible();
+});
+
 test("@P2-journey-a fits settings and filters at narrow widths", async ({ page }) => {
   await page.goto("/p2-journey.html");
   for (const width of [320, 390, 768, 1440]) {
