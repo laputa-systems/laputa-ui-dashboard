@@ -35,6 +35,7 @@ describe("@laputa-systems/ui-dashboard", () => {
     }
     expect(() => render("2024-02-01", "2024-02-02", "2024-02-02")).toThrow(RangeError);
     expect(() => render("2024-02-01", "2024-02-02", "2024-03-01", "2024-02-01")).toThrow(RangeError);
+    expect(() => renderToString(() => <DateRangePicker label="Dates" value={{ start: "2024-01-01", end: "2024-01-01" }} today="2023-02-29" onChange={() => {}} />)).toThrow(RangeError);
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

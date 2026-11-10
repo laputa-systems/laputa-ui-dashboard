@@ -60,6 +60,30 @@ test("@C040-a fits date inputs at narrow widths and zoom", async ({ page }) => {
   expect(await page.getByRole("dialog").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
 
+test("@C040-b presets use the supplied today and remain drafts until applied", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  await dialog.getByRole("button", { name: "Last 7 days" }).click();
+  await expect(dialog.getByLabel("Start date")).toHaveValue("2024-02-24");
+  await expect(dialog.getByLabel("End date")).toHaveValue("2024-03-01");
+  await expect(page.getByTestId("range-requests")).toHaveText("0");
+  await dialog.getByRole("button", { name: "Last 30 days" }).click();
+  await expect(dialog.getByLabel("Start date")).toHaveValue("2024-02-01");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(page.getByTestId("range")).toHaveText("2024-02-01 / 2024-03-01");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  await dialog.getByRole("button", { name: "Today", exact: true }).click();
+  await expect(dialog.getByLabel("Start date")).toHaveValue("2024-03-01");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("range-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Limited dates" }).click();
+  const limited = page.getByRole("dialog", { name: "Limited dates" });
+  await expect(limited.getByRole("button", { name: "Today", exact: true })).toBeEnabled();
+  await expect(limited.getByRole("button", { name: "Last 7 days" })).toBeDisabled();
+  await limited.getByRole("button", { name: "Cancel" }).click();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });

@@ -53,6 +53,11 @@ the request. The dialog requires JavaScript. For a static form, use labelled nat
 with matching `min` and `max` and validate their order on submission. Generated IDs reserve the
 `ui-date-range-` prefix.
 
+Supply `today` as a date in the same format to offer Today, Last 7 days, and Last 30 days.
+Each preset includes `today` and edits the draft without applying it. A preset outside the bounds
+or supported date range is disabled. The host supplies `today`, so the component does not read a
+clock or infer a timezone.
+
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
 Options can be individual items or labelled groups. Option IDs must be unique across the whole

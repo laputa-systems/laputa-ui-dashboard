@@ -11,8 +11,17 @@ export interface DateRangePickerProps {
   readonly value: DateRange;
   readonly min?: string | undefined;
   readonly max?: string | undefined;
+  readonly today?: string | undefined;
   readonly onChange: (range: DateRange) => void;
   readonly class?: string | undefined;
+}
+
+function shiftDate(value: string, days: number): string | undefined {
+  const date = new Date(0);
+  date.setUTCFullYear(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
+  date.setUTCDate(date.getUTCDate() + days);
+  const result = date.toISOString().slice(0, 10);
+  return validDate(result) ? result : undefined;
 }
 
 function validDate(value: string): boolean {
@@ -38,8 +47,9 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
   let frame: number | undefined;
   let disposed = false;
   const value = createMemo(() => {
-    const { min, max, value: range } = props;
+    const { min, max, today, value: range } = props;
     if ((min !== undefined && !validDate(min)) || (max !== undefined && !validDate(max)) || (min !== undefined && max !== undefined && min > max)) throw new RangeError("Invalid date range bounds");
+    if (today !== undefined && !validDate(today)) throw new RangeError("Invalid today date");
     if (!validDate(range.start) || !validDate(range.end) || range.start > range.end || (min !== undefined && range.start < min) || (max !== undefined && range.end > max)) throw new RangeError("Invalid date range value");
     return range;
   });
@@ -75,6 +85,19 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     close();
     props.onChange({ start: first, end: last });
   };
+  const presetStart = (days: number) => props.today === undefined ? undefined : shiftDate(props.today, 1 - days);
+  const presetAvailable = (days: number) => {
+    const first = presetStart(days);
+    const last = props.today;
+    return first !== undefined && last !== undefined && (props.min === undefined || first >= props.min) && (props.max === undefined || last <= props.max);
+  };
+  const selectPreset = (days: number) => {
+    const first = presetStart(days);
+    if (!presetAvailable(days) || first === undefined || props.today === undefined) return;
+    setStart(first);
+    setEnd(props.today);
+    setError("");
+  };
   onCleanup(() => { disposed = true; if (frame !== undefined) cancelAnimationFrame(frame); });
   return <div class={["ui-date-range", props.class].filter(Boolean).join(" ")}>
     <button type="button" class="ui-btn" aria-label={props.label} aria-describedby={`${id}-value`} aria-haspopup="dialog" aria-expanded={open() ? "true" : "false"} aria-controls={`${id}-dialog`} ref={element => { trigger = element; }} onClick={show}>
@@ -82,6 +105,13 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     </button>
     <Show when={open()}>
       <dialog id={`${id}-dialog`} class="ui-date-range-dialog" aria-label={props.label} ref={present} onCancel={event => { event.preventDefault(); close(); }}>
+        <Show when={props.today !== undefined}>
+          <div class="ui-date-range-presets" role="group" aria-label="Date presets">
+            <button type="button" class="ui-btn ui-btn-small" disabled={!presetAvailable(1)} onClick={() => selectPreset(1)}>Today</button>
+            <button type="button" class="ui-btn ui-btn-small" disabled={!presetAvailable(7)} onClick={() => selectPreset(7)}>Last 7 days</button>
+            <button type="button" class="ui-btn ui-btn-small" disabled={!presetAvailable(30)} onClick={() => selectPreset(30)}>Last 30 days</button>
+          </div>
+        </Show>
         <div class="ui-date-range-fields">
           <label class="ui-field" for={`${id}-start`}><span class="ui-field-label">Start date</span><input id={`${id}-start`} class="ui-text-field" type="date" min={props.min} max={props.max} value={start()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} ref={element => { startInput = element; }} onInput={event => { setStart(event.currentTarget.value); setError(""); }} /></label>
           <label class="ui-field" for={`${id}-end`}><span class="ui-field-label">End date</span><input id={`${id}-end`} class="ui-text-field" type="date" min={props.min} max={props.max} value={end()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} onInput={event => { setEnd(event.currentTarget.value); setError(""); }} /></label>
