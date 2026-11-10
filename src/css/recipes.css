@@ -12,3 +12,7 @@
 .ui-integration-option:focus-visible, .ui-integration-list input:focus-visible, .ui-integration-details:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-integration-details p { margin: 0; }
 @container (max-width: 34rem) { .ui-integration-columns { grid-template-columns: minmax(0, 1fr); } }
+.ui-profile-header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--ui-space-sm); padding: var(--ui-space-sm); overflow-wrap: anywhere; }
+.ui-profile-avatar { grid-row: span 2; }
+.ui-profile-account { display: grid; min-width: 0; }
+.ui-profile-header .ui-progress { grid-column: 1 / -1; }

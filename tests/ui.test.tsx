@@ -3,7 +3,7 @@ import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu } from "../src/layout";
-import { IntegrationPicker } from "../src/recipes";
+import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
   Button,
@@ -89,6 +89,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     const html = renderToString(() => <NotificationStack label="Notices" notices={[notice, { id: "two", title: "Second" }]} />);
     expect(html).toContain("First");
     expect(html).not.toContain("Second");
+  });
+  it("renders profile account information and rejects unsafe action links", () => {
+    const html = renderToString(() => <ProfileMenu label="Account" account={{ name: "Ada" }} items={[{ id: "settings", label: "Settings", href: "/account" }]} progress={{ label: "Setup", value: 0 }} />);
+    expect(html).toContain("Ada");
+    expect(html).toContain('href="/account"');
+    expect(html).toContain('value="0"');
+    expect(() => renderToString(() => <ProfileMenu label="Account" account={{ name: "Ada" }} items={[{ id: "bad", label: "Bad", href: "javascript:alert(1)" }]} />)).toThrow("Invalid action menu URL");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

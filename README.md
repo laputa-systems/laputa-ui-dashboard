@@ -118,6 +118,9 @@ provide a static form path.
 and details. Load `styles/recipes.css` after the base stylesheet. The host supplies connection
 states and handles connection requests; a static page can link to integration management.
 
+`ProfileMenu` from `recipes` combines account details, optional setup progress, and host-supplied
+links or actions. Load the feedback, layout, and recipes styles after the base stylesheet.
+
 ## Progress
 
 Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load

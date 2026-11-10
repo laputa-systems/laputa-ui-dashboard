@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createUniqueId, For, onCleanup, untrack } from "solid-js";
+import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { createAnchoredPopover } from "../internal/anchoredPopover";
 
@@ -6,12 +6,14 @@ export interface ActionMenuItem {
   readonly id: string;
   readonly label: string;
   readonly disabled?: boolean | undefined;
+  readonly href?: string | undefined;
 }
 
 export interface ActionMenuProps {
   readonly label: string;
   readonly items: readonly ActionMenuItem[];
   readonly onSelect: (id: string) => void;
+  readonly header?: JSX.Element | undefined;
   readonly class?: string | undefined;
 }
 
@@ -22,16 +24,18 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
   let menu: HTMLDivElement | undefined;
   let disposed = false;
   let openOnPointerDown = false;
+  const header = createMemo(() => props.header);
   const items = () => {
     const ids = new Set<string>();
     for (const item of props.items) {
       if (ids.has(item.id)) throw new Error(`Duplicate action menu item ID: ${item.id}`);
       ids.add(item.id);
+      if (item.href !== undefined && (!item.href || item.href !== item.href.trim() || !["http:", "https:"].includes(new URL(item.href, "https://ui.invalid").protocol))) throw new Error("Invalid action menu URL");
     }
     return props.items;
   };
-  const enabled = () => props.items.some(item => !item.disabled);
-  const buttons = () => [...(menu?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])];
+  const enabled = () => header() !== undefined || items().some(item => !item.disabled);
+  const buttons = () => [...(menu?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled):not([aria-disabled="true"])') ?? [])];
   const positioner = createAnchoredPopover(() => trigger, () => menu);
   const close = (restore: boolean) => {
     if (menu?.matches(":popover-open")) menu.hidePopover();
@@ -45,7 +49,8 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
     setOpen(true);
     positioner.start();
     const choices = buttons();
-    choices[last ? choices.length - 1 : 0]?.focus();
+    const target = choices[last ? choices.length - 1 : 0];
+    if (target) target.focus(); else menu.focus();
   };
   createEffect(enabled, hasActions => {
     if (!hasActions && untrack(open)) close(true);
@@ -78,6 +83,7 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
         class="ui-popover ui-action-menu-popup"
         id={id}
         role="menu"
+        tabindex="-1"
         aria-labelledby={`${id}-trigger`}
         popover="auto"
         ref={element => { menu = element; }}
@@ -98,7 +104,7 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
             return;
           }
           const choices = buttons();
-          const index = choices.indexOf(document.activeElement as HTMLButtonElement);
+          const index = choices.indexOf(document.activeElement as HTMLElement);
           if (choices.length === 0 || index < 0) return;
           let target = -1;
           if (event.key === "Home") target = 0;
@@ -115,7 +121,8 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
           if (target >= 0) { event.preventDefault(); choices[target]?.focus(); }
         }}
       >
-        <For each={items()}>{item => <button type="button" role="menuitem" class="ui-action-menu-item" tabindex="-1" disabled={item.disabled} onClick={() => { close(true); props.onSelect(item.id); }}>{item.label}</button>}</For>
+        <Show when={header() !== undefined}><div role="none" class="ui-action-menu-header">{header()}</div></Show>
+        <For each={items()}>{item => <Show when={item.href !== undefined} fallback={<button type="button" role="menuitem" class="ui-action-menu-item" tabindex="-1" disabled={item.disabled} onClick={() => { close(true); props.onSelect(item.id); }}>{item.label}</button>}><a role="menuitem" class="ui-action-menu-item" tabindex="-1" href={item.disabled ? undefined : item.href} aria-disabled={item.disabled ? "true" : undefined} onClick={event => { if (item.disabled) event.preventDefault(); else close(false); }}>{item.label}</a></Show>}</For>
       </div>
     </span>
   );

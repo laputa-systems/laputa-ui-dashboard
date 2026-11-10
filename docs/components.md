@@ -223,6 +223,11 @@ focusable with `aria-disabled`. The menu requires JavaScript and the browser Pop
 ordinary links or forms for no-JavaScript actions. Generated IDs reserve the `ui-action-menu-`
 prefix. Use distinct Solid `renderId` values when independently hydrating multiple roots.
 
+An action menu item may supply an HTTP or HTTPS `href` or a relative URL. A link navigates using
+native browser behavior and does not call `onSelect`. Invalid URLs throw. An optional `header`
+renders noninteractive content above the actions. A header keeps the menu available even if every
+action is disabled.
+
 `FilterMenu`, `FilterMenuProps`, `FilterGroup`, `FilterOption`, and `FilterSelection` are exported
 from `layout`. Supply a `label`, named `groups`, a controlled `value`, and `onChange`. Selections
 are `{ groupId, optionId }` pairs suitable for URL serialization. Group IDs are unique and option
@@ -247,6 +252,14 @@ the action. Pending disables it until the host supplies another state. The host 
 request correlation, and external results. Back returns to search. Escape returns to search from
 details, then closes the dialog. Close restores focus to the trigger. The picker requires JavaScript;
 provide an ordinary link to integration management for static pages.
+
+`ProfileMenu`, `ProfileMenuProps`, and `ProfileAccount` from `recipes` compose `ActionMenu` and
+`Progress`. Load the base stylesheet, then `styles/feedback.css`, `styles/layout.css`, and
+`styles/recipes.css`. Supply a label, account name, optional detail and decorative avatar, and menu
+items. Items with `href` are links; other items call `onSelect(id)` when supplied. Actions without
+a callback are disabled. Optional `progress` uses the same value and max rules as `Progress`.
+Arrow keys navigate enabled items and Escape returns focus to the trigger. The menu requires
+JavaScript and the browser Popover API. Provide ordinary account links for static pages.
 
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.

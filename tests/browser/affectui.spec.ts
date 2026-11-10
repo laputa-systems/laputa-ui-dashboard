@@ -556,6 +556,61 @@ test("@C059-a retains a rejected notice and never steals focus for background up
   await expect(background).toBeFocused();
 });
 
+test("@C064-a opens an account menu with progress, routes and actions", async ({ page }) => {
+  const warnings: string[] = [];
+  page.on("console", message => { if (message.text().includes("NO_OWNER_EFFECT")) warnings.push(message.text()); });
+  await page.goto("/profile-menu.html");
+  const trigger = page.getByRole("button", { name: "Account menu" });
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  const menu = page.getByRole("menu", { name: "Account menu" });
+  await expect(menu.getByText("Ada Lovelace")).toBeVisible();
+  await expect(menu.getByText("ada@example.test")).toBeVisible();
+  await expect(menu.getByRole("progressbar", { name: "Setup" })).toHaveAttribute("value", "2");
+  const settings = menu.getByRole("menuitem", { name: "Settings" });
+  await expect(settings).toHaveAttribute("href", "/account");
+  await expect(settings).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(menu.getByRole("menuitem", { name: "Sign out" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("profile-action")).toHaveText("signout");
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await menu.getByRole("menuitem", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/\/account$/u);
+  expect(warnings).toEqual([]);
+});
+
+test("@C064-a keeps links usable when actions are unavailable and fits narrow views", async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("/profile-menu.html");
+  await page.getByRole("button", { name: "Profile without actions" }).click();
+  await expect(page.getByRole("menu", { name: "Profile without actions" }).getByText("No actions")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Profile without actions" })).toBeFocused();
+  await page.getByRole("button", { name: "Read-only profile" }).click();
+  const menu = page.getByRole("menu", { name: "Read-only profile" });
+  await expect(menu.getByRole("menuitem", { name: "Sign out" })).toBeDisabled();
+  await expect(menu.getByRole("menuitem", { name: "Settings" })).toHaveAttribute("href", "/account");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await menu.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await menu.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto("/profile-menu.html");
+  await expect(staticPage.getByRole("link", { name: "Account settings" })).toHaveAttribute("href", "/account");
+  await staticContext.close();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
