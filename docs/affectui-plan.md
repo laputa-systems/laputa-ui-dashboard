@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** P3-page-grid-a. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P2-static-forge, S10-a, S10-b, S16-a, S17-split-a, S17-split-b, S17-tabs-a, S17-tabs-b, S17-preview-a, S17-journey, P3-tab-mechanics, P3-settings-a, P3-description-a, P3-page-frame-a, P3-page-grid-a, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
-- **Next:** continue P3 shared page layouts and phase-exit journeys. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
+- **Last accepted revision:** P3-canvas-journey. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P2-static-forge, S10-a, S10-b, S16-a, S17-split-a, S17-split-b, S17-tabs-a, S17-tabs-b, S17-preview-a, S17-journey, P3-tab-mechanics, P3-settings-a, P3-description-a, P3-page-frame-a, P3-page-grid-a, P3-canvas-journey, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
+- **Next:** finish P3 exit specimen coverage and run the phase check. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
 
 ## Charter
 

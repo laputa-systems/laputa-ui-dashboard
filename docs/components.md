@@ -360,7 +360,9 @@ and named navigation landmarks in the navigation slots. `navigationDrawer={{ lab
 combined modal drawer at that width. Set `drawer: true` on `workspace` to offer a separate modal
 workspace drawer. Escape returns focus to the opener, resizing preserves focus inside a pane, and
 removing a focused workspace moves focus to the main area. Without JavaScript, both areas remain
-visible and stacked. The CSS classes also support static HTML. Resizable panes remain separate work.
+visible and stacked. If a host action closes a drawer directly with `dialog.close()`, the host must
+return focus to an appropriate control; browsers differ in their native focus restoration. The CSS
+classes also support static HTML. Resizable panes remain separate work.
 
 `Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
 strings and noninteractive `children`. The label names the button independently of its tooltip;

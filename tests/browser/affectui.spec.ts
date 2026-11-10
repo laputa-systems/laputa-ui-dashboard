@@ -169,6 +169,64 @@ test("@P3-settings-a keeps a static form usable without JavaScript", async ({ br
   await context.close();
 });
 
+test("@P3-canvas-journey links selection and resizes the bottom trace", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/canvas-workbench.html");
+  await page.getByRole("navigation", { name: "Nodes" }).getByRole("button", { name: "Beta" }).click();
+  await expect(page.getByTestId("canvas-selection")).toHaveText("Selected: Beta");
+  await expect(page.getByTestId("inspector-selection")).toHaveText("Beta");
+  await expect(page.getByTestId("trace-selection")).toHaveText("Trace for Beta");
+  const separator = page.getByRole("separator", { name: "Canvas and trace" });
+  await separator.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(separator).toHaveAttribute("aria-valuenow", "230");
+  expect(errors).toEqual([]);
+});
+
+test("@P3-canvas-journey routes a mobile selection and restores drawer focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/canvas-workbench.html");
+  const opener = page.getByRole("button", { name: "Open Navigation" });
+  await opener.click();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  await drawer.getByRole("button", { name: "Beta", exact: true }).click();
+  await expect(drawer).not.toBeVisible();
+  await expect(opener).toBeFocused();
+  await expect(page.getByTestId("canvas-selection")).toHaveText("Selected: Beta");
+  await page.getByRole("button", { name: "Open Inspector" }).click();
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+  await expect(inspector.getByTestId("inspector-selection")).toHaveText("Beta");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Open Inspector" })).toBeFocused();
+});
+
+test("@P3-canvas-journey keeps content reachable at page and embedded widths", async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("/canvas-workbench.html");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator(".ui-workbench-container").evaluate(element => { (element as HTMLElement).style.width = "350px"; });
+  await expect(page.getByRole("button", { name: "Open Navigation" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
+  await page.locator(".ui-workbench-container").evaluate(element => { (element as HTMLElement).style.width = ""; });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto("/canvas-workbench-static.html");
+  await expect(staticPage.getByRole("link", { name: "Beta" })).toHaveAttribute("href", "/nodes/beta");
+  await expect(staticPage.getByRole("region", { name: "Run trace" })).toContainText("Trace for Alpha");
+  await staticContext.close();
+});
+
 test("@S17-journey composes inset panes and preserves artifact drafts", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/inset-workbench.html");
