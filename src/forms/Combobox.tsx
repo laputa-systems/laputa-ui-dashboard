@@ -1,5 +1,6 @@
 import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { domIdSuffix } from "../internal/domId";
 import { createAnchoredPopover } from "../internal/anchoredPopover";
 import { createFieldDescriptions } from "./fieldDescriptions";
 
@@ -111,7 +112,7 @@ export function ComboboxControl(props: ComboboxProps & { readonly creationOption
   };
   const enabled = () => visible().flatMap(group => group.options).filter(option => !option.disabled);
   const activeOption = () => enabled().find(option => option.id === active());
-  const optionId = (id: string) => `${popupId}-option-${Array.from({ length: id.length }, (_, index) => id.charCodeAt(index).toString(16)).join("-")}`;
+  const optionId = (id: string) => `${popupId}-option-${domIdSuffix(id)}`;
   const activeDescendant = () => {
     const option = activeOption();
     return open() && option ? optionId(option.id) : undefined;

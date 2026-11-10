@@ -1,5 +1,6 @@
 import { createEffect, createSignal, createUniqueId, For, onCleanup } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { domIdSuffix } from "../internal/domId";
 import { createAnchoredPopover } from "../internal/anchoredPopover";
 import { NativeSelect, type NativeSelectOption } from "./NativeSelect";
 
@@ -39,7 +40,7 @@ export function Select(props: SelectProps): JSX.Element {
     return props.options;
   };
   const enabled = () => options().filter(option => !option.disabled);
-  const optionId = (value: string) => `${id}-option-${Array.from({ length: value.length }, (_, index) => value.charCodeAt(index).toString(16)).join("-")}`;
+  const optionId = (value: string) => `${id}-option-${domIdSuffix(value)}`;
   const activeOption = () => enabled().find(option => option.value === active());
   const activate = (value: string | undefined) => {
     setActive(value);

@@ -1,5 +1,7 @@
 import { createMemo, createSignal, createUniqueId, For } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { domIdSuffix } from "../internal/domId";
+import { createTabSwipeGuard } from "../internal/tabSwipe";
 
 export interface Tab {
   readonly id: string;
@@ -24,8 +26,7 @@ export function Tabs(props: TabsProps): JSX.Element {
   const [focused, setFocused] = createSignal<string>();
   const [within, setWithin] = createSignal(false);
   let list: HTMLDivElement | undefined;
-  let touch: { readonly pointerId: number; readonly x: number; readonly y: number; moved: boolean } | undefined;
-  let suppressClick = false;
+  const swipe = createTabSwipeGuard();
   const tabs = createMemo(() => {
     if (props.tabs.length > 100) throw new RangeError("Tabs supports at most 100 tabs");
     const ids = new Set<string>();
@@ -36,9 +37,8 @@ export function Tabs(props: TabsProps): JSX.Element {
     }
     return props.tabs;
   });
-  const suffix = (value: string) => Array.from({ length: value.length }, (_, index) => value.charCodeAt(index).toString(16)).join("-");
-  const tabId = (value: string) => `${id}-tab-${suffix(value)}`;
-  const panelId = (value: string) => `${id}-panel-${suffix(value)}`;
+  const tabId = (value: string) => `${id}-tab-${domIdSuffix(value)}`;
+  const panelId = (value: string) => `${id}-panel-${domIdSuffix(value)}`;
   const enabled = () => tabs().filter(tab => !tab.disabled);
   const roving = () => {
     const candidates = enabled();
@@ -60,8 +60,8 @@ export function Tabs(props: TabsProps): JSX.Element {
     if (props.activation !== "manual") choose(target.id);
   };
   return <div class={["ui-tabs", props.class].filter(Boolean).join(" ")}>
-    <div class="ui-tabs-list" role="tablist" aria-label={props.label} ref={element => { list = element; }} onKeyDown={move} onFocusOut={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setWithin(false); }} onPointerDown={event => { suppressClick = false; if (event.pointerType === "touch" || event.pointerType === "pen") touch = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false }; }} onPointerMove={event => { if (touch?.pointerId === event.pointerId && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 8) touch.moved = true; }} onPointerUp={event => { if (touch?.pointerId === event.pointerId) { suppressClick = touch.moved; touch = undefined; } }} onPointerCancel={() => { touch = undefined; suppressClick = false; }}>
-      <For each={tabs()} keyed={tab => tab.id}>{tab => <button type="button" role="tab" class="ui-tabs-tab" id={tabId(tab().id)} data-tab-id={tab().id} aria-controls={panelId(tab().id)} aria-selected={props.value === tab().id ? "true" : "false"} disabled={tab().disabled} tabindex={roving() === tab().id ? 0 : -1} onFocus={() => { setWithin(true); setFocused(tab().id); }} onClick={event => { if (event.detail > 0 && suppressClick) { suppressClick = false; return; } choose(tab().id); }}>{tab().icon && <span aria-hidden="true">{tab().icon}</span>}<span>{tab().label}</span>{tab().count !== undefined && <span>{tab().count}</span>}</button>}</For>
+    <div class="ui-tabs-list" role="tablist" aria-label={props.label} ref={element => { list = element; }} onKeyDown={move} onFocusOut={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setWithin(false); }} onPointerDown={swipe.pointerDown} onPointerMove={swipe.pointerMove} onPointerUp={swipe.pointerUp} onPointerCancel={swipe.pointerCancel}>
+      <For each={tabs()} keyed={tab => tab.id}>{tab => <button type="button" role="tab" class="ui-tabs-tab" id={tabId(tab().id)} data-tab-id={tab().id} aria-controls={panelId(tab().id)} aria-selected={props.value === tab().id ? "true" : "false"} disabled={tab().disabled} tabindex={roving() === tab().id ? 0 : -1} onFocus={() => { setWithin(true); setFocused(tab().id); }} onClick={event => { if (swipe.suppress(event)) return; choose(tab().id); }}>{tab().icon && <span aria-hidden="true">{tab().icon}</span>}<span>{tab().label}</span>{tab().count !== undefined && <span>{tab().count}</span>}</button>}</For>
     </div>
     <For each={tabs()} keyed={tab => tab.id}>{tab => <section role="tabpanel" id={panelId(tab().id)} aria-labelledby={tabId(tab().id)} hidden={props.value !== tab().id} tabindex="0">{tab().content}</section>}</For>
   </div>;

@@ -1,5 +1,6 @@
 import { createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { domIdSuffix } from "../internal/domId";
 
 export interface Command {
   readonly id: string;
@@ -94,7 +95,7 @@ export function CommandMenu(props: CommandMenuProps): JSX.Element {
   });
   const enabled = () => visible().flatMap(group => group.commands).filter(command => !command.disabled);
   const current = () => submenuRemoved() ? undefined : enabled().find(command => command.id === active());
-  const optionId = (commandId: string) => `${id}-option-${Array.from({ length: commandId.length }, (_, index) => commandId.charCodeAt(index).toString(16)).join("-")}`;
+  const optionId = (commandId: string) => `${id}-option-${domIdSuffix(commandId)}`;
   const close = () => {
     if (frame !== undefined) cancelAnimationFrame(frame);
     if (dialog?.open) dialog.close();
