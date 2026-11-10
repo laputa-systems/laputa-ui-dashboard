@@ -2,9 +2,9 @@
 
 ## Status
 
-- **State:** Planned 2026-11-10. Not started. Gate 0 is the open Stats acceptance in the [AffectUI plan](affectui-plan.md); no theme or Discover work starts before it closes or the owner settles it (see **Gate 0**).
+- **State:** Planned 2026-11-10. Not started. Gate 0 is the open Stats acceptance in the [AffectUI plan](affectui-plan.md). It runs in parallel with T1–T4 under **Lanes**. Gate 0 must close, or the owner must settle it, before any release and before T6.
 - **Revisions reviewed:** library `add1733`, Stats `6f12fb4`, Discover `c90f80d`, Niceforge `apps/forge` and `web` on `@laputa-systems/ui-dashboard@0.5.0`.
-- **Next:** Gate 0, then T1.
+- **Next:** launch lanes A, B, C and D together.
 - **Resume:** "Run the multi-product campaign in `docs/multi-product-plan.md` from **Status**." First command: `git status && git log --oneline -5`, then the same in `~/d/discover` and `~/d/stats`.
 
 ## Goal
@@ -13,7 +13,7 @@ Stats, Discover and Niceforge share one implementation of controls, interaction 
 
 ## Charter
 
-This plan is not an execution grant. It applies the AffectUI plan's Charter for slicing, commits, failure handling, performance gates and verification, with the boundaries below. One writer. Each slice lands with its code, behavior tests, docs and measurements. Run `make check` at each slice exit in this library, and the consumer's own check in the consumer.
+This plan is not an execution grant. It applies the AffectUI plan's Charter for slicing, commits, failure handling, performance gates and verification, with the boundaries below and the parallel lanes in **Lanes**, which replace that Charter's single-writer default for these owners. Each slice lands with its code, behavior tests, docs and measurements. Run `make check` at each slice exit in this library, and the consumer's own check in the consumer.
 
 ## Execution boundary
 
@@ -45,6 +45,23 @@ These facts shape the decisions below. Recheck them before each slice.
 - **Shared behavior in the reader.** The search island may adopt a library component only if its packed, per-component chunk fits the reader budget. The budget is no more than 5% growth in initial reader JS, with zero growth in JS for pages that do not open search. Otherwise extract the shared mechanics into a smaller entry or keep Discover's search and record the duplication.
 - **Shell, Workbench and DataTable** are not used on public Discover pages. The research review surface may use them only where its layout already needs them.
 
+## Lanes
+
+Four writers run at once, each in its own worktree and each launched through the Pi bridge. The parent scopes each lane, reviews it, rebases it onto the integration branch, reruns its acceptance there, and lands it. Lanes update neither plan's Status; the parent does.
+
+| Lane | Work | Worktree | Owns | Must not touch |
+| --- | --- | --- | --- | --- |
+| A | Gate 0: Button payload and paired readiness | library `.work/wt/gate0`; Stats `.work/wt/gate0` | `src/components/*.tsx`, `src/index.ts`, `src/internal/`, `vite.config.ts`; Stats build config and route entries | `src/tokens.css`, `src/css/`, Stats cost code |
+| B | T1, T2, T3, then the T5 fixture | library `.work/wt/theming` | `src/tokens.css`, `src/css/`, `scripts/build-css.mjs`, `docs/theming.md`, new theme fixture pages and their tests | component TSX, package exports, existing goldens |
+| C | T4 on the 0.6.0 tarball, then the 0.6.x tarball with T2 | Discover `.work/wt/ui-pilot` | Discover `site/site.css`, `site/client/search.css`, presentational markup in `src/site/pages.ts` | the paths DSC-33 owns (**Execution boundary**) |
+| D | Stats data: storage inputs and partially covered series | Stats `.work/wt/coverage` | Stats cost and series code with their tests | Stats build config, route entries, library |
+
+- **Shared files.** `package.json`, `playwright.config.ts`, `vitest.config.ts`, the fixture server and `tests/` helpers belong to the parent. A lane that needs one of them stops and asks. Lane B adds no package export; an exported theme waits for its second consumer.
+- **Why C need not wait for B.** A page-wide theme on `:root` and `@import … layer(ui)` both work with the current tarball. Only themes scoped to a region need T2. C rebases onto T2's tarball before its isolation acceptance.
+- **Timing windows.** Lane A's paired cold-readiness runs need a quiet host. The parent pauses browser suites and builds in B, C and D for each measurement window and records whether `perf-gate-ready` passed. Byte and size gates run at any time. If no quiet window opens, report "perf gate deferred: host busy"; Gate 0 cannot close until a window opens.
+- **Serial points.** T5's Discover adoption waits for DSC-33 H3. T6 waits for Gate 0, because both are the same per-entry chunking problem. A release waits for Gate 0 and T2.
+- **Throughput.** Another lane goes in only after the parent measures that integration review, not lane work, is the bottleneck.
+
 ## Gate 0 — close Stats acceptance
 
 The AffectUI plan's Next remains the first work: unrelated Button code in initial route graphs, and paired cold-readiness measurements. Four Stats routes are above the 5% review threshold, and cold readiness regresses beyond its spread. Four chunking approaches have failed. Give this gate one more bounded attempt, a symbol-level chunking approach or a smaller fully compatible forwarding implementation, then stop. If it fails, the owner chooses one of three outcomes:
@@ -53,7 +70,7 @@ The AffectUI plan's Next remains the first work: unrelated Button code in initia
 2. Ship 0.6.x as the Stats baseline and continue the performance work in parallel with T1.
 3. Keep this campaign blocked.
 
-T1 is read-only analysis and may run during the attempt.
+Lanes B, C and D run during the attempt.
 
 ## Sequence
 
