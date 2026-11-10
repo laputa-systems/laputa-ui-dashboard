@@ -257,6 +257,17 @@ do not call the callback. Native form submission uses the selected ID. Form rese
 current parent value. If the selected ID is absent, no radio is checked. Give different groups
 different names. Static forms can use ordinary fieldsets and radio inputs.
 
+`NativeSelect`, `NativeSelectProps`, and `NativeSelectOption` from `forms` render a labelled
+native select. Supply a unique `id`, label, and at most 500 options with nonempty unique values.
+`hint` and `error` are associated with the control. Native select attributes such as `name`,
+`required`, `disabled`, `form`, and `autocomplete` are forwarded. `defaultValue` initializes an
+uncontrolled select and native reset restores that value. `value` and `onValueChange` make the
+control parent-owned; a rejected request and form reset retain the parent value. A controlled
+select without a callback is disabled. A `placeholder` supplies the empty value for a required
+choice. An empty value with nonempty options requires a placeholder. A value missing from the options throws. The
+component supports one selection. Static forms can use native select and option elements with
+the field classes.
+
 Import `IntegrationPicker`, `IntegrationPickerProps`, `Integration`, and `IntegrationConnection`
 from `@laputa-systems/ui-dashboard/recipes`. Load `styles/recipes.css` after the base stylesheet.
 Supply a label and up to 500 services with nonempty unique IDs, names, descriptions, optional

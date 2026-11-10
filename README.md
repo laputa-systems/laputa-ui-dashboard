@@ -117,6 +117,8 @@ provide a static form path.
 `Tabs` from `layout` and `RadioGroup` from `forms` provide separate tab and radio semantics.
 The existing `Segmented` button group retains its original behavior.
 
+`NativeSelect` from `forms` provides a labelled native select with form validation and reset.
+
 `IntegrationPicker` from `@laputa-systems/ui-dashboard/recipes` opens a searchable service list
 and details. Load `styles/recipes.css` after the base stylesheet. The host supplies connection
 states and handles connection requests; a static page can link to integration management.

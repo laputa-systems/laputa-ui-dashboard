@@ -695,6 +695,39 @@ test("@C073-a supports manual activation and does not select during a swipe", as
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
+test("@C074-a native select preserves validation, control and form reset", async ({ page }) => {
+  await page.goto("/select.html");
+  const project = page.getByLabel("Project", { exact: true });
+  const local = page.getByLabel("Local choice");
+  await expect(page.getByLabel("Locked choice")).toBeDisabled();
+  await expect(project).toHaveAccessibleDescription("Choose a project Project required");
+  await expect(project).toHaveAttribute("aria-invalid", "true");
+  await page.getByRole("button", { name: "Save project" }).click();
+  await expect(project).toBeFocused();
+  await project.selectOption("alpha");
+  await local.selectOption("a");
+  await expect(page.getByTestId("select-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Save project" }).click();
+  await expect(page.getByTestId("select-submitted")).toHaveText("alpha");
+  await page.getByRole("button", { name: "Reset project" }).click();
+  await expect(project).toHaveValue("alpha");
+  await expect(local).toHaveValue("b");
+  await page.getByRole("button", { name: "Parent selects beta" }).click();
+  await expect(project).toHaveValue("beta");
+  await expect(page.getByTestId("select-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject select requests" }).click();
+  await project.selectOption("alpha");
+  await expect(project).toHaveValue("beta");
+  await expect(page.getByTestId("select-calls")).toHaveText("2");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, RadioGroup, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
@@ -104,6 +104,16 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <RadioGroup label="Choice" name="choice" value="one" options={[option, option]} onChange={() => {}} />)).toThrow("Radio option IDs must be nonempty and unique");
     const html = renderToString(() => <RadioGroup label="Choice" name="choice" value="one" options={[option]} required onChange={() => {}} />);
     expect(html).toContain('type="radio"');
+    expect(html).toContain('name="choice"');
+    expect(html).toContain("required");
+  });
+  it("validates native select options and renders native form markup", () => {
+    const option = { value: "one", label: "One" };
+    expect(() => renderToString(() => <NativeSelect id="choice" label="Choice" options={[option, option]} />)).toThrow("Select option values must be nonempty and unique");
+    expect(() => renderToString(() => <NativeSelect id="choice" label="Choice" options={[option]} value="missing" onValueChange={() => {}} />)).toThrow("Select value is not in the options");
+    expect(() => renderToString(() => <NativeSelect id="choice" label="Choice" options={[option]} value="" onValueChange={() => {}} />)).toThrow("An empty select value requires a placeholder");
+    const html = renderToString(() => <NativeSelect id="choice" label="Choice" name="choice" options={[option]} required />);
+    expect(html).toContain("<select");
     expect(html).toContain('name="choice"');
     expect(html).toContain("required");
   });
