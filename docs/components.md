@@ -279,6 +279,13 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`Breadcrumbs`, `BreadcrumbsProps`, and `Breadcrumb` from `layout` render a labelled navigation
+landmark with ordinary ancestor links and a non-link current page. Supply `ancestors` in order and
+`current`; `label` defaults to “Breadcrumb”. Labels must contain text, and ancestor URLs must be
+relative or HTTP(S). Invalid labels and URLs throw. Long paths wrap without hiding links. Static
+HTML can use `ui-breadcrumbs` on a `nav`, an ordered list of links, and
+`ui-breadcrumb-separator` on decorative separators.
+
 Import `Disclosure` and `DisclosureProps` from `@laputa-systems/ui-dashboard/layout`, and load
 `@laputa-systems/ui-dashboard/styles/layout.css` after the base stylesheet. `label` names a
 native summary and `children` supplies its content. `defaultOpen` initializes local state once.

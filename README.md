@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`Breadcrumbs` from `@laputa-systems/ui-dashboard/layout` presents ordinary ancestor links and the
+current page. Load `styles/layout.css` after the base stylesheet.
+
 ## Disclosure
 
 Import `Disclosure` from `@laputa-systems/ui-dashboard/layout` and load

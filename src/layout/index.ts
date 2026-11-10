@@ -4,3 +4,4 @@ export { ActionMenu, type ActionMenuItem, type ActionMenuProps } from "./ActionM
 export { CommandMenu, type CommandMenuProps, type CommandGroup, type Command, type CommandSubmenu, type CommandShortcut } from "./CommandMenu";
 export { FilterMenu, type FilterMenuProps, type FilterGroup, type FilterOption, type FilterSelection } from "./FilterMenu";
 export { Tabs, type TabsProps, type Tab } from "./Tabs";
+export { Breadcrumbs, type BreadcrumbsProps, type Breadcrumb } from "./Breadcrumbs";

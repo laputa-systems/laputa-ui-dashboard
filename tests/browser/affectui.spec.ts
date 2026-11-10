@@ -3,6 +3,24 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P2-breadcrumbs keeps every ancestor navigable in a narrow container", async ({ page, browserName }) => {
+  await page.goto("/breadcrumbs.html");
+  const navigation = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(navigation.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
+  await expect(navigation.getByRole("link", { name: "A project with a very long name that remains readable" })).toHaveAttribute("href", "/projects/long");
+  await expect(navigation.locator('[aria-current="page"]')).toHaveText("Repository settings");
+  await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
+  await expect(navigation.getByRole("link", { name: "Projects" })).toBeFocused();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    expect(await navigation.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@C040-a edits a date-only range as a controlled draft", async ({ page }) => {
   await page.goto("/date-range.html");
   const trigger = page.getByRole("button", { name: "Reporting dates" });
@@ -1408,6 +1426,9 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   await page.getByRole("button", { name: "Choose frequency" }).click();
   await expect(page).toHaveURL(/\/frequency\?frequency=weekly$/u);
   await page.goto("/forms-static.html");
+  const breadcrumb = page.getByRole("navigation", { name: "Static breadcrumb" });
+  await expect(breadcrumb.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
+  await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText("Settings");
   await expect(page.getByRole("navigation", { name: "Static sections" }).getByRole("link", { name: "Overview" })).toHaveAttribute("href", "/overview");
   await expect(page.getByRole("region", { name: "Static notifications" }).getByRole("link", { name: "Open notification inbox" })).toHaveAttribute("href", "/inbox");
   await page.getByRole("group", { name: "Static status filters" }).getByLabel("Open").check();

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -70,6 +70,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     complete("done");
     await changed;
     expect(store.toasts().find(toast => toast.id === "changed")?.title).toBe("Host update");
+  });
+  it("rejects unsafe breadcrumb links and empty labels", () => {
+    expect(() => renderToString(() => <Breadcrumbs ancestors={[{ label: "Bad", href: "javascript:alert(1)" }]} current="Here" />)).toThrow("Invalid breadcrumb");
+    expect(() => renderToString(() => <Breadcrumbs ancestors={[]} current="  " />)).toThrow("nonempty");
+    const html = renderToString(() => <Breadcrumbs ancestors={[{ label: "Projects", href: "/projects" }]} current="Settings" />);
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('href="/projects"');
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);
