@@ -225,6 +225,19 @@ move between chips. Escape closes the filter disclosure and focuses its summary.
 restores focus after the parent removes it; a rejected request retains focus on the chip. A static
 form can use native fieldsets and named checkboxes for server-side filtering.
 
+Import `IntegrationPicker`, `IntegrationPickerProps`, `Integration`, and `IntegrationConnection`
+from `@laputa-systems/ui-dashboard/recipes`. Load `styles/recipes.css` after the base stylesheet.
+Supply a label and up to 500 services with nonempty unique IDs, names, descriptions, optional
+keywords, and host-owned connection states. Invalid identities or empty failure and expiry messages
+throw. The picker searches locally and keeps the selected service as presentation state. A removed
+service loses its selection and does not become selected again if it returns. The host reports
+`disconnected`, `pending`, `connected`, `expired`, or `failed`; selecting a service does not connect
+it. `onConnect(id)` requests a connection or retry once per activation. A missing callback disables
+the action. Pending disables it until the host supplies another state. The host owns authorization,
+request correlation, and external results. Back returns to search. Escape returns to search from
+details, then closes the dialog. Close restores focus to the trigger. The picker requires JavaScript;
+provide an ordinary link to integration management for static pages.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

@@ -391,6 +391,116 @@ test("@C050-a supports keyboard chips, limits and narrow layouts", async ({ page
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
+test("@C052-a searches services and presents host-owned connection state", async ({ page }) => {
+  await page.goto("/integration-picker.html");
+  const trigger = page.getByRole("button", { name: "Add integration" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Add integration" });
+  const search = dialog.getByRole("searchbox", { name: "Search integrations" });
+  await expect(search).toBeFocused();
+  await search.fill("metrics");
+  await expect(dialog.getByRole("button", { name: "Alpha" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Beta" })).toHaveCount(0);
+  await page.keyboard.press("ArrowDown");
+  await expect(dialog.getByRole("button", { name: "Alpha" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  const details = dialog.getByRole("region", { name: "Alpha" });
+  await expect(details.getByText("Connect an alpha service")).toBeVisible();
+  await details.getByRole("button", { name: "Connect Alpha" }).click();
+  await expect(page.getByTestId("connection-calls")).toHaveText("1");
+  await expect(details.getByText("Not connected")).toBeVisible();
+  await page.getByRole("button", { name: "Mark connection pending", includeHidden: true }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(details.getByText("Connecting")).toBeVisible();
+  await expect(details.getByRole("button", { name: "Connect Alpha" })).toBeDisabled();
+  await page.getByRole("button", { name: "Fail connection", includeHidden: true }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(details.getByRole("alert")).toHaveText("Connection failed");
+  await details.getByRole("button", { name: "Retry Alpha" }).click();
+  await expect(page.getByTestId("connection-calls")).toHaveText("2");
+  await details.getByRole("button", { name: "Back" }).click();
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+});
+
+test("@C052-a stacks regions at narrow widths and exposes expired state", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/integration-picker.html");
+  await page.getByRole("button", { name: "Add integration" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add integration" });
+  await dialog.getByRole("button", { name: "Gamma" }).click();
+  const details = dialog.getByRole("region", { name: "Gamma" });
+  await expect(details.getByText("Authorization expired")).toBeVisible();
+  await expect(details.getByRole("button", { name: "Reconnect Gamma" })).toBeEnabled();
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  const positions = await dialog.evaluate(element => {
+    const list = element.querySelector(".ui-integration-list")!.getBoundingClientRect();
+    const details = element.querySelector(".ui-integration-details")!.getBoundingClientRect();
+    return { listBottom: list.bottom, detailsTop: details.top };
+  });
+  expect(positions.detailsTop).toBeGreaterThanOrEqual(positions.listBottom);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("button", { name: "Add integration" })).toBeFocused();
+});
+
+test("@C052-a preserves text editing, handles removed services and disables unavailable actions", async ({ page }) => {
+  await page.goto("/integration-picker.html");
+  await page.getByRole("button", { name: "Add integration" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add integration" });
+  const search = dialog.getByRole("searchbox", { name: "Search integrations" });
+  await search.fill("Alpha");
+  await search.evaluate(input => input.addEventListener("keydown", event => { if (event.key === "Home") queueMicrotask(() => input.setAttribute("data-home-prevented", String(event.defaultPrevented))); }));
+  await page.keyboard.press("Home");
+  await expect(search).toHaveAttribute("data-home-prevented", "false");
+  await search.evaluate(input => (input as HTMLInputElement).setSelectionRange(0, 0));
+  await page.keyboard.type("x");
+  await expect(search).toHaveValue("xAlpha");
+  await expect(dialog.getByRole("status")).toHaveText("No matching integrations");
+  await search.fill("");
+  await search.evaluate(input => { input.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })); (input as HTMLInputElement).value = "Beta"; input.dispatchEvent(new InputEvent("input", { bubbles: true, isComposing: true })); });
+  await expect(dialog.getByRole("button", { name: "Alpha" })).toBeVisible();
+  await search.evaluate(input => input.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: "Beta" })));
+  await expect(dialog.getByRole("button", { name: "Alpha" })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Beta" })).toBeVisible();
+  await search.fill("");
+  await dialog.getByRole("button", { name: "Alpha" }).click();
+  const toggle = page.getByRole("button", { name: "Toggle Alpha", includeHidden: true });
+  await toggle.evaluate(button => (button as HTMLButtonElement).click());
+  await expect(dialog.getByRole("region", { name: "Alpha" })).toHaveCount(0);
+  await toggle.evaluate(button => (button as HTMLButtonElement).click());
+  await expect(dialog.getByRole("region", { name: "Alpha" })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Beta" }).click();
+  await expect(dialog.getByRole("region", { name: "Beta" }).getByText("Connected")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Connect Beta" })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Browse only" }).click();
+  const readOnly = page.getByRole("dialog", { name: "Browse only" });
+  await readOnly.getByRole("button", { name: "Locked" }).click();
+  await expect(readOnly.getByRole("button", { name: "Connect Locked" })).toBeDisabled();
+  await expect(readOnly.getByText("Connection unavailable")).toBeVisible();
+});
+
+test("@C052-a fits long service descriptions and offers static navigation", async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("/integration-picker.html");
+  await page.getByRole("button", { name: "Add integration" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add integration" });
+  await dialog.getByRole("button", { name: "Long service" }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto("/integration-picker.html");
+  await expect(staticPage.getByRole("link", { name: "Manage integrations" })).toHaveAttribute("href", "/integration-settings");
+  await staticContext.close();
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });

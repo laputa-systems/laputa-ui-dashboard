@@ -3,6 +3,7 @@ import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu } from "../src/layout";
+import { IntegrationPicker } from "../src/recipes";
 import {
   Badge,
   Button,
@@ -71,6 +72,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <FilterMenu label="Filters" groups={[group, group]} value={[]} onChange={() => {}} />)).toThrow("Filter group IDs must be nonempty and unique");
     expect(() => renderToString(() => <FilterMenu label="Filters" groups={[{ ...group, options: [group.options[0]!, group.options[0]!] }]} value={[]} onChange={() => {}} />)).toThrow("Filter option IDs must be nonempty and unique within a group");
     expect(() => renderToString(() => <FilterMenu label="Filters" groups={[]} value={[{ groupId: "x", optionId: "y" }, { groupId: "x", optionId: "y" }]} onChange={() => {}} />)).toThrow("Filter selections must have nonempty unique IDs");
+  });
+  it("validates integration identities and connection errors", () => {
+    const item = { id: "one", label: "One", description: "Service", connection: { kind: "disconnected" as const } };
+    expect(() => renderToString(() => <IntegrationPicker label="Integrations" integrations={[item, item]} />)).toThrow("Integration IDs must be nonempty and unique");
+    expect(() => renderToString(() => <IntegrationPicker label="Integrations" integrations={[{ ...item, connection: { kind: "failed", message: "" } }]} />)).toThrow("Integration connection state requires a message");
+    const html = renderToString(() => <IntegrationPicker label="Integrations" integrations={[item]} />);
+    expect(html).toContain("1 integration");
+    expect(html).not.toContain("<dialog");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);
