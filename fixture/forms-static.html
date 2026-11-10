@@ -2,6 +2,7 @@
 <html lang="en">
   <head><meta charset="utf-8"><title>Static forms fixture</title><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/forms.css"><link rel="stylesheet" href="/dist/styles/feedback.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head>
   <body>
+    <form action="/domain" method="get"><div class="ui-field"><label class="ui-field-label" for="static-domain">Static domain</label><div class="ui-text-field-control"><span class="ui-text-field-affix" aria-hidden="true">https://</span><input class="ui-text-field" id="static-domain" name="domain"><span class="ui-text-field-affix" aria-hidden="true">.test</span></div></div><button type="submit">Choose domain</button></form>
     <form action="/notes" method="get"><label class="ui-field" for="static-notes"><span class="ui-field-label">Static notes</span><textarea id="static-notes" class="ui-text-field ui-textarea" name="notes" required></textarea></label><button type="submit">Save static notes</button></form>
     <form action="/tags" method="get"><label for="static-tags">Static tags, separated by commas</label><input id="static-tags" name="tags"><button type="submit">Save static tags</button></form>
     <form action="/switch" method="get"><label class="ui-choice ui-switch"><input class="ui-checkbox" type="checkbox" role="switch" name="sync" value="yes"><span class="ui-choice-content"><span class="ui-field-label">Static sync</span></span></label><button type="submit">Choose sync</button></form>

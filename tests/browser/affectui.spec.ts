@@ -802,6 +802,10 @@ test("@C074-b server-rendered native control submits without JavaScript", async 
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto("/forms-static.html");
+  await page.getByRole("textbox", { name: "Static domain" }).fill("example");
+  await page.getByRole("button", { name: "Choose domain" }).click();
+  await expect(page).toHaveURL(/\/domain\?domain=example$/u);
+  await page.goto("/forms-static.html");
   await page.setContent(`<form action="/choose" method="get">${markup}<button type="submit">Submit choice</button></form>`);
   await page.getByLabel("SSR choice", { exact: true }).selectOption("two");
   await page.getByRole("button", { name: "Submit choice" }).click();
@@ -1098,6 +1102,53 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   await expect(page.getByRole("textbox", { name: "Notes" })).toHaveAccessibleDescription("Help 5");
   await page.getByRole("textbox", { name: "Notes" }).fill("Edited");
   await expect(page.locator("html")).toHaveAttribute("data-edited", "Edited");
+  expect(errors).toEqual([]);
+});
+
+test("@C081-a adds decorative affixes and an associated count", async ({ page }) => {
+  await page.goto("/text-field-extra.html");
+  const field = page.getByRole("textbox", { name: "Project name" });
+  await expect(field).toHaveAttribute("prefix", "schema: https://schema.org/");
+  await expect(field).toHaveAccessibleDescription("Use a slug Name unavailable 3 / 10");
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  await field.fill("project");
+  await expect(field).toHaveAccessibleDescription("Use a slug Name unavailable 7 / 10");
+  await page.getByRole("button", { name: "Save name" }).click();
+  await expect(page.getByTestId("name-submitted")).toHaveText("project");
+  await page.getByRole("button", { name: "Update name" }).click();
+  await expect(field).toHaveValue("parent");
+  await expect(field).toHaveAccessibleDescription("Use a slug Name unavailable 6 / 10");
+  const local = page.getByRole("textbox", { name: "Local name" });
+  await local.fill("changed");
+  await page.getByRole("button", { name: "Reset name" }).click();
+  await expect(local).toHaveValue("start");
+  await expect(local).toHaveAccessibleDescription("5");
+  await expect(field).toHaveValue("parent");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@C081-a hydrates an affixed field and its count", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { TextField } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(TextField, { id: "project", label: "Project", defaultValue: "abc", leadingContent: "https://", hint: "Help", showCount: true, onInput() {} })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/extra-field-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialField = document.getElementById("project");</script><script type="module" src="/hydrate-text-field-extra.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/extra-field-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const field = page.getByRole("textbox", { name: "Project" });
+  await expect(field).toHaveAccessibleDescription("Help 3");
+  await field.fill("new value");
+  await expect(field).toHaveAccessibleDescription("Help 9");
+  await expect(page.locator("html")).toHaveAttribute("data-edited", "new value");
   expect(errors).toEqual([]);
 });
 

@@ -67,6 +67,7 @@ are linked to the input. Generated description IDs reserve the `ui-field-descrip
 For multiple server-rendered roots, use a distinct Solid `renderId` for each root and its hydration.
 The forms entry supports server rendering and browser use. Native input attributes, `value`, `defaultValue`, and input events
 are forwarded. Use `defaultValue` for native form reset and `value` for parent-owned state.
+Optional decorative `leadingContent` and `trailingContent` slots and a character count are available.
 
 ```tsx
 import "@laputa-systems/ui-dashboard/styles.css";

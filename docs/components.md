@@ -32,6 +32,12 @@ resets with its form; use `value` and `onInput` for parent-controlled state. The
 retains the current parent value on form reset. The control classes can also be used directly in
 static HTML as shown in the README.
 
+`leadingContent` and `trailingContent` add decorative, noninteractive affixes around the input.
+`showCount` associates a UTF-16 character count with the field and displays `maxlength` when
+supplied. These options are additive; fields without affixes retain their original markup. The
+native `prefix` attribute remains available. Static markup can wrap an input with
+`ui-text-field-control` and use `ui-text-field-affix` for decorative spans.
+
 `Checkbox` and `CheckboxProps` from `forms` require `id` and `label`. Native name, value,
 required, disabled, form, and input attributes are forwarded. `hint` and `error` are associated
 with the input; `card` adds a padded label. `defaultChecked` initializes an uncontrolled
