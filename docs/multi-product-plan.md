@@ -2,18 +2,16 @@
 
 ## Status
 
-- **State (2026-11-10):** Features complete. The follow-up plan's items 1, 3, 4 and 5 are landed and pushed; items 6–8 wait for a second consumer. Timing gates are deferred by the owner until after feature completion, so the campaign is not closed.
-- **Library releases:** 0.7.0 (scoped themes, Button forwarding), 0.8.0 (dashboard grid density tokens and `ui-dashboard-grid-fill`), 0.9.0 (`SearchDialog`), 0.9.1 (search rows size to content). All are published on the stuff npm registry.
-- **Consumers:** Stats, Discover (reader, admin review, search, HQ desk), repomod and Niceforge all depend on the published library: Discover on 0.9.1, the others on 0.9.0. Niceforge moved its pinned Node to 26.13.0 with re-verified CI image digests and regenerated material locks.
-- **Shared behavior now in the library:** themes scoped by `.ui-theme`; CSS-only form, button, notice and settings markup in Discover's admin review; the search dialog's combobox, keyboard and focus handling in Discover's reader; the dashboard grid in repomod; Stats' components on the same version.
-- **Open:** paired timing measurements (deferred). Discover's `make cloud-test` currently fails before running, because `852807b` (DSC-33) writes a `domains` key the local topology rejects. That is outside this campaign.
+- **State (2026-11-10):** Feature work is complete. Every follow-up item except paired timings is landed and pushed. The owner deferred timing gates until after feature completion, so the campaign stays open on that gate alone.
+- **Library releases:** 0.7.0 (scoped themes, Button forwarding), 0.8.0 (dashboard grid density tokens, `ui-dashboard-grid-fill`), 0.9.0 (`SearchDialog`), 0.9.1 (search rows size to content), 0.10.0 (accent table links, CSS-only editorial family), 0.11.0 (opt-in dark theme). All are published on the stuff npm registry.
+- **Consumers:** Stats, repomod and Niceforge depend on 0.9.0; Discover depends on 0.11.0 and marks its reader citations, references, figures, term lists and native names with the editorial classes, pixel-identical to before. Niceforge pins Node 26.13.0 with re-verified CI image digests and regenerated material locks.
+- **Shared behavior now in the library:** themes scoped by `.ui-theme`; CSS-only form, button, notice and settings markup in Discover's admin review; the search dialog in Discover's reader; the dashboard grid in repomod; editorial focus, target and forced-colors rules in Discover's reader.
+- **Open:** paired timing measurements, run when the host is quiet.
 
 ## Follow-up plan
 
 1. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`.
-2. **Links in library tables** take the browser's link color; add a token-driven link rule when a second consumer needs it.
-3. **Editorial primitives** (citation reference list, figure with credit, taxonomy term) stay in Discover until another product renders them.
-4. **Dark theme** stays an optional sheet for the first consumer that needs one.
+2. **Dark theme adoption** waits for a product that wants it; the sheet ships and is contrast-tested.
 
 ## Goal
 
