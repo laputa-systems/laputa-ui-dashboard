@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs, Tooltip } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -82,6 +82,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Popover label=" " trigger="Open">Content</Popover>)).toThrow("nonempty");
     expect(() => renderToString(() => <Popover label="Options" trigger=" ">Content</Popover>)).toThrow("nonempty");
     expect(renderToString(() => <Popover label="Options" trigger="Open">Content</Popover>)).toContain('popover="auto"');
+  });
+  it("requires an independent tooltip name and description", () => {
+    expect(() => renderToString(() => <Tooltip label=" " content="Detail">Info</Tooltip>)).toThrow("nonempty");
+    expect(() => renderToString(() => <Tooltip label="Information" content=" ">Info</Tooltip>)).toThrow("nonempty");
+    const html = renderToString(() => <Tooltip label="Information" content="Detail">Info</Tooltip>);
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('aria-describedby=');
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

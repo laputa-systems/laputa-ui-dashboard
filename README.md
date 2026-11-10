@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`Tooltip` from the same layout entry adds optional, keyboard-accessible explanatory text to a
+named button. Keep required instructions visible on the page.
+
 `Popover` from `@laputa-systems/ui-dashboard/layout` opens a labelled, nonmodal surface beside a
 button. It requires JavaScript and the browser Popover API; use native disclosure for static pages.
 

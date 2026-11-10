@@ -6,3 +6,4 @@ export { FilterMenu, type FilterMenuProps, type FilterGroup, type FilterOption, 
 export { Tabs, type TabsProps, type Tab } from "./Tabs";
 export { Breadcrumbs, type BreadcrumbsProps, type Breadcrumb } from "./Breadcrumbs";
 export { Popover, type PopoverProps } from "./Popover";
+export { Tooltip, type TooltipProps } from "./Tooltip";

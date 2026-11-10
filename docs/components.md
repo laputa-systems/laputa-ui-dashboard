@@ -279,6 +279,13 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
+strings and noninteractive `children`. The label names the button independently of its tooltip;
+the content is an associated description. Hover or focus shows it, touch toggles it, and Escape
+dismisses it without leaving the trigger. It requires JavaScript and the browser Popover API.
+Use short supplementary text; required instructions must remain visible outside the tooltip. A
+static page can display the information as ordinary text.
+
 `Popover` and `PopoverProps` from `layout` accept nonempty `trigger` and `label` strings and
 `children`. Opening places focus on the first visible enabled control, or the surface when there
 is none. Escape closes the surface and restores focus to its trigger; outside activation closes

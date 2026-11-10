@@ -3,6 +3,117 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P2-tooltip describes its trigger and closes before its dialog", async ({ page }) => {
+  await page.goto("/tooltip.html");
+  await page.getByRole("button", { name: "Open settings" }).click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const trigger = dialog.getByRole("button", { name: "Retention information" });
+  await trigger.focus();
+  await expect(trigger).toHaveAccessibleDescription("Files are retained for thirty days.");
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Other setting" }).focus();
+  await trigger.focus();
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});
+
+test("@P2-tooltip closes a hovered tooltip before its dialog", async ({ page }) => {
+  await page.goto("/tooltip.html");
+  await page.getByRole("button", { name: "Open settings" }).click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  await dialog.getByRole("button", { name: "Other setting" }).focus();
+  await dialog.getByRole("button", { name: "Retention information" }).hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Other setting" })).toBeFocused();
+});
+
+test("@P2-tooltip remains visible when the pointer enters its content", async ({ page }) => {
+  await page.goto("/tooltip.html");
+  const trigger = page.getByRole("button", { name: "Storage information" });
+  await trigger.hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  await tooltip.hover();
+  await expect(tooltip).toBeVisible();
+  await page.getByRole("button", { name: "Outside tooltip" }).hover();
+  await expect(tooltip).toBeHidden();
+});
+
+test("@P2-tooltip keeps the pointer path to its content open", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/tooltip.html");
+  const trigger = page.getByRole("button", { name: "Storage information" });
+  await trigger.hover();
+  const tooltip = page.getByRole("tooltip");
+  const anchorBounds = await trigger.boundingBox();
+  const tooltipBounds = await tooltip.boundingBox();
+  expect(anchorBounds).not.toBeNull();
+  expect(tooltipBounds).not.toBeNull();
+  const x = Math.max(anchorBounds!.x, tooltipBounds!.x) + 5;
+  const y = (anchorBounds!.y + anchorBounds!.height + tooltipBounds!.y) / 2;
+  await page.mouse.move(x, y);
+  await page.clock.fastForward(1000);
+  await expect(tooltip).toBeVisible();
+});
+
+test("@P2-tooltip toggles for touch", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true });
+  const page = await context.newPage();
+  await page.goto("/tooltip.html");
+  const trigger = page.getByRole("button", { name: "Storage information" });
+  await trigger.tap();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  await trigger.tap();
+  await expect(tooltip).toBeHidden();
+  await context.close();
+});
+
+test("@P2-tooltip wraps long content within narrow viewports", async ({ page }) => {
+  await page.goto("/tooltip.html");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 500 });
+    await page.getByRole("button", { name: "Storage information" }).focus();
+    const tooltip = page.getByRole("tooltip");
+    const bounds = await tooltip.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    expect(await tooltip.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Outside tooltip" }).focus();
+  }
+});
+
+test("@P2-tooltip retains its description through hydration", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Tooltip } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Tooltip, { label: "Information", content: "Additional detail", children: "Info" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/tooltip-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTooltipTrigger = document.querySelector("button");</script><script type="module" src="/hydrate-tooltip.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/tooltip-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const trigger = page.getByRole("button", { name: "Information" });
+  await expect(trigger).toHaveAccessibleDescription("Additional detail");
+  await trigger.focus();
+  await expect(page.getByRole("tooltip")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("@P2-popover closes the inner overlay before its dialog", async ({ page }) => {
   await page.goto("/popover.html");
   await page.getByRole("button", { name: "Open dialog" }).click();
@@ -1487,6 +1598,7 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   await page.getByRole("button", { name: "Choose frequency" }).click();
   await expect(page).toHaveURL(/\/frequency\?frequency=weekly$/u);
   await page.goto("/forms-static.html");
+  await expect(page.getByText("Static additional information")).toBeVisible();
   await page.getByText("Static help", { exact: true }).click();
   await expect(page.getByText("Static help content")).toBeVisible();
   const breadcrumb = page.getByRole("navigation", { name: "Static breadcrumb" });
