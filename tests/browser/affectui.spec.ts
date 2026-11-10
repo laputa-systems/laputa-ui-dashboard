@@ -3,6 +3,63 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@C040-a edits a date-only range as a controlled draft", async ({ page }) => {
+  await page.goto("/date-range.html");
+  const trigger = page.getByRole("button", { name: "Reporting dates" });
+  await expect(trigger).toHaveAccessibleDescription("2024-02-28 – 2024-03-01");
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  const start = dialog.getByLabel("Start date");
+  const end = dialog.getByLabel("End date");
+  await expect(start).toBeFocused();
+  await start.fill("2024-02-29");
+  await end.fill("2024-02-28");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(dialog.getByRole("alert")).toHaveText("End date must be on or after start date.");
+  await expect(start).toHaveAccessibleDescription("End date must be on or after start date.");
+  await expect(page.getByTestId("range-requests")).toHaveText("0");
+  await end.fill("2024-03-02");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(trigger).toBeFocused();
+  await expect(page.getByTestId("range")).toHaveText("2024-02-28 / 2024-03-01");
+  await trigger.click();
+  await expect(start).toHaveValue("2024-02-28");
+  await start.fill("2024-02-29");
+  await end.fill("2024-03-02");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(trigger).toBeFocused();
+  await expect(page.getByTestId("range")).toHaveText("2024-02-29 / 2024-03-02");
+  await expect(page.getByTestId("range-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent update" }).click();
+  await expect(page.getByTestId("range-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject requests" }).click();
+  await trigger.click();
+  await start.fill("2024-03-11");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(page.getByTestId("range-requests")).toHaveText("2");
+  await trigger.click();
+  await expect(start).toHaveValue("2024-03-10");
+  await start.fill("2024-01-31");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("between");
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+});
+
+test("@C040-a fits date inputs at narrow widths and zoom", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    expect(await page.getByRole("dialog").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  expect(await page.getByRole("dialog").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });

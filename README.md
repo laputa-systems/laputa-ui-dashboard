@@ -88,6 +88,11 @@ Popover API. Use a native `<select>` or `<select multiple>` for no-JavaScript or
 required-field validation. Optional creation and async search requests expose host-owned results, pending states, and
 failures; stale search results are ignored.
 
+`DateRangePicker` edits a host-controlled inclusive date range in a dialog. Apply requests a
+change; Cancel discards the draft. Dates are calendar dates rather than instants. Use two native
+date inputs in a form when JavaScript is unavailable. See the component reference for bounds and
+validation.
+
 ## Command menu
 
 `CommandMenu` from `@laputa-systems/ui-dashboard/layout` opens a searchable dialog for grouped,

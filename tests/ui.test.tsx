@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, MultiCombobox, TextField } from "../src/forms";
+import { Checkbox, Combobox, DateRangePicker, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -27,6 +27,15 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("validates date-only range values and bounds", () => {
+    const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);
+    expect(render("2000-02-29", "2000-02-29")).toContain("2000-02-29");
+    for (const range of [["1900-02-29", "1900-03-01"], ["0000-01-01", "0001-01-01"], ["2024-03-02", "2024-03-01"], ["2024-02-01T00:00:00Z", "2024-02-02"]]) {
+      expect(() => render(range[0]!, range[1]!)).toThrow(RangeError);
+    }
+    expect(() => render("2024-02-01", "2024-02-02", "2024-02-02")).toThrow(RangeError);
+    expect(() => render("2024-02-01", "2024-02-02", "2024-03-01", "2024-02-01")).toThrow(RangeError);
+  });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);
     const withRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed", retry: () => {} }} />);

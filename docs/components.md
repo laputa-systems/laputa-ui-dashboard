@@ -42,6 +42,17 @@ it sets the native property after hydration and exposes the mixed state in serve
 `class` applies to the label. Static HTML can use `ui-choice`, `ui-choice-card`, `ui-checkbox`,
 `ui-choice-content`, and the field classes with a native checkbox and label.
 
+`DateRangePicker`, `DateRangePickerProps`, and `DateRange` are exported from `forms`.
+Supply a `label`, a controlled `value`, and `onChange`. A range has inclusive `start` and `end`
+dates in `YYYY-MM-DD` form. Dates are Gregorian calendar dates from `0001-01-01` through
+`9999-12-31`, not instants. No timezone conversion occurs. Optional `min` and `max` use the same
+format and are inclusive. Invalid bounds or values throw `RangeError`. Opening the dialog copies
+the current value into a draft. Apply requests one change; Cancel or Escape discards the draft.
+Parent updates do not call `onChange` or replace an open draft. The host decides whether to accept
+the request. The dialog requires JavaScript. For a static form, use labelled native date inputs
+with matching `min` and `max` and validate their order on submission. Generated IDs reserve the
+`ui-date-range-` prefix.
+
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
 Options can be individual items or labelled groups. Option IDs must be unique across the whole
