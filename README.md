@@ -88,6 +88,14 @@ Popover API. Use a native `<select>` or `<select multiple>` for no-JavaScript or
 required-field validation. Optional creation and async search requests expose host-owned results, pending states, and
 failures; stale search results are ignored.
 
+## Command menu
+
+`CommandMenu` from `@laputa-systems/ui-dashboard/layout` opens a searchable dialog for grouped,
+host-supplied actions. Load `styles/layout.css` after the base stylesheet. Supply stable command
+IDs, labels, optional keywords, and `onSelect`; disabled commands cannot execute. Keep ordinary
+navigation available alongside the menu. Scoped shortcuts and integration submenus are not yet
+supported.
+
 ## Progress
 
 Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load

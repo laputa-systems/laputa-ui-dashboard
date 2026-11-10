@@ -84,6 +84,16 @@ only after the current search succeeds. The host fetches data, handles cancellat
 selected option records in `options` so their labels remain available across searches. No search is
 started by server rendering.
 
+`CommandMenu`, `CommandMenuProps`, `CommandGroup`, and `Command` are exported from `layout`.
+Load `styles/layout.css` after the base stylesheet. Supply a trigger `label`, groups with unique
+group IDs and unique command IDs, and `onSelect(id)`. At most 500 commands are accepted. Each
+command has a label, optional search keywords and an optional disabled state. Search keeps focus
+in the input while Up and Down move the active enabled command; Enter requests that action once.
+Escape first clears a query, then closes the dialog and returns focus to the trigger. A Close
+button provides the same exit for pointer and touch users. The host performs actions and supplies
+unavailable commands as disabled. This JavaScript-enhanced menu supplements ordinary navigation;
+scoped shortcuts and integration submenus are not yet implemented.
+
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
 native `<progress>` element. A missing `value` means indeterminate progress; zero is a measured

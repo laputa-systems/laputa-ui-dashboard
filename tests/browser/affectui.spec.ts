@@ -1211,3 +1211,133 @@ test("@C030-d offers creation only after current search results arrive", async (
   await page.locator("form").evaluate(form => (form as HTMLFormElement).requestSubmit());
   await expect(page.locator("html")).toHaveAttribute("data-submitted", "alpha");
 });
+
+test("@C031-a searches grouped commands and executes only an enabled action", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  const trigger = page.getByRole("button", { name: "Commands" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await expect(input).toBeFocused();
+  await expect(dialog.getByRole("group", { name: "Navigation" })).toBeVisible();
+  await expect(dialog.getByRole("option", { name: "Open billing" })).toHaveAttribute("aria-disabled", "true");
+  await input.fill("repository");
+  await expect(dialog.getByRole("option", { name: "Open projects" })).toBeVisible();
+  await expect(dialog.getByRole("option", { name: "Open overview" })).toHaveCount(0);
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(page.getByTestId("command-selected")).toHaveText("projects");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test("@C031-a clears a search before Escape closes and retains no-results feedback", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  const trigger = page.getByRole("button", { name: "Commands" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await input.fill("not found");
+  await expect(dialog.getByText("No matching commands")).toBeVisible();
+  await input.press("Enter");
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  await input.press("Escape");
+  await expect(input).toHaveValue("");
+  await expect(dialog).toBeVisible();
+  await input.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test("@C031-a skips unavailable commands and drops a removed active command", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands" }).click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await input.press("ArrowDown");
+  const overview = dialog.getByRole("option", { name: "Open overview" });
+  await expect(input).toHaveAttribute("aria-activedescendant", await overview.getAttribute("id") ?? "");
+  await input.press("ArrowDown");
+  const projects = dialog.getByRole("option", { name: "Open projects" });
+  await expect(input).toHaveAttribute("aria-activedescendant", await projects.getAttribute("id") ?? "");
+  await page.getByRole("button", { name: "Remove projects command" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(input).not.toHaveAttribute("aria-activedescendant");
+  await input.press("Enter");
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  await expect(input).toBeFocused();
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("button", { name: "Commands" })).toBeFocused();
+});
+
+test("@C031-a preserves IME editing and fits a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands" }).click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await input.press("ArrowDown");
+  await input.dispatchEvent("keydown", { key: "Enter", isComposing: true, bubbles: true });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+
+test("@C031-a closes the nested command menu before its parent", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Open parent" }).click();
+  const parent = page.getByRole("dialog", { name: "Parent" });
+  const trigger = parent.getByRole("button", { name: "Nested commands" });
+  await trigger.click();
+  const child = page.getByRole("dialog", { name: "Nested commands" });
+  await child.getByRole("combobox", { name: "Search commands" }).press("Escape");
+  await expect(child).toHaveCount(0);
+  await expect(parent).toBeVisible();
+  await expect(trigger).toBeFocused();
+});
+
+test("@C031-a hydrates the trigger and executes a command", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { CommandMenu } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(CommandMenu, { label: "Commands", groups: [{ id: "actions", label: "Actions", commands: [{ id: "open", label: "Open" }] }], onSelect() {} })));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/command-menu-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTrigger = document.querySelector(".ui-command-menu > button");</script><script type="module" src="/hydrate-command-menu.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/command-menu-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Commands" }).click();
+  const input = page.getByRole("combobox", { name: "Search commands" });
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(page.locator("html")).toHaveAttribute("data-selected", "open");
+});
+
+
+test("@C031-a supports touch without executing a dragged command", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands" }).tap();
+  const option = page.getByRole("option", { name: "Open projects" });
+  await option.dispatchEvent("pointerdown", { pointerType: "touch", pointerId: 9, clientX: 10, clientY: 10, bubbles: true });
+  await option.dispatchEvent("pointermove", { pointerType: "touch", pointerId: 9, clientX: 10, clientY: 40, bubbles: true });
+  await option.dispatchEvent("pointerup", { pointerType: "touch", pointerId: 9, clientX: 10, clientY: 40, bubbles: true });
+  await option.dispatchEvent("click");
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  await option.tap();
+  await expect(page.getByTestId("command-selected")).toHaveText("projects");
+  await context.close();
+});
+
+test("@C031-a leaves ordinary navigation available without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/command-menu.html");
+  await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
+  await context.close();
+});

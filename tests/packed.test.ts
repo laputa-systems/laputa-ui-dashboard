@@ -45,11 +45,12 @@ describe("packed artifact contract", () => {
       mkdirSync(scope, { recursive: true });
       renameSync(join(tmp, "package"), join(scope, "ui-dashboard"));
       writeFileSync(join(tmp, "package.json"), '{"name":"packed-consumer","type":"module","private":true}');
-      const consumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
+      const consumer = `import { Accordion, ActionMenu, CommandMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
 import { Checkbox, Combobox, MultiCombobox, TextField } from "@laputa-systems/ui-dashboard/forms";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
+if (typeof CommandMenu !== "function") throw new Error("command menu is missing");
 if (typeof ActionMenu !== "function") throw new Error("action menu is missing");
 if (typeof Accordion !== "function") throw new Error("accordion is missing");
 if (typeof Disclosure !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/layout").endsWith("/dist/layout.js")) throw new Error("browser layout entry is not selected");
@@ -62,7 +63,7 @@ if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-
 for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
-      const serverConsumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
+      const serverConsumer = `import { Accordion, ActionMenu, CommandMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
 import { Badge } from "@laputa-systems/ui-dashboard";
 import { Checkbox, Combobox, MultiCombobox, TextField } from "@laputa-systems/ui-dashboard/forms";
@@ -79,6 +80,8 @@ const disclosure = renderToString(() => Disclosure({ label: "Details", defaultOp
 if (!disclosure.includes("<details") || !disclosure.includes("open") || !disclosure.includes("Contents")) throw new Error(disclosure);
 const status = renderToString(() => ActionStatus({ state: { kind: "failed", message: "Save failed" } }));
 if (!status.includes('role="alert"') || !status.includes("Save failed")) throw new Error(status);
+const commandMenu = renderToString(() => CommandMenu({ label: "Commands", groups: [], onSelect() {} }));
+if (!commandMenu.includes("Commands") || commandMenu.includes("<dialog")) throw new Error(commandMenu);
 const progress = renderToString(() => Progress({ label: "Upload", value: 0, max: 10 }));
 if (!progress.includes("Upload") || !progress.includes('value="0"')) throw new Error(progress);
 const badge = renderToString(() => Badge({ children: "Ready" }));
@@ -97,7 +100,7 @@ if (!html.includes('for="name"') || !description || !html.includes('id="' + desc
 `;
       execFileSync("node", ["--input-type=module", "-e", serverConsumer], { cwd: tmp, stdio: "inherit" });
       const consumerTypes = join(tmp, "consumer.ts");
-      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, ActionMenu, type ActionMenuProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { Checkbox, type CheckboxProps, Combobox, type ComboboxProps, MultiCombobox, type MultiComboboxProps, type ComboboxCreateState, type ComboboxSearchState, TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst menu: ActionMenuProps = { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} };\nvoid ActionMenu; void menu;\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst combo: ComboboxProps = { id: "choice", label: "Choice", options: [{ id: "a", label: "Alpha" }], value: null, onChange() {} };\nvoid Combobox; void combo;\nconst multi: MultiComboboxProps = { id: "choices", label: "Choices", options: [], value: [], onChange() {} };\nvoid MultiCombobox; void multi;\nconst creating: ComboboxCreateState = { kind: "pending", query: "new" };\nvoid creating;\nconst searching: ComboboxSearchState = { kind: "pending", request: { id: "1", query: "new" } };\nvoid searching;\nconst checkbox: CheckboxProps = { id: "all", label: "Select all", defaultChecked: true };\nvoid Checkbox; void checkbox;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
+      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, ActionMenu, type ActionMenuProps, CommandMenu, type CommandMenuProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { Checkbox, type CheckboxProps, Combobox, type ComboboxProps, MultiCombobox, type MultiComboboxProps, type ComboboxCreateState, type ComboboxSearchState, TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst menu: ActionMenuProps = { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} };\nvoid ActionMenu; void menu;\nconst commands: CommandMenuProps = { label: "Commands", groups: [{ id: "a", label: "Actions", commands: [{ id: "open", label: "Open" }] }], onSelect() {} };\nvoid CommandMenu; void commands;\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst combo: ComboboxProps = { id: "choice", label: "Choice", options: [{ id: "a", label: "Alpha" }], value: null, onChange() {} };\nvoid Combobox; void combo;\nconst multi: MultiComboboxProps = { id: "choices", label: "Choices", options: [], value: [], onChange() {} };\nvoid MultiCombobox; void multi;\nconst creating: ComboboxCreateState = { kind: "pending", query: "new" };\nvoid creating;\nconst searching: ComboboxSearchState = { kind: "pending", request: { id: "1", query: "new" } };\nvoid searching;\nconst checkbox: CheckboxProps = { id: "all", label: "Select all", defaultChecked: true };\nvoid Checkbox; void checkbox;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
       execFileSync(join(uiDir, "node_modules/.bin/tsrs"), ["--ignoreConfig", "--noEmit", "--strict", "--skipLibCheck", "--module", "esnext", "--moduleResolution", "bundler", "--target", "es2022", "--lib", "es2022,dom", consumerTypes], { cwd: tmp, stdio: "inherit" });
       const declarations = readFileSync(join(scope, "ui-dashboard/dist/forms/index.d.ts"), "utf8");
       assert.match(declarations, /TextField/u);
