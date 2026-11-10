@@ -2,25 +2,18 @@
 
 ## Status
 
-- **State (2026-11-10):** All local deliverables accepted, and 0.7.0 published. Paired timing gates are deferred because the host is busy; the owner authorized publication anyway. Lanes are closed.
-- **Accepted:** library `b7d030d` (T1, T2: scoped themes recompute derived tokens; `.ui-theme` hook), `78ae116` (T3: one control set under two themes), `914fda5` (Gate 0: Button forwarding leaves shared route chunks), `9815180` (T5: CSS-only review surface), `ed4cb24` (0.7.0). Stats `cd6409c` (partial series and storage coverage), `3635002` (0.7.0 from the registry). Discover `a16d338` (reader loads the library beneath its styles; desk on 0.7.0). repomod `4d12a1e` (dashboard renders from the installed 0.7.0 package instead of committed copies). All four repositories are pushed.
-- **Release:** `@laputa-systems/ui-dashboard@0.7.0` is on the stuff npm registry (generation `6f6ae4a160c473cfc41a0c7bfa630ce4ec062e30e0da10ee2ff53d5372f39a66`, SHA-512 `9ed6b949…27f7`). Frozen installs verify in Stats, Discover and repomod. Niceforge on 0.7.0 renders identically to 0.5.0, with all 54 script-free forge tests passing; it was checked in a disposable copy and not changed.
-- **Gate 0:** Fleet, Host, Services and Service are within 5% raw and gzip. The owner accepted the remaining project-route growth (Projects +8.7% raw, +5.8% gzip) as attributed to cost disclosure. The owner then relaxed size gates generously.
-- **Findings:** tokens change palette, scale and density but do not by themselves make products look distinct; character comes from consumer composition and type. The Discover reader shares one control. The admin review maps cleanly onto CSS-only library forms. Discover's search keeps its own island because the library lacks a controlled query, rich options and a document-scoped shortcut.
+- **State (2026-11-10):** Features complete. The follow-up plan's items 1, 3, 4 and 5 are landed and pushed; items 6–8 wait for a second consumer. Timing gates are deferred by the owner until after feature completion, so the campaign is not closed.
+- **Library releases:** 0.7.0 (scoped themes, Button forwarding), 0.8.0 (dashboard grid density tokens and `ui-dashboard-grid-fill`), 0.9.0 (`SearchDialog`), 0.9.1 (search rows size to content). All are published on the stuff npm registry.
+- **Consumers:** Stats, Discover (reader, admin review, search, HQ desk), repomod and Niceforge all depend on the published library: Discover on 0.9.1, the others on 0.9.0. Niceforge moved its pinned Node to 26.13.0 with re-verified CI image digests and regenerated material locks.
+- **Shared behavior now in the library:** themes scoped by `.ui-theme`; CSS-only form, button, notice and settings markup in Discover's admin review; the search dialog's combobox, keyboard and focus handling in Discover's reader; the dashboard grid in repomod; Stats' components on the same version.
+- **Open:** paired timing measurements (deferred). Discover's `make cloud-test` currently fails before running, because `852807b` (DSC-33) writes a `domains` key the local topology rejects. That is outside this campaign.
 
 ## Follow-up plan
 
-In priority order, by consumer benefit:
-
-1. **Discover admin review on library forms.** Apply the T5 mapping (`fixture/review-static.html`) to `cloudflare/src/site/admin.ts` once DSC-33 releases its admin views. This removes the most duplicated UI in Discover.
-2. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`; the campaign is not complete until this runs or the owner waives it.
-3. **Niceforge and repomod upgrades.** Bump Niceforge's two packages from 0.5.0 to 0.7.0; the visual check found no change.
-4. **Dashboard grid density.** Add a minimum-column-width token and a non-stretching option to `.ui-dashboard-grid` so repomod can drop its own card grid.
-5. **Search mechanics for host-driven results.** A controlled query, rich option rendering and a document-scoped shortcut on `CommandMenu`, or a headless listbox entry, would let Discover drop its own dialog and listbox. Size is no longer the blocker.
-6. **Links in library tables** take the browser's link color; add a token-driven link rule if a second consumer needs it.
-7. **Editorial primitives** (citation reference list, figure with credit, taxonomy term) stay in Discover until another product renders them.
-8. **Dark theme** stays an optional sheet for the first consumer that needs one.
-- **Resume:** "Run the multi-product campaign in `docs/multi-product-plan.md` from **Status**." First command: `git status && git log --oneline -5`, then the same in `~/d/discover` and `~/d/stats`.
+1. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`.
+2. **Links in library tables** take the browser's link color; add a token-driven link rule when a second consumer needs it.
+3. **Editorial primitives** (citation reference list, figure with credit, taxonomy term) stay in Discover until another product renders them.
+4. **Dark theme** stays an optional sheet for the first consumer that needs one.
 
 ## Goal
 

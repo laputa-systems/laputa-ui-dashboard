@@ -245,7 +245,9 @@ or invalid URLs throw. `renderResult(result, { active })` supplies noninteractiv
 component-owned link. The host owns filtering, fetching, cancellation, and empty results; an empty
 results array displays “No results”. Loading and error messages use a polite status.
 
-Escape, the Close button, and a backdrop activation request close through `onOpenChange(false)`;
+Escape, the Close button, and a backdrop activation request close through `onOpenChange(false)`.
+In a nonempty search field the browser's first Escape clears the query, as in `CommandMenu`, and
+the next one closes;
 parent updates do not call it. Focus returns to the element focused before opening, or to the
 element returned by `returnFocus`. The input is a combobox with `aria-controls`, `aria-expanded`,
 and `aria-activedescendant`; results form a listbox of links with `aria-selected` on the active
