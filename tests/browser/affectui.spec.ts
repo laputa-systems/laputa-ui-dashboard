@@ -1105,6 +1105,30 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   expect(errors).toEqual([]);
 });
 
+test("@C085-a isolates queues and promotes waiting notices", async ({ page }) => {
+  await page.goto("/toaster.html");
+  await page.getByRole("button", { name: "Add notices" }).click();
+  const region = page.getByRole("region", { name: "Notices", exact: true });
+  await expect(region.getByText("First")).toBeVisible();
+  await expect(region.getByText("Second")).toBeVisible();
+  await expect(region.getByText("Third")).toHaveCount(0);
+  await region.getByRole("button", { name: "Undo" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-undo", "yes");
+  await region.getByRole("button", { name: "Dismiss First" }).focus();
+  await page.getByRole("button", { name: "Update notice" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(region.getByRole("button", { name: "Dismiss Updated" })).toBeFocused();
+  await expect(region.getByText("Updated")).toBeVisible();
+  await page.getByRole("button", { name: "Add separate" }).click();
+  await expect(page.getByRole("region", { name: "Other notices" }).getByText("Separate")).toBeVisible();
+  const outside = page.getByRole("button", { name: "Dismiss externally" });
+  await outside.focus();
+  await region.getByRole("button", { name: "Dismiss Updated" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(outside).toBeFocused();
+  await expect(region.getByText("Third")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Other notices" }).getByText("Separate")).toBeVisible();
+});
+
 test("@C081-a adds decorative affixes and an associated count", async ({ page }) => {
   await page.goto("/text-field-extra.html");
   const field = page.getByRole("textbox", { name: "Project name" });

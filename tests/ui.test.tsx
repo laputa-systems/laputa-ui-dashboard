@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
-import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
+import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
@@ -28,6 +28,21 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("bounds isolated toast queues and validates updates", () => {
+    const first = createToastStore();
+    const second = createToastStore();
+    first.add({ id: "one", title: "First" });
+    expect(second.toasts()).toEqual([]);
+    expect(() => first.add({ id: "one", title: "Duplicate" })).toThrow("unique");
+    expect(() => first.update("missing", { title: "Missing" })).toThrow("not in the queue");
+    first.update("one", { title: "Updated" });
+    expect(renderToString(() => <Toaster label="Notices" store={first} />)).toContain("Updated");
+    expect(first.dismiss("missing")).toBe(false);
+    expect(first.dismiss("one")).toBe(true);
+    for (let i = 0; i < 100; i += 1) first.add({ id: String(i), title: "Notice" });
+    expect(() => first.add({ id: "overflow", title: "Overflow" })).toThrow(RangeError);
+    expect(() => renderToString(() => <Toaster label="Notices" store={second} maxVisible={0} />)).toThrow(RangeError);
+  });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);
     expect(render("2000-02-29", "2000-02-29")).toContain("2000-02-29");

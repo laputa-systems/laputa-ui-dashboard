@@ -259,6 +259,16 @@ Background updates do not move focus. Optional `total` includes all shown notice
 the supplied list, `inbox` must provide an HTTP or HTTPS link or a relative URL. Invalid IDs,
 counts, or URLs throw. The stack does not expire notices.
 
+`createToastStore`, `ToastStore`, `Toast`, `Toaster`, and `ToasterProps` from `feedback` provide
+an isolated queue and its view. Create a store per application or server request; never share a
+store between requests. `add` requires a unique nonempty ID and title, `update` replaces the
+content for an existing ID, and `dismiss` returns whether an ID was present. Each store accepts
+at most 100 notices. A toaster displays the oldest three by default; `maxVisible` can be 1–10.
+A notice may supply an action label and callback. Deliberately dismissing a focused notice returns
+focus to the connected element that most recently preceded entry into the toaster, when focus has
+not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
+`ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
+
 Import `Disclosure` and `DisclosureProps` from `@laputa-systems/ui-dashboard/layout`, and load
 `@laputa-systems/ui-dashboard/styles/layout.css` after the base stylesheet. `label` names a
 native summary and `children` supplies its content. `defaultOpen` initializes local state once.

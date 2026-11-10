@@ -143,7 +143,8 @@ and `max` (100 by default). Omit `value` when progress is unknown. Invalid value
 The component uses native `<progress>` semantics and supports server rendering.
 
 `NotificationStack` from the same entry presents one host-owned persistent notice at a time.
-The host handles dismissal and actions and can link to an inbox for a larger history.
+The host handles dismissal and actions and can link to an inbox for a larger history. `createToastStore`
+and `Toaster` provide a separate, bounded queue of brief notices.
 
 ```tsx
 import "@laputa-systems/ui-dashboard/styles.css";

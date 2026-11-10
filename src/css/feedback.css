@@ -16,3 +16,8 @@
 .ui-notification-card p { margin: 0; }
 .ui-notification-card:focus-visible, .ui-notification-stack:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-notification-navigation [aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.ui-toaster { min-width: 0; color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); }
+.ui-toaster > div { display: grid; gap: var(--ui-space-sm); }
+.ui-toast { display: grid; gap: var(--ui-space-xs); min-width: 0; padding: var(--ui-space-sm); border: 1px solid var(--ui-line); border-radius: var(--ui-radius-md); background: var(--ui-surface); overflow-wrap: anywhere; }
+.ui-toast p { margin: 0; }
+.ui-toast-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); }
