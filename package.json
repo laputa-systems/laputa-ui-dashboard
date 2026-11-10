@@ -58,6 +58,7 @@
     "./styles/recipes.css": "./dist/styles/recipes.css",
     "./styles/layout.css": "./dist/styles/layout.css",
     "./styles/data.css": "./dist/styles/data.css",
+    "./styles/sortable-header.css": "./dist/styles/sortable-header.css",
     "./styles/feedback.css": "./dist/styles/feedback.css",
     "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",

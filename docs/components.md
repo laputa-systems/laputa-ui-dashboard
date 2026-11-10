@@ -341,7 +341,8 @@ controlled column header for native tables. Supply `label` and `onSort`; set `di
 the next direction. Each activation requests sorting once; changing `direction` does not call
 `onSort`. The header exposes the direction through `aria-sort` and leaves inactive headers unmarked.
 Its default arrow is decorative. An `indicator` function may supply a decorative replacement;
-`class` and `buttonClass` add host classes. Import `styles/data.css` after the base stylesheet.
+`class` and `buttonClass` add host classes. Import `styles/sortable-header.css` after the base
+stylesheet; `styles/data.css` also includes those rules for consumers of the other data components.
 Static tables can use a native column header and an ordinary link or GET form to request a sort.
 
 Static pages can use `ui-data-table-scroll` on a focusable named region around `ui-data-table`,

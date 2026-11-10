@@ -34,6 +34,7 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/data.js"), "Missing data entry");
       assert.ok(paths.includes("dist/data/index.d.ts"), "Missing data declarations");
       assert.ok(paths.includes("dist/styles/data.css"), "Missing data stylesheet");
+      assert.ok(paths.includes("dist/styles/sortable-header.css"), "Missing standalone sortable header stylesheet");
       assert.ok(paths.includes("dist/layout.js"), "Missing layout entry");
       assert.ok(paths.includes("dist/layout/index.d.ts"), "Missing layout declarations");
       assert.ok(paths.includes("dist/styles/layout.css"), "Missing layout stylesheet");
@@ -82,7 +83,7 @@ if (typeof IntegrationPicker !== "function" || !import.meta.resolve("@laputa-sys
 if (typeof ProfileMenu !== "function") throw new Error("profile menu is missing");
 if (dateRangeComparison({ start: "2024-03-01", end: "2024-03-01", comparison: "previous" }).start !== "2024-02-29") throw new Error("date comparison is wrong");
 if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/forms.js")) throw new Error("browser forms entry is not usable");
-for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/recipes.css"]) require.resolve(entry);
+for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css", "@laputa-systems/ui-dashboard/styles/data.css", "@laputa-systems/ui-dashboard/styles/sortable-header.css", "@laputa-systems/ui-dashboard/styles/recipes.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
       const serverConsumer = `import { BreakdownChart, ChangeSummary, DataTable, SortableHeader } from "@laputa-systems/ui-dashboard/data";

@@ -1,5 +1,5 @@
 import "@laputa-systems/ui-dashboard/styles.css";
-import "@laputa-systems/ui-dashboard/styles/data.css";
+import "@laputa-systems/ui-dashboard/styles/sortable-header.css";
 import { createSignal } from "solid-js";
 import { render } from "@solidjs/web";
 import { SortableHeader, type SortDirection } from "@laputa-systems/ui-dashboard/data";

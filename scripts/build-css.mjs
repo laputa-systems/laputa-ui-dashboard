@@ -42,5 +42,6 @@ mkdirSync(join(dist, "styles"), { recursive: true });
 copyFileSync(join(source, "css/forms.css"), join(dist, "styles/forms.css"));
 copyFileSync(join(source, "css/feedback.css"), join(dist, "styles/feedback.css"));
 copyFileSync(join(source, "css/layout.css"), join(dist, "styles/layout.css"));
-copyFileSync(join(source, "css/data.css"), join(dist, "styles/data.css"));
+writeFileSync(join(dist, "styles/data.css"), readFileSync(join(source, "css/data.css"), "utf8") + readFileSync(join(source, "css/sortable-header.css"), "utf8"));
+copyFileSync(join(source, "css/sortable-header.css"), join(dist, "styles/sortable-header.css"));
 copyFileSync(join(source, "css/recipes.css"), join(dist, "styles/recipes.css"));
