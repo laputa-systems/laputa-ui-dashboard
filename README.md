@@ -95,6 +95,9 @@ date inputs in a form when JavaScript is unavailable. See the component referenc
 validation. Supply `today` to enable deterministic date presets, and `locale` and `weekStartsOn`
 to configure the calendar. Optional comparisons use the same date-only rules.
 
+`Dropzone` requests real files from a picker or drop and applies host-supplied count, size, and
+type restrictions. The host owns the queue and upload. Use a native file input in a static form.
+
 ## Command menu
 
 `CommandMenu` from `@laputa-systems/ui-dashboard/layout` opens a searchable dialog for grouped,

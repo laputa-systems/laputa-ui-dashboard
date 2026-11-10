@@ -81,6 +81,19 @@ before `0001-01-01` cannot be applied. `dateRangeComparison(range)` returns the 
 range, or `null` when no comparison is selected. Invalid or unrepresentable input throws
 `RangeError`.
 
+`Dropzone`, `DropzoneProps`, and `DropzoneFile` are exported from `forms`. Supply a `label`,
+the host-owned `files` with nonempty unique IDs, `maxFiles` from 1 to 100, and a nonnegative
+integer `maxFileBytes`. Optional `accept` entries are file extensions, MIME types, or MIME
+wildcards. The picker and drop target request accepted `File` objects through `onFiles` once per
+selection. A batch may contain both accepted and rejected files. The component displays each
+rejection and refuses batches over 100 files. If the callback is absent or the queue is full,
+selection is unavailable. A callback is a request, not proof that a file was queued or uploaded.
+The host validates file contents and manages upload, authorization, and reconciliation. File names
+are rendered as text and truncated to 255 characters for display. The component does not read file
+contents or create object URLs. The native picker works with keyboard and touch. For a static form,
+use `ui-field ui-file-field` on a label containing a native file input, and validate submitted files
+on the server.
+
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
 Options can be individual items or labelled groups. Option IDs must be unique across the whole

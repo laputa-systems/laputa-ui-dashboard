@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, MultiCombobox, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -43,6 +43,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(dateRangeComparison({ start: "2024-01-01", end: "2024-01-01" })).toBeNull();
     expect(() => dateRangeComparison({ start: "0001-01-01", end: "0001-01-01", comparison: "previous" })).toThrow(RangeError);
     expect(() => dateRangeComparison({ start: "0001-01-01", end: "0001-01-01", comparison: "year" })).toThrow(RangeError);
+  });
+  it("rejects invalid dropzone limits and duplicate file identities", () => {
+    const file = new File(["x"], "a.txt", { type: "text/plain" });
+    expect(() => renderToString(() => <Dropzone label="Files" files={[]} maxFiles={101} maxFileBytes={1} />)).toThrow(RangeError);
+    expect(() => renderToString(() => <Dropzone label="Files" files={[]} maxFiles={1} maxFileBytes={-1} />)).toThrow(RangeError);
+    expect(() => renderToString(() => <Dropzone label="Files" files={[]} maxFiles={1} maxFileBytes={1} accept={["invalid"]} />)).toThrow("Invalid Dropzone accept type");
+    expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file }, { id: "a", file }]} maxFiles={2} maxFileBytes={1} />)).toThrow("Dropzone file IDs must be nonempty and unique");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

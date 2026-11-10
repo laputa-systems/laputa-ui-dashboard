@@ -198,6 +198,74 @@ test("@C040-d shows pending and failed requests while preserving the draft", asy
   await expect(dialog.getByRole("button", { name: "Apply" })).toBeEnabled();
 });
 
+test("@C045-a selects real files, rejects invalid files and respects queue capacity", async ({ page }) => {
+  await page.goto("/dropzone.html");
+  const input = page.getByRole("group", { name: "Attachments" }).locator('input[type="file"]');
+  await expect(page.getByRole("group", { name: "Unavailable upload" }).locator('input[type="file"]')).toBeDisabled();
+  await expect(page.getByText("File selection unavailable")).toBeVisible();
+  await input.setInputFiles([
+    { name: "good.txt", mimeType: "text/plain", buffer: Buffer.from("hello") },
+    { name: "bad.png", mimeType: "image/png", buffer: Buffer.from("too large") },
+    { name: "bad.html", mimeType: "text/html", buffer: Buffer.from("bad") }
+  ]);
+  await expect(page.getByTestId("upload-calls")).toHaveText("1");
+  await expect(page.getByRole("group", { name: "Attachments" }).getByRole("status")).toHaveText("Requested 1 file.");
+  await expect(page.getByText("good.txt")).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("bad.png");
+  await expect(page.getByRole("alert")).toContainText("bad.html");
+  await input.setInputFiles([{ name: "second.png", mimeType: "image/png", buffer: Buffer.from("png") }]);
+  await expect(page.getByTestId("upload-calls")).toHaveText("2");
+  await expect(page.getByText("second.png")).toBeVisible();
+  await expect(input).toBeDisabled();
+});
+
+test("@C045-a permits repeated requests and bounds oversized drops", async ({ page }) => {
+  await page.goto("/dropzone.html");
+  const rejected = page.getByRole("group", { name: "Rejected files" });
+  const input = rejected.locator('input[type="file"]');
+  const file = { name: "again.txt", mimeType: "text/plain", buffer: Buffer.from("hi") };
+  await input.setInputFiles(file);
+  await input.setInputFiles(file);
+  await expect(page.getByTestId("rejected-calls")).toHaveText("2");
+  await rejected.evaluate(element => {
+    const transfer = new DataTransfer();
+    for (let index = 0; index < 101; index++) transfer.items.add(new File(["x"], `${index}.txt`));
+    element.dispatchEvent(new DragEvent("drop", { dataTransfer: transfer, bubbles: true }));
+  });
+  await expect(rejected.getByRole("alert")).toHaveText("Choose no more than 100 files at once.");
+  await expect(page.getByTestId("rejected-calls")).toHaveText("2");
+});
+
+test("@C045-a accepts dropped files without manufacturing upload success", async ({ page }) => {
+  await page.goto("/dropzone.html");
+  const zone = page.getByRole("group", { name: "Attachments" });
+  await zone.evaluate(element => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(["hi"], "<img src=x onerror=alert(1)>.txt", { type: "text/plain" }));
+    element.dispatchEvent(new DragEvent("drop", { dataTransfer: transfer, bubbles: true }));
+  });
+  await expect(page.getByTestId("upload-calls")).toHaveText("1");
+  await expect(zone.getByText("<img src=x onerror=alert(1)>.txt")).toBeVisible();
+  await expect(zone.locator("img")).toHaveCount(0);
+  await expect(zone.getByText(/uploaded|complete/iu)).toHaveCount(0);
+});
+
+test("@C045-a fits long filenames and keeps its picker keyboard accessible", async ({ page }) => {
+  await page.goto("/dropzone.html");
+  const zone = page.getByRole("group", { name: "Attachments" });
+  const input = zone.locator('input[type="file"]');
+  await input.focus();
+  await expect(input).toBeFocused();
+  await input.setInputFiles({ name: `${"long".repeat(100)}.txt`, mimeType: "text/plain", buffer: Buffer.from("hi") });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -229,6 +297,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByLabel("Static attachment").setInputFiles({ name: "report.txt", mimeType: "text/plain", buffer: Buffer.from("report") });
+  await page.getByRole("button", { name: "Attach file" }).click();
+  await expect(page).toHaveURL(/\/attach\?attachment=report.txt$/u);
   await page.goto("/forms-static.html");
   await page.getByLabel("Static start date").fill("2024-02-29");
   await page.getByLabel("Static end date").fill("2024-03-01");
