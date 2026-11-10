@@ -8,4 +8,4 @@ export { RadioGroup, type RadioGroupProps, type RadioOption } from "./RadioGroup
 export { NativeSelect, type NativeSelectProps, type NativeSelectOption } from "./NativeSelect";
 export { Select, type SelectProps, type SelectOption } from "./Select";
 export { Switch, type SwitchProps, type SwitchRequestState } from "./Switch";
-export { TagInput, type TagInputProps, type Tag, type TagRequestState, type TagAddRequest } from "./TagInput";
+export { TagInput, type TagInputProps, type Tag, type TagRequestState, type TagAddRequest, type TagEditRequest } from "./TagInput";

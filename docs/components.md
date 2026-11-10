@@ -52,19 +52,26 @@ omits the value from form submission. Use a checkbox instead for a choice applie
 submission. Static markup can combine `ui-choice`, `ui-switch`, `ui-checkbox`, and
 `ui-choice-content` with a native checkbox carrying `role="switch"`.
 
-`TagInput`, `TagInputProps`, `Tag`, `TagAddRequest`, and `TagRequestState` from `forms` provide
+`TagInput`, `TagInputProps`, `Tag`, `TagAddRequest`, `TagEditRequest`, and `TagRequestState` from `forms` provide
 controlled tag chips. Supply a unique input ID, label, tags with nonempty unique IDs and normalized
 labels, a request state, and `onAdd`. Labels are normalized with Unicode NFKC, trimmed, and have
 internal whitespace collapsed. Duplicate comparison is case-insensitive. `maxTags` defaults to 50
 and accepts 1–100. `maxLength` defaults to 80 and accepts 1–256 UTF-16 code units. Optional
-`validate(label)` returns a message to reject a label. Enter or Add requests the normalized label;
-the host receives a unique request ID and an array of labels. The host supplies `pending`,
+`validate(label)` returns a message to reject a label. Enter or Add splits a list on commas,
+semicolons, and line breaks. Pasting a list requests its valid entries immediately; spaces remain
+inside labels. Rejected entries remain in the draft with their reasons. Drafts over 32,768 UTF-16
+code units are not submitted. The host receives a unique request ID and an array of valid labels.
+The host supplies `pending`,
 `accepted`, or `failed` with that ID and adds accepted tags to `value`. The draft clears only
 after the matching acceptance and values arrive. Later edits and stale results do not clear it.
-`onRemove(id)` requests removal; absent removal capability disables the chip button. Backspace at
+`onEdit(request)` requests an edit with a unique request ID, tag ID, and normalized label. Editing
+treats the whole draft as one label and restores any earlier draft after matching acceptance.
+Cancel edit restores the earlier draft and does not cancel an in-flight host request. `onRemove(id)` requests removal; absent
+edit or removal capabilities disable their chip buttons. Backspace at
 an empty input moves focus to the last chip, and arrow keys traverse chips. Optional `name` submits
-one hidden value per tag label. Hidden inputs do not provide native required validation. For a
-static form, use a labelled text field and parse the submitted tags on the server.
+one hidden value per tag label. Form reset discards the draft and retains host-owned tags. Hidden
+inputs do not provide native required validation. For a static form, use a labelled text field and
+parse the submitted tags on the server.
 
 `DateRangePicker`, `DateRangePickerProps`, `DateRange`, `DateRangeRequestState`, and
 `dateRangeComparison` are exported from `forms`.

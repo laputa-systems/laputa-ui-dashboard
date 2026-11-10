@@ -926,6 +926,95 @@ test("@C079-a enforces tag limits and validation in narrow layouts", async ({ pa
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
+test("@C079-b adds pasted lists and retains rejected entries", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.focus();
+  await input.evaluate(element => {
+    const data = new DataTransfer();
+    data.setData("text/plain", "new one, First tag;bad#tag\nsecond tag");
+    element.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: data }));
+  });
+  await expect(page.getByRole("button", { name: "Remove new one" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove second tag" })).toBeVisible();
+  await expect(page.getByTestId("tag-calls")).toHaveText("1");
+  await expect(input).toHaveValue("First tag, bad#tag");
+  await expect(page.getByRole("alert")).toContainText("rejected");
+  await expect(page.getByRole("alert")).toContainText("already selected");
+  await expect(page.getByRole("alert")).toContainText("cannot contain #");
+});
+
+test("@C079-b edits a chip and preserves an unrelated draft", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.fill("Unfinished draft");
+  await page.getByRole("button", { name: "Edit First tag" }).click();
+  await expect(input).toHaveValue("First tag");
+  await expect(input).toHaveAccessibleDescription("Editing First tag");
+  await input.fill("Renamed tag");
+  await input.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove Renamed tag" })).toBeVisible();
+  await expect(input).toHaveValue("Unfinished draft");
+  await page.getByRole("button", { name: "Reject tags" }).click();
+  await page.getByRole("button", { name: "Edit Renamed tag" }).click();
+  await input.fill("Rejected edit");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("Could not edit tag");
+  await expect(input).toHaveValue("Rejected edit");
+  await page.getByRole("button", { name: "Cancel edit" }).click();
+  await expect(input).toHaveValue("Unfinished draft");
+});
+
+test("@C079-b keeps a newer edit through a stale acknowledgment and resets drafts", async ({ page }) => {
+  await page.goto("/tags.html");
+  await page.getByRole("button", { name: "Defer tags" }).click();
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await page.getByRole("button", { name: "Edit First tag" }).click();
+  await input.fill("Older edit");
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await input.press("Enter");
+  await expect(page.getByText("Saving tag…")).toBeVisible();
+  await input.fill("Newer edit");
+  await page.getByRole("button", { name: "Acknowledge tags" }).click();
+  await expect(page.getByRole("button", { name: "Remove Older edit" })).toBeVisible();
+  await expect(input).toHaveValue("Newer edit");
+  await page.locator("form").evaluate(form => form.addEventListener("reset", event => event.preventDefault(), { once: true }));
+  await page.getByRole("button", { name: "Reset tag draft" }).click();
+  await expect(input).toHaveValue("Newer edit");
+  await page.getByRole("button", { name: "Reset tag draft" }).click();
+  await expect(input).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Remove Older edit" })).toBeVisible();
+});
+
+test("@C079-b rejects duplicate edits without dropping the edit draft", async ({ page }) => {
+  await page.goto("/tags.html");
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.fill("Second tag");
+  await input.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove Second tag" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit First tag" }).click();
+  await input.fill("second TAG");
+  await input.press("Enter");
+  await expect(page.getByRole("alert")).toContainText("already selected");
+  await expect(input).toHaveValue("second TAG");
+  await expect(page.getByTestId("tag-calls")).toHaveText("1");
+});
+
+test("@C079-b keeps the full pasted draft if the host rejects the request", async ({ page }) => {
+  await page.goto("/tags.html");
+  await page.getByRole("button", { name: "Reject tags" }).click();
+  const input = page.getByRole("textbox", { name: "Tags" });
+  await input.evaluate(element => {
+    const data = new DataTransfer();
+    data.setData("text/plain", "one tag,bad#tag");
+    element.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: data }));
+  });
+  await expect(input).toHaveValue("one tag,bad#tag");
+  await expect(page.getByRole("alert")).toContainText("Could not add tags");
+  await expect(page.getByRole("alert")).toContainText("cannot contain #");
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
