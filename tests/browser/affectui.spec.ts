@@ -3,6 +3,14 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@fixture-assets serves built CSS to static pages", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/inset-workbench-static.html");
+  await expect(page.locator(".ui-workbench")).toHaveCSS("display", "grid");
+  await context.close();
+});
+
 test("@P3-settings-a preserves a draft through pending and failed saves", async ({ page }) => {
   await page.goto("/settings-row.html");
   const group = page.getByRole("group", { name: "Workspace identity" });
