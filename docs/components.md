@@ -92,7 +92,15 @@ in the input while Up and Down move the active enabled command; Enter requests t
 Escape first clears a query, then closes the dialog and returns focus to the trigger. A Close
 button provides the same exit for pointer and touch users. The host performs actions and supplies
 unavailable commands as disabled. This JavaScript-enhanced menu supplements ordinary navigation;
-integration submenus are not yet implemented. An optional `shortcut` takes one ASCII letter or
+a submenu can contain one level of commands. Supply a `CommandSubmenu` with `kind: "submenu"`
+and its own stable ID, label and commands; all command and submenu IDs must be unique, and both
+count toward the 500-item limit. Opening a submenu does not call `onSelect`; choosing an enabled
+child calls it with the child ID. The input searches within the current level. Escape clears the
+draft, returns from a submenu while restoring the parent query and active item, then closes the
+dialog. Back is also available as a button. If a submenu disappears or becomes disabled, the
+menu returns to its parent without executing an action. Nested submenus are not supported.
+
+An optional `shortcut` takes one ASCII letter or
 digit, a `Control`, `Meta`, or `Alt` modifier, and optional `shift`. It opens the menu only when
 focus is within its children or trigger. It does not intercept editable fields, composition,
 repeats, or extra modifiers. A shortcut-opened dialog restores focus to the invoking control, or

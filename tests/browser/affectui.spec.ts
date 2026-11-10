@@ -1380,3 +1380,68 @@ test("@C031-b returns focus to the trigger if the shortcut opener disappears", a
   await dialog.getByRole("combobox", { name: "Search commands" }).press("Escape");
   await expect(page.getByRole("button", { name: "Commands", exact: true })).toBeFocused();
 });
+
+test("@C031-c searches an integration submenu and returns to the previous query", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await input.fill("connect");
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue("");
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Back to commands" })).toBeVisible();
+  await expect(dialog.getByRole("option", { name: "Connect locked service" })).toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  await input.fill("repository");
+  await expect(dialog.getByRole("option", { name: "Connect GitHub" })).toBeVisible();
+  await input.press("Escape");
+  await expect(input).toHaveValue("");
+  await input.press("Escape");
+  await expect(input).toHaveValue("connect");
+  await expect(dialog.getByRole("option", { name: "Integrations" })).toHaveAttribute("id", await input.getAttribute("aria-activedescendant") ?? "");
+  await input.press("Enter");
+  await input.press("ArrowDown");
+  await input.press("ArrowDown");
+  const slack = dialog.getByRole("option", { name: "Connect Slack" });
+  await expect(slack).toHaveAttribute("id", await input.getAttribute("aria-activedescendant") ?? "");
+  await input.press("Enter");
+  await expect(page.getByTestId("command-selected")).toHaveText("slack");
+  await expect(page.getByRole("button", { name: "Commands", exact: true })).toBeFocused();
+});
+
+test("@C031-c does not execute a removed integration submenu", async ({ page }) => {
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  const input = dialog.getByRole("combobox", { name: "Search commands" });
+  await dialog.getByRole("option", { name: "Integrations" }).click();
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toBeVisible();
+  await page.getByRole("button", { name: "Remove integrations" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toHaveCount(0);
+  await expect(input).toBeFocused();
+  await input.press("Enter");
+  await expect(page.getByTestId("command-selected")).toHaveText("");
+  await page.getByRole("button", { name: "Restore integrations" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toHaveCount(0);
+  await dialog.getByRole("option", { name: "Integrations" }).click();
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toBeVisible();
+});
+
+
+test("@C031-c supports opening and returning from a submenu by touch", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto("/command-menu.html");
+  await page.getByRole("button", { name: "Commands", exact: true }).tap();
+  const dialog = page.getByRole("dialog", { name: "Commands" });
+  await dialog.getByRole("option", { name: "Integrations" }).tap();
+  await expect(dialog.getByRole("group", { name: "Integrations" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Back to commands" }).tap();
+  await expect(dialog.getByRole("option", { name: "Integrations" })).toBeVisible();
+  await dialog.getByRole("option", { name: "Integrations" }).tap();
+  await dialog.getByRole("option", { name: "Connect GitHub" }).tap();
+  await expect(page.getByTestId("command-selected")).toHaveText("github");
+  await context.close();
+});

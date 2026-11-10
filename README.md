@@ -94,7 +94,8 @@ failures; stale search results are ignored.
 host-supplied actions. Load `styles/layout.css` after the base stylesheet. Supply stable command
 IDs, labels, optional keywords, and `onSelect`; disabled commands cannot execute. Keep ordinary
 navigation available alongside the menu. An optional shortcut works only inside the menu’s
-child scope and leaves editable fields alone. Integration submenus are not yet supported.
+child scope and leaves editable fields alone. A submenu can group integration actions without
+executing an action when it opens.
 
 ## Progress
 
