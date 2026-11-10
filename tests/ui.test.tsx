@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DataTable } from "../src/data";
+import { BreakdownChart, DataTable } from "../src/data";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
@@ -29,6 +29,23 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("distinguishes missing, zero, and signed breakdown values", () => {
+    const series = [{ id: "built", label: "Built" }, { id: "failed", label: "Failed" }];
+    const categories = [{ id: "first", label: "First", values: [{ seriesId: "built", value: 0 }, { seriesId: "failed", value: null }] }, { id: "second", label: "Second", values: [{ seriesId: "built", value: -4 }, { seriesId: "failed", value: 6 }] }];
+    const render = (items: typeof categories) => renderToString(() => <BreakdownChart label="Builds" series={series} categories={items} formatValue={value => `${value} jobs`} />);
+    const html = render(categories);
+    expect(html).toContain("0 jobs");
+    expect(html).toContain("Unavailable");
+    expect(html).toContain("-4 jobs");
+    expect(html).toContain("6 jobs");
+    expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "built", value: 1 }, { seriesId: "built", value: 2 }] }])).toThrow("unique");
+    expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "built", value: Number.NaN }, { seriesId: "failed", value: null }] }])).toThrow("finite");
+    expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "built", value: 1 }] }])).toThrow("every series");
+    expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "unknown", value: 1 }] }])).toThrow("unknown series");
+    expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "built", value: 1e308 }, { seriesId: "failed", value: 1e308 }] }])).toThrow(RangeError);
+    expect(() => render(Array.from({ length: 41 }, (_, index) => ({ ...categories[0]!, id: String(index) })))).toThrow(RangeError);
+    expect(() => renderToString(() => <BreakdownChart label="Builds" series={series} categories={categories} formatValue={() => " "} />)).toThrow("nonempty");
+  });
   it("renders bounded semantic data tables and validates identities", () => {
     const columns = [{ id: "name", label: "Name", rowHeader: true as const, cell: (row: () => { id: string; name: string }) => row().name }];
     const render = (rows: readonly { id: string; name: string }[]) => renderToString(() => <DataTable caption="Projects" columns={columns} rows={rows} getRowId={row => row.id} />);

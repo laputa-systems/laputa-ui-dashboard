@@ -3,6 +3,88 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@C023-a links focused signed bars to exact values", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/breakdown-chart.html");
+  const chart = page.getByRole("region", { name: "Builds", exact: true });
+  const negative = chart.getByRole("img", { name: "First, Built: -4 jobs" });
+  const positive = chart.getByRole("img", { name: "First, Failed: 6 jobs" });
+  expect(Number(await negative.getAttribute("x"))).toBeCloseTo(0);
+  expect(Number(await negative.getAttribute("width"))).toBeCloseTo(40);
+  expect(Number(await positive.getAttribute("x"))).toBeCloseTo(40);
+  expect(Number(await positive.getAttribute("width"))).toBeCloseTo(60);
+  await negative.focus();
+  await expect(chart.getByRole("cell", { name: "-4 jobs" }).locator("[data-active]")).toBeVisible();
+  await expect(chart.getByRole("cell", { name: "Unavailable" })).toBeVisible();
+  await expect(chart.getByRole("cell", { name: "0 jobs" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh values" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(chart.getByRole("img", { name: "First, Built: -5 jobs" })).toBeFocused();
+  await expect(chart.getByRole("cell", { name: "-5 jobs" }).locator("[data-active]")).toBeVisible();
+  await page.getByRole("button", { name: "Show extremes" }).click();
+  const extreme = chart.getByRole("img", { name: "Extreme, Built: -1e+308 jobs" });
+  expect(Number(await extreme.getAttribute("width"))).toBeCloseTo(50);
+  await page.getByRole("button", { name: "Show empty" }).click();
+  await expect(chart.getByRole("cell", { name: "No records." })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("@C023-a returns focus to the chart when a focused bar disappears", async ({ page }) => {
+  await page.goto("/breakdown-chart.html");
+  const chart = page.getByRole("region", { name: "Builds", exact: true });
+  await chart.getByRole("img", { name: "First, Built: -4 jobs" }).focus();
+  await page.getByRole("button", { name: "Show empty" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(chart).toBeFocused();
+  await expect(chart.getByRole("cell", { name: "No records." })).toBeVisible();
+});
+
+test("@C023-a does not steal focus from an unrelated control", async ({ page }) => {
+  await page.goto("/breakdown-chart.html");
+  await page.getByRole("img", { name: "First, Built: -4 jobs" }).focus();
+  const outside = page.getByRole("button", { name: "Refresh values" });
+  await outside.focus();
+  await page.getByRole("button", { name: "Show empty" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(outside).toBeFocused();
+});
+
+test("@C023-a keeps chart and numeric table reachable in narrow containers", async ({ page }) => {
+  await page.goto("/breakdown-chart.html");
+  await page.getByTestId("chart-container").evaluate(element => { (element as HTMLElement).style.width = "240px"; });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.getByRole("table", { name: "Builds values" })).toBeVisible();
+});
+
+test("@C023-a hydrates its numeric table and supplies a static equivalent", async ({ browser }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { BreakdownChart } from "./dist/ssr/data.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(BreakdownChart, { label: "Builds", series: [{ id: "built", label: "Built" }], categories: [{ id: "first", label: "First", values: [{ seriesId: "built", value: 3 }] }], formatValue: value => value + " jobs" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route("**/breakdown-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTable = document.querySelector('table');</script><script type="module" src="/hydrate-breakdown-chart.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/breakdown-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("img", { name: "First, Built: 3 jobs" }).focus();
+  await expect(page.getByRole("cell", { name: "3 jobs" }).locator("[data-active]")).toBeVisible();
+  expect(errors).toEqual([]);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto("/breakdown-chart-static.html");
+  await expect(staticPage.getByRole("table", { name: "Builds values" }).getByRole("cell", { name: "Unavailable" })).toBeVisible();
+  await expect(staticPage.getByRole("cell", { name: "0 jobs" })).toBeVisible();
+  await staticContext.close();
+});
+
 test("@C039-table-a displays host updates with semantic headers and bounded scrolling", async ({ page }) => {
   await page.goto("/data-table.html");
   const table = page.getByRole("table", { name: "Projects" });

@@ -291,6 +291,21 @@ Use a labelled `nav` with real links for navigation and appropriate headings and
 content. `ui-reading-column` limits a content region to 48rem and centers it. These classes work
 with static HTML and do not alter `Shell`.
 
+`BreakdownChart`, `BreakdownChartProps`, `BreakdownSeries`, `BreakdownCategory`, and
+`BreakdownValue` from `data` display host-aggregated signed stacks and an accompanying numeric
+table. Import `styles/data.css` after the base stylesheet. Supply a nonempty `label`, up to five
+series and 40 categories, and a `formatValue` callback that includes the desired unit and returns
+nonempty text. Series and category IDs must be unique and nonempty; each category supplies exactly
+one value for each series ID. Use `null` for unavailable data and `0` for a measured zero. Values
+and stacked totals must be finite. Empty categories display the table's empty state.
+
+A focusable bar names its category, series and formatted value, and highlights the matching table
+cell. Reordering or replacing records with the same IDs preserves focused bars; if a focused bar
+disappears, focus returns to the chart. Background updates do not move outside focus. The numeric
+table remains available without relying on color, and a static page can provide the same values
+using the native table markup below. Measure/category/stack selectors and a selectable legend are
+not yet implemented; the host supplies the currently aggregated data.
+
 `DataTable`, `DataTableProps<Row>`, and `DataColumn<Row>` from `data` render a semantic read-only
 table. Import `styles/data.css` after the base stylesheet. Supply a nonempty `caption`, one to 32
 columns, up to 1,000 rows, and `getRowId` returning a nonempty unique ID for each row. Column IDs
