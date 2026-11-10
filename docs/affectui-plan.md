@@ -4,7 +4,7 @@
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
 - **Last accepted revision:** P2-static-forge. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P2-static-forge, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
-- **Next:** verify the P2 phase exit with `make check`, then begin P3. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
+- **Next:** begin P3 with S10 and its Workbench prerequisites. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
 
 ## Charter
 
@@ -58,7 +58,7 @@ The phase descriptions, row requirements, and shared contracts below remain bind
 
 ## Needs environment
 
-Chromium passes the local suite. WebKit passed 12 focused form, progress, disclosure, accordion, action and nested-dialog cases plus the assembled P1 journey using `TMPDIR="$PWD/.work/tmp" PLAYWRIGHT_BROWSERS_PATH="$PWD/.work/tmp/playwright-browsers" pnpm exec playwright test tests/browser/affectui.spec.ts --browser=webkit`. The binaries under `.work` are disposable and may need reinstalling. For real assistive technology, record OS, browser, screen reader, fixture URL and the keyboard/announcement scenarios for an owner to run. Consumer integration is separate from local completion: on the relevant consumer checkout, install a locally packed tarball, run that consumer's documented checks, and record the exact command and result. Do not change or publish a consumer without a separate grant.
+P2 exit: `TMPDIR="$PWD/.work/tmp" make check` passed 57 unit/packed and 178 Chromium browser tests. Focused WebKit runs covered the P2 settings journey, static forge, date and file inputs, menus, field actions, toaster, popover and tooltip. The binaries under `.work` are disposable and may need reinstalling. Real assistive-technology verification is unassigned and unrun: record the named tester, OS, browser and screen reader; use `/p2-journey.html`, `/toaster.html`, `/tooltip.html`, `/date-range.html` and `/combobox.html` to check keyboard focus, mixed selection, errors, live announcements and nested Escape. Consumer integration is separate from local completion: on the relevant consumer checkout, install a locally packed tarball, run that consumer's documented checks, and record the exact command and result. Do not change or publish a consumer without a separate grant.
 
 ## Execution boundary and non-goals
 
