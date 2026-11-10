@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, ArtifactPreview, Breadcrumbs, Disclosure, FilterMenu, Popover, SplitPane, Tabs, Tooltip, Workbench, WorkspaceTabs } from "../src/layout";
+import { Accordion, ActionMenu, ArtifactPreview, Breadcrumbs, Disclosure, FilterMenu, Popover, SaveBar, SettingsRow, SplitPane, Tabs, Tooltip, Workbench, WorkspaceTabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -98,6 +98,15 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Workbench navigation={<nav />} workspace={{ label: " ", content: "Details" }}>Main</Workbench>)).toThrow("nonempty");
     expect(() => renderToString(() => <Workbench navigation={<nav />} navigationDrawer={{ label: " " }}>Main</Workbench>)).toThrow("nonempty");
   });
+  it("requires meaningful settings labels and save messages", () => {
+    expect(() => renderToString(() => <SettingsRow label=" ">Content</SettingsRow>)).toThrow("nonempty");
+    expect(() => renderToString(() => <SaveBar state={{ kind: "failed", message: " " }} />)).toThrow("nonempty");
+    expect(() => renderToString(() => <SaveBar state={{ kind: "saved", message: " " }} />)).toThrow("nonempty");
+    const html = renderToString(() => <SettingsRow label="Identity" description="Help">Content</SettingsRow>);
+    expect(html).toContain('role="group"');
+    expect(html).toContain('aria-describedby=');
+  });
+
   it("validates split pane bounds before rendering", () => {
     const render = (minSize: number, maxSize: number, defaultSize: number) => renderToString(() => <SplitPane label="Split" axis="horizontal" minSize={minSize} maxSize={maxSize} minOtherSize={20} defaultSize={defaultSize} primary="First" secondary="Second" />);
     expect(render(20, 200, 100)).toContain('role="separator"');

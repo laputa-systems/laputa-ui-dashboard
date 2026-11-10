@@ -279,6 +279,22 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`SettingsRow` and `SettingsRowProps` from `layout` group related controls under a required,
+nonempty `label` and optional `description`. Each control still needs its own label. The group
+stacks when its container is at most 600 pixels wide. Generated IDs beginning with
+`ui-settings-row-` are reserved for the component. Static forms can use
+`ui-settings-row-container`, `ui-settings-row`, `ui-settings-row-heading`,
+`ui-settings-row-description`, and `ui-settings-row-content` with a labelled group and native controls.
+
+`SaveBar`, `SaveBarProps`, and `SaveBarState` from `layout` present host-owned `clean`, `dirty`,
+`saving`, `failed`, and `saved` states. Failed and saved states require nonempty messages. Save and
+discard are available in dirty and failed states only when their respective callbacks are supplied.
+The host owns the draft, request correlation, persistence, and transition to saving; invoking an
+action does not imply success. The bar moves focus to itself before invoking an action or when a
+focused action becomes disabled as the host changes state. Status and error messages use separate
+live regions. Static forms can use `ui-save-bar` and `ui-save-bar-actions` with native submit and
+reset buttons.
+
 `ArtifactPreview`, `ArtifactPreviewProps`, and `ArtifactPreviewState` from `layout` present a
 labelled artifact region. The host supplies `loading`, `failed`, `not-found`, or `ready` state;
 non-ready states require a message. A failure may provide `retry`, which moves focus to the region

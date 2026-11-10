@@ -11,3 +11,5 @@ export { Workbench, type WorkbenchProps, type WorkbenchPane } from "./Workbench"
 export { SplitPane, type SplitPaneProps } from "./SplitPane";
 export { WorkspaceTabs, type WorkspaceTabsProps, type WorkspaceTab, type WorkspaceCloseState } from "./WorkspaceTabs";
 export { ArtifactPreview, type ArtifactPreviewProps, type ArtifactPreviewState } from "./ArtifactPreview";
+export { SettingsRow, type SettingsRowProps } from "./SettingsRow";
+export { SaveBar, type SaveBarProps, type SaveBarState } from "./SaveBar";

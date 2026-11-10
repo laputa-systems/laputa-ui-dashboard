@@ -3,6 +3,96 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P3-settings-a preserves a draft through pending and failed saves", async ({ page }) => {
+  await page.goto("/settings-row.html");
+  const group = page.getByRole("group", { name: "Workspace identity" });
+  await expect(group).toHaveAccessibleDescription("Shown to collaborators");
+  const name = group.getByRole("textbox", { name: "Workspace name" });
+  const save = page.getByRole("button", { name: "Save changes" });
+  await expect(save).toBeDisabled();
+  await name.fill("Changed");
+  await save.click();
+  await expect(page.getByRole("status").filter({ hasText: "Saving changes" })).toBeVisible();
+  await expect(save).toBeDisabled();
+  await expect(page.getByTestId("save-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Fail save" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("alert")).toHaveText("Could not save settings");
+  await expect(name).toHaveValue("Changed");
+  await save.click();
+  await expect(page.getByTestId("save-requests")).toHaveText("2");
+  await page.getByRole("button", { name: "Fail save" }).evaluate((button: HTMLButtonElement) => button.click());
+  await page.getByRole("button", { name: "Discard changes" }).click();
+  await expect(name).toHaveValue("Original");
+  await expect(save).toBeDisabled();
+});
+
+test("@P3-settings-a keeps focus when a focused save becomes pending", async ({ page }) => {
+  await page.goto("/settings-row.html");
+  await page.getByRole("textbox", { name: "Workspace name" }).fill("Changed");
+  const save = page.getByRole("button", { name: "Save changes" });
+  await save.focus();
+  await page.getByRole("button", { name: "Mark saving" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(save).toBeDisabled();
+  await expect(page.locator(".ui-save-bar")).toBeFocused();
+});
+
+test("@P3-settings-a stacks within a narrow container", async ({ page }) => {
+  await page.goto("/settings-row.html");
+  await page.getByTestId("settings-container").evaluate(element => { (element as HTMLElement).style.width = "350px"; });
+  const positions = await page.locator(".ui-settings-row > div").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+  expect(positions[1]!.top).toBeGreaterThanOrEqual(positions[0]!.bottom);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@P3-settings-a reports confirmed saves", async ({ page }) => {
+  await page.goto("/settings-row.html");
+  const name = page.getByRole("textbox", { name: "Workspace name" });
+  await name.fill("Changed");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("button", { name: "Confirm save" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.locator(".ui-save-bar").getByRole("status")).toHaveText("Settings saved");
+  await expect(name).toHaveValue("Changed");
+  await expect(page.getByRole("button", { name: "Discard changes" })).toBeDisabled();
+});
+
+test("@P3-settings-a hydrates its labelled group and save state", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { SettingsRow, SaveBar } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(SettingsRow, { label: "Identity", description: "Help", get children() { return createComponent(SaveBar, { state: { kind: "dirty" }, onSave() {} }); } })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/settings-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialGroup = document.querySelector('[role="group"]');</script><script type="module" src="/hydrate-settings-row.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/settings-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const group = page.getByRole("group", { name: "Identity" });
+  await expect(group).toHaveAccessibleDescription("Help");
+  await group.getByRole("button", { name: "Save changes" }).click();
+  await expect(group.getByRole("status")).toHaveText("Saving changes");
+  expect(errors).toEqual([]);
+});
+
+test("@P3-settings-a keeps a static form usable without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/settings-row-static.html");
+  const name = page.getByRole("textbox", { name: "Workspace name" });
+  await name.fill("Changed");
+  await page.getByRole("button", { name: "Discard changes" }).click();
+  await expect(name).toHaveValue("Original");
+  await name.fill("Saved name");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page).toHaveURL(/\/settings\?name=Saved\+name$/);
+  await context.close();
+});
+
 test("@S17-journey composes inset panes and preserves artifact drafts", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/inset-workbench.html");

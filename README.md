@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`SettingsRow` groups labelled settings with a responsive layout. `SaveBar` presents host-owned
+save state and requests save or discard through callbacks.
+
 `ArtifactPreview` presents host-owned loading, failure, missing, and ready states. Its content and
 actions are supplied as slots; the component does not fetch or interpret artifacts.
 
