@@ -291,6 +291,21 @@ Use a labelled `nav` with real links for navigation and appropriate headings and
 content. `ui-reading-column` limits a content region to 48rem and centers it. These classes work
 with static HTML and do not alter `Shell`.
 
+`DataTable`, `DataTableProps<Row>`, and `DataColumn<Row>` from `data` render a semantic read-only
+table. Import `styles/data.css` after the base stylesheet. Supply a nonempty `caption`, one to 32
+columns, up to 1,000 rows, and `getRowId` returning a nonempty unique ID for each row. Column IDs
+and labels must be nonempty and IDs unique. A column's `cell` receives a Solid accessor for the
+current row; read it within reactive JSX so the same cell can update when the host replaces a row.
+Set `rowHeader: true` for a column containing row labels. The host owns row order and data. Keep
+column definitions stable across updates when preserving cell focus matters. Empty rows show
+`No records.` or the supplied nonempty `emptyMessage`. The named scroll region is keyboard-focusable
+and keeps wide tables inside the page. Larger datasets need host pagination or aggregation. Sorting,
+selection, paging, loading and editing controls are not part of this initial read-only slice.
+
+Static pages can use `ui-data-table-scroll` on a focusable named region around `ui-data-table`,
+with a native caption, column headers and row headers. Use real links and GET forms where appropriate.
+Generated IDs beginning with `ui-data-table-caption-` are reserved for the component.
+
 For a responsive description list, apply `ui-description-list` to a native `dl` and wrap each
 `dt`/`dd` pair in a `ui-description-list-row` div. Values may contain ordinary text or elements
 such as links. Rows stack when the list container is at most 480 pixels wide. The markup works

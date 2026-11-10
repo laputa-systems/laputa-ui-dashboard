@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { DataTable } from "../src/data";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
@@ -28,6 +29,20 @@ function classTokens(html: string): string[] {
 }
 
 describe("@laputa-systems/ui-dashboard", () => {
+  it("renders bounded semantic data tables and validates identities", () => {
+    const columns = [{ id: "name", label: "Name", rowHeader: true as const, cell: (row: () => { id: string; name: string }) => row().name }];
+    const render = (rows: readonly { id: string; name: string }[]) => renderToString(() => <DataTable caption="Projects" columns={columns} rows={rows} getRowId={row => row.id} />);
+    const html = render([{ id: "one", name: "<Alpha>" }]);
+    expect(html).toContain("<caption");
+    expect(html).toContain('scope="col"');
+    expect(html).toContain('scope="row"');
+    expect(html).toContain("&lt;Alpha>");
+    expect(render([])).toContain("No records.");
+    expect(() => render([{ id: "one", name: "First" }, { id: "one", name: "Duplicate" }])).toThrow("unique");
+    expect(() => render([{ id: " ", name: "Blank" }])).toThrow("nonempty");
+    expect(() => render(Array.from({ length: 1001 }, (_, index) => ({ id: String(index), name: "Record" })))).toThrow(RangeError);
+    expect(() => renderToString(() => <DataTable caption="Projects" columns={[...columns, ...columns]} rows={[]} getRowId={row => row.id} />)).toThrow("unique");
+  });
   it("bounds isolated toast queues and validates updates", () => {
     const first = createToastStore();
     const second = createToastStore();

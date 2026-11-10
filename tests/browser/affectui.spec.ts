@@ -3,6 +3,60 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@C039-table-a displays host updates with semantic headers and bounded scrolling", async ({ page }) => {
+  await page.goto("/data-table.html");
+  const table = page.getByRole("table", { name: "Projects" });
+  await expect(table.getByRole("columnheader", { name: "Project" })).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Alpha" }).getByRole("link")).toHaveAttribute("href", "/projects/alpha");
+  const alpha = table.getByRole("link", { name: "Alpha" });
+  await alpha.focus();
+  await page.getByRole("button", { name: "Reverse projects" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(table.getByRole("row").nth(1)).toContainText("Beta");
+  await expect(alpha).toBeFocused();
+  await page.getByRole("button", { name: "Update Alpha" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(table.getByRole("link", { name: "Alpha updated" })).toBeFocused();
+  await page.getByTestId("container").evaluate(element => { (element as HTMLElement).style.width = "200px"; });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  const scroller = page.getByRole("region", { name: "Projects" });
+  expect(await scroller.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+  await scroller.focus();
+  await expect(scroller).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => scroller.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Clear projects" }).click();
+  await expect(table.getByRole("cell", { name: "No records." })).toBeVisible();
+});
+
+test("@C039-table-a hydrates server rows and applies host updates", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { DataTable } from "./dist/ssr/data.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(DataTable, { caption: "Projects", columns: [{ id: "name", label: "Name", rowHeader: true, cell: row => row().name }], rows: [{ id: "one", name: "Alpha" }], getRowId: row => row.id })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/data-table-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTable = document.querySelector('table');</script><script type="module" src="/hydrate-data-table.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/data-table-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.evaluate(() => (window as Window & { updateDataTable: () => void }).updateDataTable());
+  await expect(page.getByRole("rowheader", { name: "Beta" })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("@C039-table-a provides native static links and search", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/data-table-static.html");
+  await expect(page.getByRole("table", { name: "Projects" }).getByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/projects/alpha");
+  await page.getByRole("textbox", { name: "Search" }).fill("alpha");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/projects\?q=alpha$/);
+  await context.close();
+});
+
 test("@fixture-assets serves built CSS to static pages", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

@@ -41,6 +41,13 @@
       "import": "./dist/layout.js",
       "default": "./dist/layout.js"
     },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "browser": "./dist/data.js",
+      "node": "./dist/ssr/data.js",
+      "import": "./dist/data.js",
+      "default": "./dist/data.js"
+    },
     "./recipes": {
       "types": "./dist/recipes/index.d.ts",
       "browser": "./dist/recipes.js",
@@ -50,6 +57,7 @@
     },
     "./styles/recipes.css": "./dist/styles/recipes.css",
     "./styles/layout.css": "./dist/styles/layout.css",
+    "./styles/data.css": "./dist/styles/data.css",
     "./styles/feedback.css": "./dist/styles/feedback.css",
     "./styles/forms.css": "./dist/styles/forms.css",
     "./styles.css": "./dist/styles.css",

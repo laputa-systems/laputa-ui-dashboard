@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [solid({ ssr: true })],
   build: {
     lib: {
-      entry: { index: resolve(import.meta.dirname, "src/index.ts"), forms: resolve(import.meta.dirname, "src/forms/index.ts"), feedback: resolve(import.meta.dirname, "src/feedback/index.ts"), layout: resolve(import.meta.dirname, "src/layout/index.ts"), recipes: resolve(import.meta.dirname, "src/recipes/index.ts") },
+      entry: { index: resolve(import.meta.dirname, "src/index.ts"), forms: resolve(import.meta.dirname, "src/forms/index.ts"), feedback: resolve(import.meta.dirname, "src/feedback/index.ts"), layout: resolve(import.meta.dirname, "src/layout/index.ts"), data: resolve(import.meta.dirname, "src/data/index.ts"), recipes: resolve(import.meta.dirname, "src/recipes/index.ts") },
       formats: ["es"],
       fileName: (_, name) => `${name}.js`,
     },

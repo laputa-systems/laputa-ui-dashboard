@@ -167,6 +167,10 @@ The layout stylesheet also provides responsive description-list styles for nativ
 `SettingsRow` groups labelled settings with a responsive layout. `SaveBar` presents host-owned
 save state and requests save or discard through callbacks.
 
+`DataTable` from the data entry renders bounded, semantic read-only tables with a caption,
+optional row headers and keyboard-scrollable overflow. Its host supplies record IDs and cell renderers.
+Sorting, selection and paging are not yet built into this component.
+
 `ArtifactPreview` presents host-owned loading, failure, missing, and ready states. Its content and
 actions are supplied as slots; the component does not fetch or interpret artifacts.
 
