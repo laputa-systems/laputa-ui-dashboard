@@ -7,3 +7,4 @@ export { Tabs, type TabsProps, type Tab } from "./Tabs";
 export { Breadcrumbs, type BreadcrumbsProps, type Breadcrumb } from "./Breadcrumbs";
 export { Popover, type PopoverProps } from "./Popover";
 export { Tooltip, type TooltipProps } from "./Tooltip";
+export { Workbench, type WorkbenchProps, type WorkbenchPane } from "./Workbench";

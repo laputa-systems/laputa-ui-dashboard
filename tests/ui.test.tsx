@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs, Tooltip } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs, Tooltip, Workbench } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -89,6 +89,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     const html = renderToString(() => <Tooltip label="Information" content="Detail">Info</Tooltip>);
     expect(html).toContain('role="tooltip"');
     expect(html).toContain('aria-describedby=');
+  });
+  it("renders optional workbench panes and rejects unnamed regions", () => {
+    const html = renderToString(() => <Workbench navigation={<nav aria-label="Primary" />} workspace={{ label: "Workspace", content: "Details" }}>Main</Workbench>);
+    expect(html).toContain('aria-label="Workspace"');
+    expect(html).toContain("Details");
+    expect(html).not.toContain("ui-workbench-secondary");
+    expect(() => renderToString(() => <Workbench navigation={<nav />} workspace={{ label: " ", content: "Details" }}>Main</Workbench>)).toThrow("nonempty");
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

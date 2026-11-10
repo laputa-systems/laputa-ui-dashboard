@@ -279,6 +279,13 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`Workbench`, `WorkbenchProps`, and `WorkbenchPane` from `layout` arrange supplied `navigation`,
+optional `secondaryNavigation`, main `children`, and optional labelled `workspace` and
+`diagnostics` panes. `appearance` is `flat` by default or `inset`; pane labels must contain text.
+The container stacks the same content below 900 CSS pixels of available width. Supply real links
+and named navigation landmarks in the navigation slots. The CSS classes also support static HTML;
+this layout does not yet add a mobile drawer or resizable panes.
+
 `Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
 strings and noninteractive `children`. The label names the button independently of its tooltip;
 the content is an associated description. Hover or focus shows it, touch toggles it, and Escape

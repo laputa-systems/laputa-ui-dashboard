@@ -56,3 +56,21 @@
 .ui-tooltip::before { top: -6px; }
 .ui-tooltip::after { bottom: -6px; }
 .ui-tooltip-content { display: block; max-height: calc(100vh - 32px); padding: var(--ui-space-sm); overflow: auto; overflow-wrap: anywhere; }
+.ui-workbench-container { container-type: inline-size; min-width: 0; }
+.ui-workbench { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); grid-template-areas: "navigation main" "navigation diagnostics"; min-width: 0; color: var(--ui-text); background: var(--ui-bg); font: var(--ui-fs-body) var(--ui-font); }
+.ui-workbench[data-secondary] { grid-template-columns: 3.5rem 15rem minmax(0, 1fr); grid-template-areas: "navigation secondary main" "navigation secondary diagnostics"; }
+.ui-workbench[data-workspace] { grid-template-columns: 3.5rem minmax(0, 1fr) 20rem; grid-template-areas: "navigation main workspace" "navigation diagnostics workspace"; }
+.ui-workbench[data-secondary][data-workspace] { grid-template-columns: 3.5rem 15rem minmax(0, 1fr) 20rem; grid-template-areas: "navigation secondary main workspace" "navigation secondary diagnostics workspace"; }
+.ui-workbench-navigation { grid-area: navigation; }
+.ui-workbench-secondary { grid-area: secondary; }
+.ui-workbench-main { grid-area: main; }
+.ui-workbench-workspace { grid-area: workspace; }
+.ui-workbench-diagnostics { grid-area: diagnostics; }
+.ui-workbench :is(.ui-workbench-navigation, .ui-workbench-secondary, .ui-workbench-main, .ui-workbench-workspace, .ui-workbench-diagnostics) { box-sizing: border-box; min-width: 0; padding: var(--ui-space-md); overflow-wrap: anywhere; }
+.ui-workbench :is(.ui-workbench-secondary, .ui-workbench-main, .ui-workbench-workspace) { border-inline-start: 1px solid var(--ui-line); }
+.ui-workbench-diagnostics { border-block-start: 1px solid var(--ui-line); }
+.ui-workbench[data-appearance="inset"] .ui-workbench-main { margin: var(--ui-space-sm); border: 0; border-radius: var(--ui-radius-xl); background: var(--ui-surface); }
+@container (max-width: 900px) {
+  .ui-workbench, .ui-workbench[data-secondary], .ui-workbench[data-workspace], .ui-workbench[data-secondary][data-workspace] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "navigation" "secondary" "main" "workspace" "diagnostics"; }
+  .ui-workbench :is(.ui-workbench-secondary, .ui-workbench-main, .ui-workbench-workspace) { border-inline-start: 0; border-block-start: 1px solid var(--ui-line); }
+}

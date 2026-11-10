@@ -3,6 +3,49 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S10-a presents navigation, content and workspace across container widths", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/workbench.html");
+  const primary = page.getByRole("navigation", { name: "Primary" });
+  const secondary = page.getByRole("navigation", { name: "Project" });
+  const main = page.getByRole("main");
+  const workspace = page.getByRole("complementary", { name: "Workspace" });
+  await expect(primary.getByRole("link", { name: "Projects" })).toHaveAttribute("aria-current", "page");
+  await expect(secondary.getByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/projects/alpha");
+  await expect(page.getByRole("region", { name: "Diagnostics" })).toContainText("Run output");
+  const positions = await Promise.all([primary.boundingBox(), secondary.boundingBox(), main.boundingBox(), workspace.boundingBox()]);
+  expect(positions.every(Boolean)).toBe(true);
+  expect(positions[0]!.x).toBeLessThan(positions[1]!.x);
+  expect(positions[1]!.x).toBeLessThan(positions[2]!.x);
+  expect(positions[2]!.x).toBeLessThan(positions[3]!.x);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect(secondary.getByRole("link", { name: "Alpha" })).toBeVisible();
+    await expect(workspace).toBeVisible();
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator("#root").evaluate(element => { (element as HTMLElement).style.width = "480px"; });
+  const nestedPrimary = await primary.boundingBox();
+  const nestedSecondary = await secondary.boundingBox();
+  expect(nestedSecondary!.y).toBeGreaterThanOrEqual(nestedPrimary!.y + nestedPrimary!.height);
+  await page.locator("#root").evaluate(element => { (element as HTMLElement).style.width = ""; });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@S10-a keeps a static workbench navigable without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
+  const page = await context.newPage();
+  await page.goto("/workbench-static.html");
+  await expect(page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
+  await expect(page.getByRole("navigation", { name: "Project" }).getByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/projects/alpha");
+  await expect(page.getByRole("complementary", { name: "Workspace" })).toContainText("Artifact details");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+});
+
 test("@P2-static-forge filters and edits a record without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

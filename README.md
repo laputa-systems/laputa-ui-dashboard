@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`Workbench` from the layout entry arranges host-supplied navigation, content, workspace and
+diagnostics. It uses container width to stack the same content in narrow spaces.
+
 `Tooltip` from the same layout entry adds optional, keyboard-accessible explanatory text to a
 named button. Keep required instructions visible on the page.
 
