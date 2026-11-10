@@ -291,6 +291,17 @@ Use a labelled `nav` with real links for navigation and appropriate headings and
 content. `ui-reading-column` limits a content region to 48rem and centers it. These classes work
 with static HTML and do not alter `Shell`.
 
+`ChangeSummary`, `ChangeSummaryProps`, `ChangeSummaryItem`, and `ChangeSummaryChange` from `data`
+render a compact description list for a named period. Supply a nonempty `label` and `period`, and
+up to 50 items with nonempty unique IDs, labels and display values. A known change explicitly
+specifies `direction` and `interpretation` (`good`, `bad`, or `neutral`). Increased and decreased
+changes also require a nonempty formatted magnitude; unchanged changes have no amount. An
+unavailable change supplies a nonempty message. The host decides how to format values and whether
+a direction is desirable; the component displays both direction and interpretation in text. An empty
+list says “No data.” Static pages can use `ui-change-summary`, `ui-change-summary-period`,
+`ui-change-summary-list`, `ui-change-summary-item`, `ui-change-summary-change`, and
+`ui-change-summary-unavailable` with a native description list.
+
 `BreakdownChart`, `BreakdownChartProps`, `BreakdownSeries`, `BreakdownCategory`, and
 `BreakdownValue`, `BreakdownDimensionOption`, `BreakdownDimension`, `BreakdownDimensions`, and
 `BreakdownSeriesSelection` from `data` display host-aggregated signed stacks and an accompanying numeric

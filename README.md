@@ -167,6 +167,9 @@ The layout stylesheet also provides responsive description-list styles for nativ
 `SettingsRow` groups labelled settings with a responsive layout. `SaveBar` presents host-owned
 save state and requests save or discard through callbacks.
 
+`ChangeSummary` from the data entry reports metric values, change direction and host-supplied
+interpretation without inferring whether an increase or decrease is desirable.
+
 `BreakdownChart` from the data entry displays host-aggregated signed category values with an
 accessible numeric table, with optional host-controlled dimensions and legend selection.
 

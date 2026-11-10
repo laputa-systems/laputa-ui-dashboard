@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { BreakdownChart, DataTable } from "../src/data";
+import { BreakdownChart, ChangeSummary, DataTable } from "../src/data";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
@@ -45,6 +45,19 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render([{ id: "first", label: "First", values: [{ seriesId: "built", value: 1e308 }, { seriesId: "failed", value: 1e308 }] }])).toThrow(RangeError);
     expect(() => render(Array.from({ length: 41 }, (_, index) => ({ ...categories[0]!, id: String(index) })))).toThrow(RangeError);
     expect(() => renderToString(() => <BreakdownChart label="Builds" series={series} categories={categories} formatValue={() => " "} />)).toThrow("nonempty");
+  });
+  it("reports change direction and interpretation independently", () => {
+    const html = renderToString(() => <ChangeSummary label="Build health" period="Last week" items={[{ id: "latency", label: "Latency", value: "120 ms", change: { kind: "known", direction: "decrease", amount: "10 ms", interpretation: "good" } }, { id: "errors", label: "Errors", value: "Unknown", change: { kind: "unavailable", message: "No comparison" } }]} />);
+    expect(html).toContain("Last week");
+    expect(html).toContain("Decreased 10 ms");
+    expect(html).toContain("Good");
+    expect(html).toContain("No comparison");
+    expect(renderToString(() => <ChangeSummary label="Summary" period="Today" items={[]} />)).toContain("No data.");
+    expect(() => renderToString(() => <ChangeSummary label=" " period="Today" items={[]} />)).toThrow("nonempty");
+    expect(() => renderToString(() => <ChangeSummary label="Summary" period="Today" items={[{ id: "x", label: "X", value: "0", change: { kind: "unavailable", message: " " } }]} />)).toThrow("nonempty");
+    const item = { id: "latency", label: "Latency", value: "120 ms", change: { kind: "known" as const, direction: "decrease" as const, amount: "10 ms", interpretation: "good" as const } };
+    expect(() => renderToString(() => <ChangeSummary label="Summary" period="Today" items={[item, item]} />)).toThrow("unique");
+    expect(() => renderToString(() => <ChangeSummary label="Summary" period="Today" items={Array.from({ length: 51 }, (_, index) => ({ ...item, id: String(index) }))} />)).toThrow(RangeError);
   });
   it("validates breakdown dimension choices and legend selection", () => {
     const dimension = { label: "Measure", value: "one", options: [{ id: "one", label: "One" }] };

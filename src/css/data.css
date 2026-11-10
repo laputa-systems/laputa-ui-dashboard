@@ -23,3 +23,11 @@
 .ui-breakdown-legend button:focus-visible, .ui-breakdown-dimensions select:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
 .ui-breakdown-bars rect[data-dimmed] { opacity: .25; }
 .ui-breakdown-value[data-selected] { font-weight: var(--ui-weight-medium); }
+.ui-change-summary { min-width: 0; color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); }
+.ui-change-summary-period, .ui-change-summary-unavailable { color: var(--ui-muted); }
+.ui-change-summary-list { display: grid; gap: var(--ui-space-sm); margin: var(--ui-space-md) 0 0; }
+.ui-change-summary-item { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-sm); min-width: 0; overflow-wrap: anywhere; }
+.ui-change-summary-item dd { display: flex; flex-wrap: wrap; gap: var(--ui-space-sm); min-width: 0; margin: 0; }
+.ui-change-summary-change[data-interpretation="good"] { color: var(--ui-good); }
+.ui-change-summary-change[data-interpretation="bad"] { color: var(--ui-bad); }
+.ui-change-summary-change[data-interpretation="neutral"] { color: var(--ui-muted); }

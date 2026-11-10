@@ -3,6 +3,50 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@C025-a shows the host's change meanings and empty state", async ({ page }) => {
+  await page.goto("/change-summary.html");
+  const summary = page.getByRole("region", { name: "Build health" });
+  await expect(summary).toContainText("Decreased 10 ms · Good");
+  await expect(summary).toContainText("Decreased 5% · Bad");
+  await expect(summary).toContainText("Unchanged · Neutral");
+  await expect(summary).toContainText("No comparison available");
+  await page.getByTestId("container").evaluate(element => { (element as HTMLElement).style.width = "240px"; });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole("button", { name: "Clear summary" }).click();
+  await expect(summary).toContainText("No data.");
+});
+
+test("@C025-a hydrates its description list and applies host updates", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { ChangeSummary } from "./dist/ssr/data.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(ChangeSummary, { label: "Build health", period: "Last week", items: [{ id: "latency", label: "Latency", value: "120 ms", change: { kind: "known", direction: "decrease", amount: "10 ms", interpretation: "good" } }] })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/change-summary-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialList = document.querySelector('dl');</script><script type="module" src="/hydrate-change-summary.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/change-summary-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.evaluate(() => (window as Window & { clearSummary: () => void }).clearSummary());
+  await expect(page.getByRole("region", { name: "Build health" })).toContainText("No data.");
+  expect(errors).toEqual([]);
+});
+
+test("@C025-a preserves a static description list", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/change-summary-static.html");
+  await expect(page.locator("dt")).toHaveText("Latency");
+  await expect(page.locator("dd")).toContainText("Decreased 10 ms · Good");
+  await context.close();
+});
+
 test("@C023-b requests dimension and legend changes from the host", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
