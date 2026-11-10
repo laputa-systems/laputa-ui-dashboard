@@ -7,3 +7,4 @@ export { Dropzone, type DropzoneProps, type DropzoneFile, type DropzoneUploadSta
 export { RadioGroup, type RadioGroupProps, type RadioOption } from "./RadioGroup";
 export { NativeSelect, type NativeSelectProps, type NativeSelectOption } from "./NativeSelect";
 export { Select, type SelectProps, type SelectOption } from "./Select";
+export { Switch, type SwitchProps, type SwitchRequestState } from "./Switch";

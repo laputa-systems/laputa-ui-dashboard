@@ -68,3 +68,14 @@
 .ui-select-option[data-active], .ui-select-option:not([aria-disabled="true"]):hover { background: var(--ui-hover); }
 .ui-select-option[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 .ui-select-description { display: block; color: var(--ui-muted); font-size: var(--ui-fs-meta); }
+.ui-switch-field { display: grid; gap: var(--ui-space-xs); }
+.ui-switch { min-height: 44px; align-items: center; }
+.ui-switch-end { grid-template-columns: minmax(0, 1fr) auto; }
+.ui-switch-end .ui-checkbox { grid-column: 2; grid-row: 1; }
+.ui-switch-end .ui-choice-content { grid-column: 1; grid-row: 1; }
+.ui-switch .ui-checkbox { appearance: none; position: relative; width: 2.25rem; height: 1.25rem; border: 1px solid var(--ui-line-strong); border-radius: 1rem; background: var(--ui-line-strong); }
+.ui-switch .ui-checkbox::before { content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.25rem - 6px); height: calc(1.25rem - 6px); border-radius: 50%; background: var(--ui-surface); }
+.ui-switch .ui-checkbox:checked { background: var(--ui-accent); border-color: var(--ui-accent); }
+.ui-switch .ui-checkbox:checked::before { left: auto; right: 2px; }
+.ui-switch .ui-checkbox[aria-disabled="true"] { opacity: .7; }
+@media (forced-colors: active) { .ui-switch .ui-checkbox { appearance: auto; } .ui-switch .ui-checkbox::before { display: none; } }

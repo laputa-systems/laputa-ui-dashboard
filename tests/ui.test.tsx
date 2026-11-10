@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
@@ -124,6 +124,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain("<select");
     expect(html).toContain('name="choice"');
     expect(html).toContain("required");
+  });
+  it("renders native switch state and rejects empty failures", () => {
+    const html = renderToString(() => <Switch id="sync" label="Sync" name="sync" checked onCheckedChange={() => {}} />);
+    expect(html).toContain('role="switch"');
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('name="sync"');
+    expect(() => renderToString(() => <Switch id="sync" label="Sync" state={{ kind: "failed", message: "" }} />)).toThrow("Switch failure requires a message");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

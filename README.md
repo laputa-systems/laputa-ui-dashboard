@@ -80,6 +80,8 @@ import { TextField } from "@laputa-systems/ui-dashboard/forms";
 and mixed presentations. Use `defaultChecked` for local state, or `checked` with
 `onCheckedChange` for parent-controlled state. Group related choices with `<fieldset>` and
 `<legend>`. The mixed presentation requires JavaScript to set the native indeterminate property.
+`Switch` uses the same native form behavior for immediate settings and can display host-reported
+pending or failed changes.
 
 `Combobox` from `forms` provides a controlled, searchable single selection with optional
 option groups. `MultiCombobox` selects multiple IDs with removable chips. Supply stable option

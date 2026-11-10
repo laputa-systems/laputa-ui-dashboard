@@ -809,6 +809,43 @@ test("@C074-b server-rendered native control submits without JavaScript", async 
   await context.close();
 });
 
+test("@C078-a exposes native switch state and host-owned pending and failure", async ({ page }) => {
+  await page.goto("/switch.html");
+  const control = page.getByRole("switch", { name: "Sync automatically" });
+  await expect(page.getByRole("switch", { name: "Unavailable switch" })).toBeDisabled();
+  await expect(control).toHaveAccessibleDescription("Sync changes");
+  await control.focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("switch-calls")).toHaveText("1");
+  await expect(control).not.toBeChecked();
+  await expect(control).toHaveAttribute("aria-disabled", "true");
+  await expect(control).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("switch-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Fail switch" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Could not save");
+  await expect(control).toHaveAccessibleDescription("Could not save Sync changes");
+  await page.getByRole("button", { name: "Confirm switch" }).click();
+  await expect(control).toBeChecked();
+  await expect(page.getByTestId("switch-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Save switches" }).click();
+  await expect(page.getByTestId("switch-submitted")).toHaveText("yes/null");
+  await page.getByRole("button", { name: "Mark switch pending" }).click();
+  await page.getByRole("button", { name: "Save switches" }).click();
+  await expect(page.getByTestId("switch-submitted")).toHaveText("yes/null");
+  await page.getByRole("switch", { name: "Show tips" }).click();
+  await page.getByRole("button", { name: "Reset switches" }).click();
+  await expect(page.getByRole("switch", { name: "Show tips" })).toBeChecked();
+  await expect(control).toBeChecked();
+  expect((await control.locator("xpath=..").boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.emulateMedia({ forcedColors: "active" });
+  await expect(control).toHaveCSS("appearance", "auto");
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -840,6 +877,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByRole("switch", { name: "Static sync" }).check();
+  await page.getByRole("button", { name: "Choose sync" }).click();
+  await expect(page).toHaveURL(/\/switch\?sync=yes$/u);
   await page.goto("/forms-static.html");
   await page.getByRole("group", { name: "Static frequency" }).getByLabel("Weekly").check();
   await page.getByRole("button", { name: "Choose frequency" }).click();

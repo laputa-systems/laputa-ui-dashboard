@@ -42,6 +42,16 @@ it sets the native property after hydration and exposes the mixed state in serve
 `class` applies to the label. Static HTML can use `ui-choice`, `ui-choice-card`, `ui-checkbox`,
 `ui-choice-content`, and the field classes with a native checkbox and label.
 
+`Switch`, `SwitchProps`, and `SwitchRequestState` from `forms` present an immediate setting as a
+native checkbox with switch semantics. The same controlled and `defaultChecked` behavior as
+`Checkbox` applies. `placement` puts the switch at the start or end of its label. Optional
+`state` is `idle`, `pending`, or `failed` with a nonempty message. Pending prevents another request
+while retaining focus and the current native form value. Failure is announced and leaves the
+current value unchanged. The host reports the result and updates `checked`. Native `disabled`
+omits the value from form submission. Use a checkbox instead for a choice applied by a later form
+submission. Static markup can combine `ui-choice`, `ui-switch`, `ui-checkbox`, and
+`ui-choice-content` with a native checkbox carrying `role="switch"`.
+
 `DateRangePicker`, `DateRangePickerProps`, `DateRange`, `DateRangeRequestState`, and
 `dateRangeComparison` are exported from `forms`.
 Supply a `label`, a controlled `value`, and `onChange`. A range has inclusive `start` and `end`
