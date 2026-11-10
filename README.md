@@ -110,6 +110,10 @@ navigation available alongside the menu. An optional shortcut works only inside 
 child scope and leaves editable fields alone. A submenu can group integration actions without
 executing an action when it opens.
 
+`FilterMenu` from the same entry presents controlled filter groups and removable selection chips.
+Its selected group and option IDs can be serialized in a URL. Native fieldsets and checkboxes
+provide a static form path.
+
 ## Progress
 
 Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load

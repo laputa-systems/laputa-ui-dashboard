@@ -213,6 +213,18 @@ focusable with `aria-disabled`. The menu requires JavaScript and the browser Pop
 ordinary links or forms for no-JavaScript actions. Generated IDs reserve the `ui-action-menu-`
 prefix. Use distinct Solid `renderId` values when independently hydrating multiple roots.
 
+`FilterMenu`, `FilterMenuProps`, `FilterGroup`, `FilterOption`, and `FilterSelection` are exported
+from `layout`. Supply a `label`, named `groups`, a controlled `value`, and `onChange`. Selections
+are `{ groupId, optionId }` pairs suitable for URL serialization. Group IDs are unique and option
+IDs are unique within their group. IDs must be nonempty. The menu supports at most 50 groups,
+500 options, and 500 selected pairs. Invalid collections throw. A selected pair missing from the
+groups remains as a removable unavailable chip. Group selection affects enabled options only;
+Clear all requests removal of every selected pair. Each action calls `onChange` once. Parent
+updates do not call it. Native disclosures and checkboxes support keyboard operation. Arrow keys
+move between chips. Escape closes the filter disclosure and focuses its summary. Removing a chip
+restores focus after the parent removes it; a rejected request retains focus on the chip. A static
+form can use native fieldsets and named checkboxes for server-side filtering.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

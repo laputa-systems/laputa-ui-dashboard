@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
-import { Accordion, ActionMenu, Disclosure } from "../src/layout";
+import { Accordion, ActionMenu, Disclosure, FilterMenu } from "../src/layout";
 import {
   Badge,
   Button,
@@ -63,6 +63,14 @@ describe("@laputa-systems/ui-dashboard", () => {
     } finally {
       create.mockRestore();
     }
+  });
+  it("validates filter identities and renders mixed selection semantics", () => {
+    const group = { id: "status", label: "Status", options: [{ id: "open", label: "Open" }, { id: "closed", label: "Closed" }] };
+    const html = renderToString(() => <FilterMenu label="Filters" groups={[group]} value={[{ groupId: "status", optionId: "open" }]} onChange={() => {}} />);
+    expect(html).toContain('aria-checked="mixed"');
+    expect(() => renderToString(() => <FilterMenu label="Filters" groups={[group, group]} value={[]} onChange={() => {}} />)).toThrow("Filter group IDs must be nonempty and unique");
+    expect(() => renderToString(() => <FilterMenu label="Filters" groups={[{ ...group, options: [group.options[0]!, group.options[0]!] }]} value={[]} onChange={() => {}} />)).toThrow("Filter option IDs must be nonempty and unique within a group");
+    expect(() => renderToString(() => <FilterMenu label="Filters" groups={[]} value={[{ groupId: "x", optionId: "y" }, { groupId: "x", optionId: "y" }]} onChange={() => {}} />)).toThrow("Filter selections must have nonempty unique IDs");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

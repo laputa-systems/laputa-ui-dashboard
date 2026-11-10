@@ -324,6 +324,73 @@ test("@C045-c bounds raster previews and releases object URLs", async ({ page })
   await expect(page.getByRole("group", { name: "Many previews" }).locator("img")).toHaveCount(10);
 });
 
+test("@C050-a controls groups, mixed selection and unavailable values", async ({ page }) => {
+  await page.goto("/filter-menu.html");
+  await page.getByText("Filters", { exact: true }).click();
+  const status = page.getByRole("group", { name: "Status" });
+  const all = status.getByRole("checkbox", { name: "All Status" });
+  await expect(all).toHaveJSProperty("indeterminate", true);
+  await expect(status.getByRole("checkbox", { name: "Locked" })).toBeDisabled();
+  await all.focus();
+  await page.keyboard.press("Space");
+  await expect(status.getByRole("checkbox", { name: "Closed" })).toBeChecked();
+  await expect(page.getByTestId("filter-calls")).toHaveText("1");
+  await expect(page.getByRole("button", { name: "Remove Owner: unknown (unavailable)" })).toBeVisible();
+  await page.getByRole("button", { name: "Parent filter update" }).click();
+  await expect(page.getByTestId("filter-calls")).toHaveText("1");
+  await expect(status.getByRole("checkbox", { name: "Closed" })).toBeChecked();
+  await expect(status.getByRole("checkbox", { name: "Open" })).not.toBeChecked();
+});
+
+test("@C050-a preserves focus on rejected and accepted chip removal", async ({ page }) => {
+  await page.goto("/filter-menu.html");
+  await page.getByRole("button", { name: "Reject filter requests" }).click();
+  await page.getByText("Filters", { exact: true }).click();
+  await page.getByRole("group", { name: "Status" }).getByRole("checkbox", { name: "Closed" }).click();
+  await expect(page.getByRole("group", { name: "Status" }).getByRole("checkbox", { name: "Closed" })).not.toBeChecked();
+  const chip = page.getByRole("button", { name: "Remove Status: Open" });
+  await chip.focus();
+  await page.keyboard.press("Enter");
+  await expect(chip).toBeFocused();
+  await expect(page.getByTestId("filter-calls")).toHaveText("2");
+  const parentUpdate = page.getByRole("button", { name: "Parent filter update" });
+  await parentUpdate.focus();
+  await parentUpdate.evaluate(button => (button as HTMLButtonElement).click());
+  await expect(chip).toHaveCount(0);
+  await expect(parentUpdate).toBeFocused();
+  await page.reload();
+  await page.getByRole("button", { name: "Remove Status: Open" }).click();
+  await expect(page.getByRole("button", { name: "Remove Owner: unknown (unavailable)" })).toBeFocused();
+  await page.getByRole("button", { name: "Clear all" }).click();
+  await expect(page.getByTestId("filters")).toHaveText("[]");
+});
+
+test("@C050-a supports keyboard chips, limits and narrow layouts", async ({ page }) => {
+  await page.goto("/filter-menu.html");
+  const first = page.getByRole("button", { name: "Remove Status: Open" });
+  const second = page.getByRole("button", { name: "Remove Owner: unknown (unavailable)" });
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(second).toBeFocused();
+  await page.getByText("Filters", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("Filters", { exact: true })).toBeFocused();
+  await page.getByRole("button", { name: "Fill filters" }).click();
+  await page.getByText("Filters", { exact: true }).click();
+  await page.getByRole("group", { name: "Status" }).getByRole("checkbox", { name: "Open" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Select at most 500 filters.");
+  await expect(page.getByRole("group", { name: "Status" }).getByRole("checkbox", { name: "Open" })).not.toBeChecked();
+  await expect(page.getByTestId("filter-calls")).toHaveText("0");
+  await page.getByRole("button", { name: "Long filter" }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -355,6 +422,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByRole("group", { name: "Static status filters" }).getByLabel("Open").check();
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await expect(page).toHaveURL(/\/filter\?status=open$/u);
   await page.goto("/forms-static.html");
   await page.getByLabel("Static attachment").setInputFiles({ name: "report.txt", mimeType: "text/plain", buffer: Buffer.from("report") });
   await page.getByRole("button", { name: "Attach file" }).click();
