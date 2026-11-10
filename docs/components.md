@@ -297,7 +297,9 @@ hidden, so switching preserves their contents. `dirty` adds a visible Unsaved ma
 owns drafts and their persistence. The tab strip scrolls horizontally without truncating names.
 After a requested close is acknowledged, focus moves to the selected tab or, after the final
 close, to the element returned by `returnFocus`; an unavailable target falls back to the region.
-Late acknowledgments do not move focus after the user has moved elsewhere. Optional host-owned
+Late acknowledgments do not move focus after the user has moved elsewhere. If the host removes a
+modal workspace on the last close, it must close that modal and restore focus after unmounting.
+Optional host-owned
 `closeState` (`WorkspaceCloseState`) is `idle`, `pending` with `tabId`, or `failed` with `tabId`
 and a message. A pending close disables all close actions; a failure stays visible and permits a
 retry. Set pending before returning from `onClose`, and have the host correlate late results with

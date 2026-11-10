@@ -3,6 +3,72 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S17-journey composes inset panes and preserves artifact drafts", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/inset-workbench.html");
+  const separator = page.getByRole("separator", { name: "Project columns" });
+  await separator.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(separator).toHaveAttribute("aria-valuenow", "230");
+  await page.getByRole("textbox", { name: "Notes draft" }).fill("Keep my work");
+  await page.getByRole("tab", { name: "build.log" }).click();
+  await expect(page.getByText("Build passed")).toBeVisible();
+  await page.getByRole("button", { name: "Close build.log" }).click();
+  await expect(page.getByRole("textbox", { name: "Notes draft" })).toHaveValue("Keep my work");
+  await page.getByRole("button", { name: "Close notes.txt" }).click();
+  await expect(page.getByRole("button", { name: "Open workspace area" })).toBeFocused();
+  await expect(page.getByRole("complementary", { name: "Workspace" })).toHaveCount(0);
+});
+
+test("@S17-journey closes the mobile workspace without stranding focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/inset-workbench.html");
+  await page.getByRole("button", { name: "Open Workspace", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Workspace" });
+  await drawer.getByRole("textbox", { name: "Notes draft" }).fill("Keep this mobile draft");
+  await drawer.getByRole("button", { name: "Close workspace", exact: true }).click();
+  await expect(drawer).toHaveCount(0);
+  const opener = page.getByRole("button", { name: "Open workspace area" });
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await page.getByRole("button", { name: "Open Workspace", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace" }).getByRole("textbox", { name: "Notes draft" })).toHaveValue("Keep this mobile draft");
+});
+
+test("@S17-journey closes the last mobile tab and returns focus outside the drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/inset-workbench.html");
+  await page.getByRole("button", { name: "Open Workspace", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Workspace" });
+  await drawer.getByRole("tab", { name: "build.log" }).click();
+  await drawer.getByRole("button", { name: "Close build.log" }).click();
+  await drawer.getByRole("button", { name: "Close notes.txt" }).click();
+  await expect(drawer).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open workspace area" })).toBeFocused();
+});
+
+test("@S17-journey fits its composed panes and static fallback", async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("/inset-workbench.html");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await context.close();
+  const staticContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto("/inset-workbench-static.html");
+  await expect(staticPage.getByRole("link", { name: "Alpha" })).toHaveAttribute("href", "/projects/alpha");
+  await expect(staticPage.getByRole("link", { name: "notes.txt" })).toHaveAttribute("href", "/artifacts/notes");
+  await expect(staticPage.getByRole("complementary", { name: "Workspace" })).toContainText("Artifact content");
+  expect(await staticPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await staticContext.close();
+});
+
 test("@S17-preview-a presents host states and preserves safe text", async ({ page }) => {
   await page.goto("/artifact-preview.html");
   const preview = page.getByRole("region", { name: "Artifact preview" });
