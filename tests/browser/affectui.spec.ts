@@ -3,6 +3,43 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P2-static-forge filters and edits a record without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/static-forge");
+  await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+  await page.getByRole("searchbox", { name: "Search repositories" }).fill("alpha");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/static-forge\?q=alpha$/u);
+  await expect(page.getByRole("row", { name: "Beta Closed" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Alpha" }).click();
+  await expect(page.getByRole("heading", { name: "Alpha" })).toBeVisible();
+  await page.getByRole("link", { name: "Repository settings" }).click();
+  await page.getByRole("textbox", { name: "Repository name" }).fill("Alpha renamed");
+  const response = page.waitForResponse(response => response.request().method() === "POST" && response.url().endsWith("/static-forge/alpha/settings"));
+  await page.getByRole("button", { name: "Save repository" }).click();
+  expect((await response).status()).toBe(303);
+  await expect(page.getByRole("heading", { name: "Alpha renamed" })).toBeVisible();
+  await page.getByRole("link", { name: "Repositories" }).click();
+  await expect(page.getByRole("link", { name: "Alpha renamed" })).toBeVisible();
+  await page.getByRole("link", { name: "Alpha renamed" }).click();
+  await page.getByRole("link", { name: "Repository settings" }).click();
+  await page.getByRole("textbox", { name: "Repository name" }).fill("Alpha <b>literal</b>");
+  await page.getByRole("button", { name: "Save repository" }).click();
+  const heading = page.getByRole("heading", { name: "Alpha <b>literal</b>" });
+  await expect(heading).toBeVisible();
+  await expect(heading.locator("b")).toHaveCount(0);
+  await page.getByRole("link", { name: "Repositories" }).click();
+  await page.getByRole("searchbox", { name: "Search repositories" }).fill('"><img src=x>');
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page.locator("img")).toHaveCount(0);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await context.close();
+});
+
 test("@P2-journey-a preserves settings failures while filtering a collection", async ({ page }) => {
   await page.addInitScript(() => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new Error("denied")) } }); });
   await page.goto("/p2-journey.html");

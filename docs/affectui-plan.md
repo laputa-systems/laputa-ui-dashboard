@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** P2-journey-d. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
-- **Next:** complete the JavaScript-disabled static forge journey and verify the P2 phase exit. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
+- **Last accepted revision:** P2-static-forge. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P2-journey-b, P2-journey-c, P2-journey-d, P2-static-forge, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
+- **Next:** verify the P2 phase exit with `make check`, then begin P3. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
 
 ## Charter
 
@@ -348,7 +348,7 @@ Exit is per feature. Completing P0-P8 does not entitle the project to claim ever
 
 ### Shared acceptance journeys
 
-1. **Static forge:** shell + GET-filtered table + record detail/settings work with JavaScript disabled and unchanged base CSS imports.
+1. **Static forge:** shell + GET-filtered table + record detail/settings work with JavaScript disabled and unchanged base CSS imports. `fixture/static-forge-server.ts` supplies an ephemeral local fixture backend; `@P2-static-forge` covers filtering, navigation, settings POST, HTML escaping and narrow layout in Chromium and WebKit.
 2. **Analytics:** range/filter changes update metrics, charts and table from one dataset; unknown/missing/zero values and lower-is-better comparisons remain accurate.
 3. **CI workbench:** list -> run inspector -> artifact tabs; resize by keyboard, close the last tab, filter out a selected row and recover focus correctly.
 4. **Conversation:** compose with IME, attach/fail/retry, stream/stop, scroll into history, receive new output, inspect citations, return to live and retain drafts.
