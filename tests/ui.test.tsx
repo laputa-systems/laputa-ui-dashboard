@@ -50,6 +50,8 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Dropzone label="Files" files={[]} maxFiles={1} maxFileBytes={-1} />)).toThrow(RangeError);
     expect(() => renderToString(() => <Dropzone label="Files" files={[]} maxFiles={1} maxFileBytes={1} accept={["invalid"]} />)).toThrow("Invalid Dropzone accept type");
     expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file }, { id: "a", file }]} maxFiles={2} maxFileBytes={1} />)).toThrow("Dropzone file IDs must be nonempty and unique");
+    expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file, state: { kind: "uploading", progress: { value: 2, max: 1 } } }]} maxFiles={1} maxFileBytes={1} />)).toThrow(RangeError);
+    expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file, state: { kind: "failed", message: "" } }]} maxFiles={1} maxFileBytes={1} />)).toThrow("Dropzone failure requires a message");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

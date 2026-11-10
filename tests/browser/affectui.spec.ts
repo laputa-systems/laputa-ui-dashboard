@@ -202,17 +202,17 @@ test("@C045-a selects real files, rejects invalid files and respects queue capac
   await page.goto("/dropzone.html");
   const input = page.getByRole("group", { name: "Attachments" }).locator('input[type="file"]');
   await expect(page.getByRole("group", { name: "Unavailable upload" }).locator('input[type="file"]')).toBeDisabled();
-  await expect(page.getByText("File selection unavailable")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Unavailable upload" }).getByText("File selection unavailable")).toBeVisible();
   await input.setInputFiles([
     { name: "good.txt", mimeType: "text/plain", buffer: Buffer.from("hello") },
     { name: "bad.png", mimeType: "image/png", buffer: Buffer.from("too large") },
     { name: "bad.html", mimeType: "text/html", buffer: Buffer.from("bad") }
   ]);
   await expect(page.getByTestId("upload-calls")).toHaveText("1");
-  await expect(page.getByRole("group", { name: "Attachments" }).getByRole("status")).toHaveText("Requested 1 file.");
+  await expect(page.getByRole("group", { name: "Attachments" }).getByRole("status").filter({ hasText: "Requested" })).toHaveText("Requested 1 file.");
   await expect(page.getByText("good.txt")).toBeVisible();
-  await expect(page.getByRole("alert")).toContainText("bad.png");
-  await expect(page.getByRole("alert")).toContainText("bad.html");
+  await expect(page.getByRole("group", { name: "Attachments" }).getByRole("alert")).toContainText("bad.png");
+  await expect(page.getByRole("group", { name: "Attachments" }).getByRole("alert")).toContainText("bad.html");
   await input.setInputFiles([{ name: "second.png", mimeType: "image/png", buffer: Buffer.from("png") }]);
   await expect(page.getByTestId("upload-calls")).toHaveText("2");
   await expect(page.getByText("second.png")).toBeVisible();
@@ -264,6 +264,37 @@ test("@C045-a fits long filenames and keeps its picker keyboard accessible", asy
   await page.setViewportSize({ width: 390, height: 900 });
   await page.evaluate(() => { document.body.style.zoom = "2"; });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("@C045-b presents host upload states and requests actions without inventing results", async ({ page }) => {
+  await page.goto("/dropzone.html");
+  const queue = page.getByRole("group", { name: "Upload queue" });
+  const first = queue.getByRole("group", { name: "first.txt" });
+  const second = queue.getByRole("group", { name: "second.txt" });
+  const third = queue.getByRole("group", { name: "third.txt" });
+  const fourth = queue.getByRole("group", { name: "fourth.txt" });
+  await expect(first.getByRole("progressbar", { name: "Uploading first.txt" })).toHaveAttribute("value", "0");
+  await expect(third.getByRole("progressbar", { name: "Uploading third.txt" })).not.toHaveAttribute("value");
+  await expect(fourth.getByText("Upload cancelled")).toBeVisible();
+  await expect(fourth.getByRole("button", { name: "Retry fourth.txt" })).toBeEnabled();
+  const readOnly = page.getByRole("group", { name: "Read-only queue" });
+  await expect(readOnly.getByRole("button", { name: "Retry failed.txt" })).toBeDisabled();
+  await expect(readOnly.getByRole("button", { name: "Remove failed.txt" })).toBeDisabled();
+  await expect(second.getByRole("alert")).toHaveText("Connection lost");
+  await second.getByRole("button", { name: "Retry second.txt" }).click();
+  await expect(page.getByTestId("upload-actions")).toHaveText("retry second");
+  await expect(second.getByRole("alert")).toHaveText("Connection lost");
+  await expect(second).toBeFocused();
+  await first.getByRole("button", { name: "Cancel first.txt" }).click();
+  await expect(page.getByTestId("upload-actions")).toHaveText("cancel first");
+  await expect(first.getByRole("progressbar")).toBeVisible();
+  await expect(first).toBeFocused();
+  await page.getByRole("button", { name: "Finish first upload" }).click();
+  await expect(first.getByText("Upload complete")).toBeVisible();
+  await second.getByRole("button", { name: "Remove second.txt" }).click();
+  await expect(page.getByTestId("upload-actions")).toHaveText("remove second");
+  await expect(second).toHaveCount(0);
+  await expect(queue).toBeFocused();
 });
 
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {

@@ -94,6 +94,14 @@ contents or create object URLs. The native picker works with keyboard and touch.
 use `ui-field ui-file-field` on a label containing a native file input, and validate submitted files
 on the server.
 
+Each `DropzoneFile` may include a `DropzoneUploadState`: `queued`, `uploading`, `cancelling`,
+`cancelled`, `failed`, or `complete`. An omitted state means queued. Uploading may carry finite
+`progress` with `value` from zero through a positive `max`; omit it for unknown progress. Failed
+state requires a message, displayed up to 500 characters. `onCancel`, `onRetry`, and `onRemove`
+receive the stable file ID. Missing callbacks disable their actions. The host updates the file
+state after each request. Retry and cancel focus the file row before calling the host; Remove
+focuses the queue. Background updates do not move focus. The component never starts an upload.
+
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
 Options can be individual items or labelled groups. Option IDs must be unique across the whole
