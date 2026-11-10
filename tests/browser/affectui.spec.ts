@@ -3,6 +3,49 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P2-journey-a preserves settings failures while filtering a collection", async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new Error("denied")) } }); });
+  await page.goto("/p2-journey.html");
+  const name = page.getByRole("textbox", { name: "Workspace name" });
+  await name.fill("Edited workspace");
+  await page.getByRole("button", { name: "Copy Workspace name" }).click();
+  await expect(page.getByText("Copy failed", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Save failed" })).toBeVisible();
+  await expect(name).toHaveValue("Edited workspace");
+  await expect(page.getByLabel("Select all notifications")).toHaveAttribute("aria-checked", "mixed");
+  await expect(page.getByRole("button", { name: "Attach files" })).toBeDisabled();
+  await expect(page.getByText("File selection unavailable")).toBeVisible();
+  await page.getByRole("button", { name: "Reporting period" }).click();
+  const dates = page.getByRole("dialog", { name: "Reporting period" });
+  await dates.getByLabel("End date").fill("2024-02-01");
+  await dates.getByRole("button", { name: "Apply" }).click();
+  await expect(dates.getByRole("alert")).toContainText("on or after");
+  await dates.getByRole("button", { name: "Cancel" }).click();
+  await expect(name).toHaveValue("Edited workspace");
+  const collection = page.getByRole("region", { name: "Repositories" });
+  await expect(collection.getByText("Alpha")).toBeVisible();
+  await expect(collection.getByText("Beta")).toBeVisible();
+  await collection.getByText("Filters", { exact: true }).click();
+  await collection.getByRole("checkbox", { name: "Open", exact: true }).check();
+  await expect(collection.getByText("Alpha")).toBeVisible();
+  await expect(collection.getByText("Beta")).toHaveCount(0);
+  await collection.getByRole("textbox", { name: "Search repositories" }).fill("missing");
+  await expect(collection.getByText("No repositories match.")).toBeVisible();
+  await expect(name).toHaveValue("Edited workspace");
+});
+
+test("@P2-journey-a fits settings and filters at narrow widths", async ({ page }) => {
+  await page.goto("/p2-journey.html");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
 test("@P2-tooltip describes its trigger and closes before its dialog", async ({ page }) => {
   await page.goto("/tooltip.html");
   await page.getByRole("button", { name: "Open settings" }).click();

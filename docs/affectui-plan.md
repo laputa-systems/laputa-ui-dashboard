@@ -3,8 +3,8 @@
 ## Status
 
 - **Goal:** Deliver the required P0–P8 functional coverage in the [catalog](affectui-catalog.md), preserving the existing library and CSS-only contract. P9 and optional M01/M05 animations are separately scoped; M04 static presentation and M06 loading semantics remain in scope.
-- **Last accepted revision:** P2-tooltip. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
-- **Next:** complete remaining P2 shared primitives and phase-exit journeys. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
+- **Last accepted revision:** P2-journey-a. F01, M06, C024, C027, C030, C031, C040, C045, C050, C052, C059, C064, C073, C074, C078, C079, C080, C081, C085, P1-progress, P1-disclosure, P1-accordion, P1-action, nested-dialog P1-overlays, P1-journey, P2-breadcrumbs, P2-popover, P2-tooltip, P2-journey-a, P1-field-ids, P1-focus and P1-menu are accepted; no slice is red or parked.
+- **Next:** extend the P2 journey across the remaining field, navigation and notification family; then verify the phase exit. P1 announcement sharing remains open until a second live-region consumer makes a private helper necessary.
 
 ## Charter
 
