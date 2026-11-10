@@ -3,6 +3,135 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@S16-a opens independent navigation and workspace drawers", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  const open = page.getByRole("button", { name: "Open Workspace" });
+  await expect(open).toBeVisible();
+  await expect(open).toHaveAttribute("aria-expanded", "false");
+  await open.click();
+  const drawer = page.getByRole("dialog", { name: "Workspace" });
+  await expect(drawer.getByRole("button", { name: "Artifact action" })).toBeVisible();
+  expect((await drawer.boundingBox())!.x).toBeGreaterThan(0);
+  await expect(open).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(open).toBeFocused();
+  await page.getByRole("button", { name: "Open Navigation" }).click();
+  await expect(page.getByRole("dialog", { name: "Navigation" }).getByRole("link", { name: "Projects" })).toBeVisible();
+});
+
+test("@S16-a matches drawer activation to the container layout boundary", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/workbench-drawers.html");
+  for (const width of [901, 900, 899, 901]) {
+    await page.locator("#root").evaluate((element, value) => { (element as HTMLElement).style.width = `${value}px`; }, width);
+    const open = page.getByRole("button", { name: "Open Workspace" });
+    if (width <= 900) await expect(open).toBeVisible(); else await expect(open).toHaveCount(0);
+  }
+});
+
+test("@S16-a keeps workspace focus when changing between wide and narrow layouts", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/workbench-drawers.html");
+  const action = page.getByRole("button", { name: "Artifact action" });
+  await action.focus();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect(page.getByRole("dialog", { name: "Workspace" })).toBeVisible();
+  await expect(action).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.getByRole("dialog", { name: "Workspace" })).toBeHidden();
+  await expect(action).toBeVisible();
+  await expect(action).toBeFocused();
+});
+
+test("@S16-a removes a focused workspace without leaving stale content", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await page.getByRole("button", { name: "Artifact action" }).focus();
+  await page.getByRole("button", { name: "Remove workspace", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("dialog", { name: "Workspace" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Artifact action" })).toHaveCount(0);
+  await expect(page.getByRole("main")).toBeFocused();
+  await page.getByRole("button", { name: "Restore workspace" }).click();
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace" }).getByRole("button", { name: "Artifact action" })).toBeVisible();
+});
+
+test("@S16-a moves focus when a closed workspace is removed", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  const open = page.getByRole("button", { name: "Open Workspace" });
+  await open.focus();
+  await page.getByRole("button", { name: "Remove workspace" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("main")).toBeFocused();
+  await expect(page.getByRole("button", { name: "Open Workspace" })).toHaveCount(0);
+});
+
+test("@S16-a does not move outside focus when the workspace is removed", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  await page.getByRole("button", { name: "Open Workspace" }).focus();
+  await page.evaluate(() => { document.body.tabIndex = -1; document.body.focus(); });
+  await page.getByRole("button", { name: "Remove workspace" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.locator("body")).toBeFocused();
+});
+
+test("@S16-a keeps the workspace open when its label changes", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  const action = page.getByRole("button", { name: "Artifact action" });
+  await action.focus();
+  await page.getByRole("button", { name: "Rename workspace", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("dialog", { name: "Artifact workspace" })).toBeVisible();
+  await expect(action).toBeFocused();
+});
+
+test("@S16-a keeps a focused workspace when its drawer is disabled", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/workbench-drawers.html");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  const action = page.getByRole("button", { name: "Artifact action" });
+  await action.focus();
+  await page.getByRole("button", { name: "Disable workspace drawer", includeHidden: true }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(action).toBeVisible();
+  await expect(action).toBeFocused();
+  await expect(page.getByRole("button", { name: "Open Workspace" })).toHaveCount(0);
+});
+
+test("@S16-a hydrates a workspace drawer without replacing its content", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Workbench, { navigation: "Navigation content", workspace: { label: "Workspace", content: "Workspace content", drawer: true }, children: "Main content" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/workspace-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}<link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body><div id="root">${html}</div><script>window.initialWorkspace = document.querySelector(".ui-workbench-workspace");</script><script type="module" src="/hydrate-workspace.tsx"></script></body></html>` }));
+  await page.setViewportSize({ width: 390, height: 800 });
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/workspace-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await expect(page.getByRole("dialog", { name: "Workspace" })).toContainText("Workspace content");
+  expect(errors).toEqual([]);
+});
+
+test("@S16-a keeps opted-in workspace content visible without JavaScript", async ({ browser }) => {
+  const script = `import { createComponent, renderToString } from "@solidjs/web";
+import { Workbench } from "./dist/ssr/layout.js";
+process.stdout.write(renderToString(() => createComponent(Workbench, { navigation: "Navigation content", workspace: { label: "Workspace", content: "Workspace content", drawer: true }, children: "Main content" })));`;
+  const html = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
+  const page = await context.newPage();
+  await page.route("**/workspace-nojs", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/dist/styles.css"><link rel="stylesheet" href="/dist/styles/layout.css"></head><body>${html}</body></html>` }));
+  await page.goto("/workspace-nojs");
+  await expect(page.getByRole("complementary", { name: "Workspace" })).toHaveText("Workspace content");
+  await expect(page.getByRole("button", { name: "Open Workspace" })).toHaveCount(0);
+  await context.close();
+});
+
 test("@S10-a presents navigation, content and workspace across container widths", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/workbench.html");

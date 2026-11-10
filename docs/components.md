@@ -284,9 +284,10 @@ optional `secondaryNavigation`, main `children`, and optional labelled `workspac
 `diagnostics` panes. `appearance` is `flat` by default or `inset`; pane labels must contain text.
 The container stacks the same content at 900 CSS pixels of available width or less. Supply real links
 and named navigation landmarks in the navigation slots. `navigationDrawer={{ label }}` opts into a
-combined modal drawer at that width. Escape closes it and returns focus to its opener; resizing
-preserves focus within navigation. Without JavaScript, the navigation remains visible and stacked.
-The CSS classes also support static HTML. Resizable panes remain separate work.
+combined modal drawer at that width. Set `drawer: true` on `workspace` to offer a separate modal
+workspace drawer. Escape returns focus to the opener, resizing preserves focus inside a pane, and
+removing a focused workspace moves focus to the main area. Without JavaScript, both areas remain
+visible and stacked. The CSS classes also support static HTML. Resizable panes remain separate work.
 
 `Tooltip` and `TooltipProps` from `layout` render a button with nonempty `label` and `content`
 strings and noninteractive `children`. The label names the button independently of its tooltip;
