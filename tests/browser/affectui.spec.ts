@@ -1198,6 +1198,42 @@ test("@C085-b cancels timers when the toaster unmounts", async ({ page }) => {
   await expect(page.getByRole("group", { name: "Timed" })).toBeVisible();
 });
 
+test("@C085-clock advances unpaused notices independently", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/toaster.html");
+  const add = page.getByRole("button", { name: "Add two timed" });
+  await add.click();
+  const first = page.getByRole("group", { name: "Timed A" });
+  const second = page.getByRole("group", { name: "Timed B" });
+  await first.hover();
+  await page.clock.fastForward(6001);
+  await expect(first).toBeVisible();
+  await expect(second).toHaveCount(0);
+  await add.hover();
+  await page.clock.fastForward(5001);
+  await expect(first).toHaveCount(0);
+});
+
+test("@C085-clock shares one timer across visible notices", async ({ page }) => {
+  await page.goto("/toaster.html");
+  await page.evaluate(() => {
+    const state = window as Window & { activeToastTimers?: Set<number> };
+    const schedule = window.setTimeout.bind(window);
+    const cancel = window.clearTimeout.bind(window);
+    const active = new Set<number>();
+    state.activeToastTimers = active;
+    window.setTimeout = ((handler: TimerHandler, timeout?: number, ...args: unknown[]) => {
+      const id = schedule(handler, timeout, ...args);
+      if (timeout !== undefined && timeout >= 1000) active.add(id);
+      return id;
+    }) as typeof window.setTimeout;
+    window.clearTimeout = ((id?: number) => { if (id !== undefined) active.delete(id); cancel(id); }) as typeof window.clearTimeout;
+  });
+  await page.getByRole("button", { name: "Add two timed" }).click();
+  await expect(page.getByRole("group", { name: "Timed B" })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { activeToastTimers?: Set<number> }).activeToastTimers?.size)).toBe(1);
+});
+
 test("@C085-c presents promise outcomes without moving focus", async ({ page }) => {
   await page.goto("/toaster.html");
   await page.getByRole("button", { name: "Start save" }).click();

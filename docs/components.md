@@ -265,7 +265,7 @@ store between requests. `add` requires a unique nonempty ID and title, `update` 
 content for an existing ID, and `dismiss` returns whether an ID was present. Each store accepts
 at most 100 notices. A toaster displays the oldest three by default; `maxVisible` can be 1–10.
 A notice may supply an action label and callback. Notices persist unless `durationMs` supplies a
-whole number from 1,000 to 86,400,000 milliseconds. A timer starts when its notice becomes visible,
+whole number from 1,000 to 86,400,000 milliseconds. A single host clock starts each timer when its notice becomes visible,
 pauses on hover, focus or a hidden document, and restarts on update or remount. Unmounting cancels
 the timers. Mount one toaster per store.
 `store.track(id, operation, states)` adds a persistent pending notice and replaces it with the

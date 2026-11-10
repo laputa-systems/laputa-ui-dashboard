@@ -78,25 +78,12 @@ export function createToastStore(): ToastStore {
   return store;
 }
 
-function ToastCard(props: { readonly toast: () => Toast; readonly onDismiss: (id: string, origin: HTMLButtonElement) => void; readonly store: ToastStore }): JSX.Element {
+function ToastCard(props: { readonly id: string; readonly toast: () => Toast; readonly onDismiss: (id: string, origin: HTMLButtonElement) => void; readonly setPaused: (id: string, paused: boolean) => void }): JSX.Element {
   const [hovered, setHovered] = createSignal(false);
   const [focused, setFocused] = createSignal(false);
   const [focusedAction, setFocusedAction] = createSignal<Toast["action"]>();
-  const [hidden, setHidden] = createSignal(isServer ? false : document.hidden);
-  let current: Toast | undefined;
-  let remaining = 0;
-  createEffect(() => true, () => {
-    const changed = () => setHidden(document.hidden);
-    document.addEventListener("visibilitychange", changed);
-    return () => document.removeEventListener("visibilitychange", changed);
-  });
-  createEffect(() => [props.toast(), hovered(), focused(), hidden()] as const, ([toast, hovering, focusing, pageHidden]) => {
-    if (current !== toast) { current = toast; remaining = toast.durationMs ?? 0; }
-    if (toast.durationMs === undefined || hovering || focusing || pageHidden) return;
-    const started = performance.now();
-    const timer = setTimeout(() => props.store.dismiss(toast.id), remaining);
-    return () => { clearTimeout(timer); remaining = Math.max(0, remaining - (performance.now() - started)); };
-  });
+  createEffect(() => hovered() || focused(), paused => { props.setPaused(props.id, paused); });
+  onCleanup(() => props.setPaused(props.id, false));
   return <div class="ui-toast" role="group" aria-label={props.toast().title} onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)} onFocusIn={() => setFocused(true)} onFocusOut={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <strong>{props.toast().title}</strong><Show when={props.toast().detail}>{detail => <p>{detail()}</p>}</Show>
     <div class="ui-toast-actions"><Show when={props.toast().action ?? focusedAction()}>{action => <button type="button" class="ui-btn ui-btn-small" aria-disabled={!props.toast().action ? "true" : undefined} onFocus={() => setFocusedAction(props.toast().action)} onBlur={() => setFocusedAction(undefined)} onClick={() => props.toast().action?.onSelect()}>{action().label}</button>}</Show><button type="button" class="ui-btn ui-btn-small" aria-label={`Dismiss ${props.toast().title}`} onClick={event => props.onDismiss(props.toast().id, event.currentTarget)}>Dismiss</button></div>
@@ -111,6 +98,48 @@ export function Toaster(props: ToasterProps): JSX.Element {
     const limit = props.maxVisible ?? 3;
     if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new RangeError("Toaster maxVisible must be between 1 and 10");
     return props.store.toasts().slice(0, limit);
+  });
+  const [paused, setPaused] = createSignal<ReadonlySet<string>>(new Set());
+  const [hidden, setHidden] = createSignal(isServer ? false : document.hidden);
+  const timers = new Map<string, { toast: Toast; remaining: number }>();
+  const setToastPaused = (id: string, value: boolean) => {
+    if (isServer || disposed) return;
+    setPaused(previous => {
+      if (previous.has(id) === value) return previous;
+      const next = new Set(previous);
+      if (value) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  createEffect(() => true, () => {
+    const changed = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", changed);
+    return () => document.removeEventListener("visibilitychange", changed);
+  });
+  createEffect(() => [visible(), paused(), hidden()] as const, ([items, pausedIds, pageHidden]) => {
+    const ids = new Set(items.map(item => item.id));
+    for (const id of timers.keys()) if (!ids.has(id)) timers.delete(id);
+    for (const toast of items) {
+      if (timers.get(toast.id)?.toast !== toast) timers.set(toast.id, { toast, remaining: toast.durationMs ?? 0 });
+    }
+    if (pageHidden) return;
+    const running = items.flatMap(toast => {
+      const timer = timers.get(toast.id)!;
+      return toast.durationMs !== undefined && !pausedIds.has(toast.id) ? [timer] : [];
+    });
+    if (!running.length) return;
+    const delay = Math.min(...running.map(timer => timer.remaining));
+    const due = running.filter(timer => timer.remaining <= delay);
+    const started = performance.now();
+    const handle = setTimeout(() => {
+      for (const timer of due) if (props.store.toasts().includes(timer.toast)) props.store.dismiss(timer.toast.id);
+    }, delay);
+    return () => {
+      clearTimeout(handle);
+      const elapsed = performance.now() - started;
+      for (const timer of running) timer.remaining = Math.max(0, timer.remaining - elapsed);
+    };
   });
   const dismiss = (id: string, origin: HTMLButtonElement) => {
     const focused = region?.contains(document.activeElement) ?? false;
@@ -128,7 +157,7 @@ export function Toaster(props: ToasterProps): JSX.Element {
   }}>
     <div aria-live="polite" aria-relevant="additions text"><For each={visible().map(toast => toast.id)}>{id => {
       const toast = () => visible().find(item => item.id === id)!;
-      return <ToastCard toast={toast} onDismiss={dismiss} store={props.store} />;
+      return <ToastCard id={id} toast={toast} onDismiss={dismiss} setPaused={setToastPaused} />;
     }}</For></div>
   </section>;
 }

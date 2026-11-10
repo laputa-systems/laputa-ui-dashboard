@@ -16,6 +16,7 @@ function Fixture() {
     <button type="button" onClick={() => notices.dismiss("one")}>Dismiss externally</button>
     <button type="button" onClick={() => other.add({ id: "one", title: "Separate" })}>Add separate</button>
     <button type="button" onClick={() => notices.add({ id: "timed", title: "Timed", durationMs: 1000 })}>Add timed</button>
+    <button type="button" onClick={() => { notices.add({ id: "timed-a", title: "Timed A", durationMs: 5000 }); notices.add({ id: "timed-b", title: "Timed B", durationMs: 6000 }); }}>Add two timed</button>
     <button type="button" onClick={() => notices.update("timed", { title: "Refreshed", durationMs: 1000 })}>Refresh timed</button>
     <button type="button" onClick={() => {
       const operation = new Promise<string>((resolve, reject) => { resolveSave = () => resolve("Saved"); rejectSave = () => reject(new Error("Rejected")); });
