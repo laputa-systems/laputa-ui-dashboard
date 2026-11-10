@@ -2,17 +2,17 @@
 
 ## Status
 
-- **State (2026-11-10):** Feature work is complete. Every follow-up item except paired timings is landed and pushed. The owner deferred timing gates until after feature completion, so the campaign stays open on that gate alone.
+- **State (2026-11-10):** Feature work is complete and every follow-up item is landed. Paired timings ran at Stats `11b62c4` with library 0.9.0: warm readiness is within spread on every route, Services cold is within spread, and Fleet, Host and Service cold exceed it by 11–18 ms, matching their added bytes. The campaign stays open on the owner's acceptance of that cost.
 - **Library releases:** 0.7.0 (scoped themes, Button forwarding), 0.8.0 (dashboard grid density tokens, `ui-dashboard-grid-fill`), 0.9.0 (`SearchDialog`), 0.9.1 (search rows size to content), 0.10.0 (accent table links, CSS-only editorial family), 0.11.0 (opt-in dark theme). All are published on the stuff npm registry.
 - **Consumers:** Stats, repomod and Niceforge depend on 0.9.0; Discover depends on 0.11.0 and marks its reader citations, references, figures, term lists and native names with the editorial classes, pixel-identical to before. Niceforge pins Node 26.13.0 with re-verified CI image digests and regenerated material locks.
 - **Shared behavior now in the library:** themes scoped by `.ui-theme`; CSS-only form, button, notice and settings markup in Discover's admin review; the search dialog in Discover's reader; the dashboard grid in repomod; editorial focus, target and forced-colors rules in Discover's reader.
-- **Open:** paired timing measurements, run when the host is quiet; the Discover search focus ring.
+- **Open:** owner acceptance of the remaining cold transfer cost on Fleet, Host and Service.
 
 ## Follow-up plan
 
-1. **Paired timings.** Rerun Stats cold and warm readiness on a quiet host with `perf-gate-ready`.
+1. **Timing acceptance.** The [Stats integration report](https://github.com/joshuarli/stats/blob/master/docs/dashboard-integration-milestone.md) records the `11b62c4` rerun. The owner accepts the remaining 35–50 ms cold cost or requires fewer bytes on those routes.
 2. **Dark theme adoption** waits for a product that wants it; the sheet ships and is contrast-tested.
-3. **Discover search focus ring.** `site/client/search.css` sets `outline: none` on `.ui-search-dialog-search:focus-visible` with no replacement indicator, which breaks the theming contract's focus-ring invariant. Restore a visible indicator in Discover.
+3. **Discover search focus ring.** Landed in Discover `eea2c05`: the search field keeps an inset accent ring, covered by a browser test.
 4. **Visual regression gallery.** Theme screenshots live only in `.work/tmp`. A small committed gallery of real Stats and Discover pages would track visual quality across releases.
 5. **After these, shift effort to products.** Treat the foundation as stable and let Discover's browsing, image presentation, research navigation and review desk surface any missing shared primitives.
 
