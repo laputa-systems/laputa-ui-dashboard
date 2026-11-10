@@ -45,6 +45,32 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => first.add({ id: "overflow", title: "Overflow" })).toThrow(RangeError);
     expect(() => renderToString(() => <Toaster label="Notices" store={second} maxVisible={0} />)).toThrow(RangeError);
   });
+  it("tracks promise results without resurrecting a changed or dismissed toast", async () => {
+    const store = createToastStore();
+    let resolve!: (value: string) => void;
+    const operation = new Promise<string>(done => { resolve = done; });
+    const tracked = store.track("save", operation, { pending: { title: "Saving" }, succeeded: value => ({ title: value }), failed: () => ({ title: "Failed" }) });
+    expect(store.toasts()[0]?.title).toBe("Saving");
+    resolve("Saved");
+    await expect(tracked).resolves.toBe("Saved");
+    expect(store.toasts()[0]?.title).toBe("Saved");
+    const error = new Error("denied");
+    await expect(store.track("failure", Promise.reject(error), { pending: { title: "Saving" }, succeeded: () => ({ title: "Saved" }), failed: () => ({ title: "Failed" }) })).rejects.toBe(error);
+    expect(store.toasts().find(toast => toast.id === "failure")?.title).toBe("Failed");
+    let finish!: (value: string) => void;
+    const stale = store.track("stale", new Promise<string>(done => { finish = done; }), { pending: { title: "Waiting" }, succeeded: () => ({ title: "Old result" }), failed: () => ({ title: "Old failure" }) });
+    store.dismiss("stale");
+    store.add({ id: "stale", title: "New notice" });
+    finish("done");
+    await stale;
+    expect(store.toasts().find(toast => toast.id === "stale")?.title).toBe("New notice");
+    let complete!: (value: string) => void;
+    const changed = store.track("changed", new Promise<string>(done => { complete = done; }), { pending: { title: "Waiting" }, succeeded: () => ({ title: "Old result" }), failed: () => ({ title: "Old failure" }) });
+    store.update("changed", { title: "Host update" });
+    complete("done");
+    await changed;
+    expect(store.toasts().find(toast => toast.id === "changed")?.title).toBe("Host update");
+  });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);
     expect(render("2000-02-29", "2000-02-29")).toContain("2000-02-29");

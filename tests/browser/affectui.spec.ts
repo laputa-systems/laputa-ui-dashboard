@@ -1198,6 +1198,21 @@ test("@C085-b cancels timers when the toaster unmounts", async ({ page }) => {
   await expect(page.getByRole("group", { name: "Timed" })).toBeVisible();
 });
 
+test("@C085-c presents promise outcomes without moving focus", async ({ page }) => {
+  await page.goto("/toaster.html");
+  await page.getByRole("button", { name: "Start save" }).click();
+  const dismiss = page.getByRole("button", { name: "Dismiss Saving" });
+  await dismiss.focus();
+  await page.getByRole("button", { name: "Resolve save" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("group", { name: "Saved" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Dismiss Saved" })).toBeFocused();
+  await page.getByRole("button", { name: "Dismiss Saved" }).click();
+  await page.getByRole("button", { name: "Start save" }).click();
+  const reject = page.getByRole("button", { name: "Reject save" });
+  await reject.click();
+  await expect(page.getByRole("group", { name: "Save failed" })).toBeVisible();
+});
+
 test("@C081-a adds decorative affixes and an associated count", async ({ page }) => {
   await page.goto("/text-field-extra.html");
   const field = page.getByRole("textbox", { name: "Project name" });

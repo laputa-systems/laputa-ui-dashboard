@@ -268,6 +268,11 @@ A notice may supply an action label and callback. Notices persist unless `durati
 whole number from 1,000 to 86,400,000 milliseconds. A timer starts when its notice becomes visible,
 pauses on hover, focus or a hidden document, and restarts on update or remount. Unmounting cancels
 the timers. Mount one toaster per store.
+`store.track(id, operation, states)` adds a persistent pending notice and replaces it with the
+mapped success or failure when the operation settles. It returns a promise with the operation's
+value or rejection; callers must handle rejection. Dismissed or explicitly updated notices are
+not overwritten by late results. `ToastPromiseStates<T>` describes the pending content and
+result mapping callbacks.
 A focused action removed by an update remains disabled until focus leaves it. Deliberately
 dismissing a focused notice returns
 focus to the connected element that most recently preceded entry into the toaster, when focus has

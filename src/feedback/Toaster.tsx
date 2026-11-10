@@ -9,11 +9,18 @@ export interface Toast {
   readonly action?: { readonly label: string; readonly onSelect: () => void } | undefined;
 }
 
+export interface ToastPromiseStates<T> {
+  readonly pending: Omit<Toast, "id" | "durationMs">;
+  readonly succeeded: (value: T) => Omit<Toast, "id">;
+  readonly failed: (error: unknown) => Omit<Toast, "id">;
+}
+
 export interface ToastStore {
   readonly toasts: () => readonly Toast[];
   readonly add: (toast: Toast) => void;
   readonly update: (id: string, toast: Omit<Toast, "id">) => void;
   readonly dismiss: (id: string) => boolean;
+  readonly track: <T>(id: string, operation: PromiseLike<T>, states: ToastPromiseStates<T>) => Promise<T>;
 }
 
 export interface ToasterProps {
@@ -36,7 +43,7 @@ export function createToastStore(): ToastStore {
     if (isServer) serverToasts = next(serverToasts);
     else setSignal(next);
   };
-  return {
+  const store: ToastStore = {
     toasts,
     add: toast => {
       validateToast(toast);
@@ -55,7 +62,20 @@ export function createToastStore(): ToastStore {
       setToasts(items => items.filter(item => item.id !== id));
       return true;
     },
+    track: (id, operation, states) => {
+      const pending: Toast = { ...states.pending, id };
+      store.add(pending);
+      const current = () => toasts().some(item => item === pending);
+      return Promise.resolve(operation).then(value => {
+        if (current()) store.update(id, states.succeeded(value));
+        return value;
+      }, error => {
+        if (current()) store.update(id, states.failed(error));
+        throw error;
+      });
+    },
   };
+  return store;
 }
 
 function ToastCard(props: { readonly toast: () => Toast; readonly onDismiss: (id: string, origin: HTMLButtonElement) => void; readonly store: ToastStore }): JSX.Element {
