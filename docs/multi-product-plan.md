@@ -4,7 +4,8 @@
 
 - **State:** Planned 2026-11-10. Not started. Gate 0 is the open Stats acceptance in the [AffectUI plan](affectui-plan.md). It runs in parallel with T1–T4 under **Lanes**. Gate 0 must close, or the owner must settle it, before any release and before T6.
 - **Revisions reviewed:** library `add1733`, Stats `6f12fb4`, Discover `c90f80d`, Niceforge `apps/forge` and `web` on `@laputa-systems/ui-dashboard@0.5.0`.
-- **Next:** launch lanes A, B, C and D together.
+- **Running (2026-11-10):** lanes A–E launched. A from library `0e93aaf` and Stats `6f12fb4`; B from library `0e93aaf`; C from Discover `26bc96c`; D from Stats `6f12fb4`; E from repomod `999b111`. The Stats lane worktrees use `node_modules` cloned from the main checkout, because the lockfile names the unpublished 0.6.0 registry entry and a frozen install fails verification. C and E install the 0.6.0 tarball through a `file:` specifier and cannot land until a version is published.
+- **Next:** review each lane as it reports. Then B continues with T3, C with T5's fixture input, and A with a quiet window for paired timings.
 - **Resume:** "Run the multi-product campaign in `docs/multi-product-plan.md` from **Status**." First command: `git status && git log --oneline -5`, then the same in `~/d/discover` and `~/d/stats`.
 
 ## Goal
@@ -17,6 +18,7 @@ This plan is not an execution grant. It applies the AffectUI plan's Charter for 
 
 ## Execution boundary
 
+- **repomod:** work only in `.work/wt/ui-deps` on `feat/ui-deps`. Follow repomod's AGENTS.md constraints. Land on `master` locally after review; do not push.
 - **Library:** edit and commit locally. Do not push or publish. Do not rename the package. Add no mandatory runtime, CSS framework, theming runtime or token compiler.
 - **Discover:** work only in the worktree `~/d/discover/.work/wt/ui-pilot` on branch `ui-pilot`. Never merge it into `main`, push, or deploy. Leave `cloudflare/`, `src/research-core/`, storage, publication, MCP and Access code alone. DSC-33 owns `main` and those paths, and its next lanes (H3 admin mode and H4 `make dev`) own `/admin` and the desk. Rebase the pilot onto `main` before each acceptance run. The owner decides adoption into `main` after DSC-33 releases the touched files.
 - **Stats:** the AffectUI plan's grant covers Gate 0 only. After Gate 0, a theme change is checked by screenshots against the installed tarball and committed in Stats only when its appearance would otherwise change.
@@ -47,7 +49,7 @@ These facts shape the decisions below. Recheck them before each slice.
 
 ## Lanes
 
-Four writers run at once, each in its own worktree and each launched through the Pi bridge. The parent scopes each lane, reviews it, rebases it onto the integration branch, reruns its acceptance there, and lands it. Lanes update neither plan's Status; the parent does.
+Five writers run at once, each in its own worktree and each launched through the Pi bridge. The parent scopes each lane, reviews it, rebases it onto the integration branch, reruns its acceptance there, and lands it. Lanes update neither plan's Status; the parent does.
 
 | Lane | Work | Worktree | Owns | Must not touch |
 | --- | --- | --- | --- | --- |
@@ -55,6 +57,7 @@ Four writers run at once, each in its own worktree and each launched through the
 | B | T1, T2, T3, then the T5 fixture | library `.work/wt/theming` | `src/tokens.css`, `src/css/`, `scripts/build-css.mjs`, `docs/theming.md`, new theme fixture pages and their tests | component TSX, package exports, existing goldens |
 | C | T4 on the 0.6.0 tarball, then the 0.6.x tarball with T2 | Discover `.work/wt/ui-pilot` | Discover `site/site.css`, `site/client/search.css`, presentational markup in `src/site/pages.ts` | the paths DSC-33 owns (**Execution boundary**) |
 | D | Stats data: storage inputs and partially covered series | Stats `.work/wt/coverage` | Stats cost and series code with their tests | Stats build config, route entries, library |
+| E | repomod dependency dashboard on 0.6.0 CSS-only | repomod `.work/wt/ui-deps` | `src/repomod/dependencies/` UI, assets and browser TS, render tests, `package.json`, `Makefile` vendoring | inventory data, `catalog.toml`, canonical checkouts |
 
 - **Shared files.** `package.json`, `playwright.config.ts`, `vitest.config.ts`, the fixture server and `tests/` helpers belong to the parent. A lane that needs one of them stops and asks. Lane B adds no package export; an exported theme waits for its second consumer.
 - **Why C need not wait for B.** A page-wide theme on `:root` and `@import … layer(ui)` both work with the current tarball. Only themes scoped to a region need T2. C rebases onto T2's tarball before its isolation acceptance.
