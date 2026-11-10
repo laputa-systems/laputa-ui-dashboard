@@ -1,6 +1,6 @@
 {
   "name": "@laputa-systems/ui-dashboard",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Compact, editorial dashboard design system: CSS tokens and styles with optional Solid primitives",
   "license": "UNLICENSED",
   "repository": {
