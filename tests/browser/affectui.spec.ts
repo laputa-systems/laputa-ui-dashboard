@@ -3,6 +3,67 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
+test("@P2-popover closes the inner overlay before its dialog", async ({ page }) => {
+  await page.goto("/popover.html");
+  await page.getByRole("button", { name: "Open dialog" }).click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const trigger = dialog.getByRole("button", { name: "Choose options" });
+  await trigger.click();
+  const popover = page.getByRole("dialog", { name: "Filter options" });
+  await expect(popover).toBeVisible();
+  await expect(page.getByLabel("Search options")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(popover).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await expect(trigger).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});
+
+test("@P2-popover closes on outside activation without stealing focus", async ({ page }) => {
+  await page.goto("/popover.html");
+  const trigger = page.getByRole("button", { name: "Open help" });
+  await trigger.click();
+  const popover = page.getByRole("dialog", { name: "Quick help" });
+  await expect(popover).toBeFocused();
+  const outside = page.getByRole("button", { name: "Outside" });
+  await outside.focus();
+  await outside.click();
+  await expect(popover).toBeHidden();
+  await expect(outside).toBeFocused();
+});
+
+test("@P2-popover stays within the viewport at narrow sizes", async ({ page }) => {
+  await page.goto("/popover.html");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 500 });
+    await page.getByRole("button", { name: "Open help" }).click();
+    const popup = page.getByRole("dialog", { name: "Quick help" });
+    const bounds = await popup.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(500);
+    await page.keyboard.press("Escape");
+  }
+});
+
+test("@P2-popover hydrates its trigger and opens its server content", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Popover } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Popover, { label: "Help", trigger: "Open help", children: "Help content" })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/popover-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialPopoverTrigger = document.querySelector("button");</script><script type="module" src="/hydrate-popover.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/popover-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Open help" }).click();
+  await expect(page.getByRole("dialog", { name: "Help" })).toContainText("Help content");
+  expect(errors).toEqual([]);
+});
+
 test("@P2-breadcrumbs keeps every ancestor navigable in a narrow container", async ({ page, browserName }) => {
   await page.goto("/breadcrumbs.html");
   const navigation = page.getByRole("navigation", { name: "Breadcrumb" });
@@ -1426,6 +1487,8 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
   await page.getByRole("button", { name: "Choose frequency" }).click();
   await expect(page).toHaveURL(/\/frequency\?frequency=weekly$/u);
   await page.goto("/forms-static.html");
+  await page.getByText("Static help", { exact: true }).click();
+  await expect(page.getByText("Static help content")).toBeVisible();
   const breadcrumb = page.getByRole("navigation", { name: "Static breadcrumb" });
   await expect(breadcrumb.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects");
   await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText("Settings");

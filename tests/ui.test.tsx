@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, createToastStore, NotificationStack, Progress, Toaster } from "../src/feedback";
-import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Tabs } from "../src/layout";
+import { Accordion, ActionMenu, Breadcrumbs, Disclosure, FilterMenu, Popover, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
 import {
   Badge,
@@ -77,6 +77,11 @@ describe("@laputa-systems/ui-dashboard", () => {
     const html = renderToString(() => <Breadcrumbs ancestors={[{ label: "Projects", href: "/projects" }]} current="Settings" />);
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('href="/projects"');
+  });
+  it("requires names for a popover and its trigger", () => {
+    expect(() => renderToString(() => <Popover label=" " trigger="Open">Content</Popover>)).toThrow("nonempty");
+    expect(() => renderToString(() => <Popover label="Options" trigger=" ">Content</Popover>)).toThrow("nonempty");
+    expect(renderToString(() => <Popover label="Options" trigger="Open">Content</Popover>)).toContain('popover="auto"');
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

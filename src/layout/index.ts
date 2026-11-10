@@ -5,3 +5,4 @@ export { CommandMenu, type CommandMenuProps, type CommandGroup, type Command, ty
 export { FilterMenu, type FilterMenuProps, type FilterGroup, type FilterOption, type FilterSelection } from "./FilterMenu";
 export { Tabs, type TabsProps, type Tab } from "./Tabs";
 export { Breadcrumbs, type BreadcrumbsProps, type Breadcrumb } from "./Breadcrumbs";
+export { Popover, type PopoverProps } from "./Popover";

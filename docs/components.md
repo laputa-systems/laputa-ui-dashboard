@@ -279,6 +279,13 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`Popover` and `PopoverProps` from `layout` accept nonempty `trigger` and `label` strings and
+`children`. Opening places focus on the first visible enabled control, or the surface when there
+is none. Escape closes the surface and restores focus to its trigger; outside activation closes
+it without moving focus. The surface is nonmodal and uses the browser Popover API and shared
+anchored positioning. Use a native `<details>` disclosure when the content must work without
+JavaScript. Do not use a popover as a substitute for modal confirmation.
+
 `Breadcrumbs`, `BreadcrumbsProps`, and `Breadcrumb` from `layout` render a labelled navigation
 landmark with ordinary ancestor links and a non-link current page. Supply `ancestors` in order and
 `current`; `label` defaults to “Breadcrumb”. Labels must contain text, and ancestor URLs must be

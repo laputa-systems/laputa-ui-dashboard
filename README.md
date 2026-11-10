@@ -158,6 +158,9 @@ import { Progress } from "@laputa-systems/ui-dashboard/feedback";
 and unavailable states. A failed state offers Retry only when the host supplies a callback.
 The host owns the operation, error details, and acknowledgment.
 
+`Popover` from `@laputa-systems/ui-dashboard/layout` opens a labelled, nonmodal surface beside a
+button. It requires JavaScript and the browser Popover API; use native disclosure for static pages.
+
 `Breadcrumbs` from `@laputa-systems/ui-dashboard/layout` presents ordinary ancestor links and the
 current page. Load `styles/layout.css` after the base stylesheet.
 
