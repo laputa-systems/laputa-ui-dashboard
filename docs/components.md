@@ -398,7 +398,8 @@ maximum. Invalid bounds throw. Give vertical panes a definite container height. 
 cancellation, or a parent size/axis change discards the preview. The separator has a 24 CSS-pixel
 target. Static markup can use
 `ui-split`, `ui-split-panes`, `ui-split-primary`, `ui-split-secondary`, and `ui-split-separator`.
-Generated control IDs reserve the `ui-split-primary-` prefix.
+Nested panes keep their own axis and resize independently. Generated control IDs reserve the
+`ui-split-primary-` prefix.
 
 `Workbench`, `WorkbenchProps`, and `WorkbenchPane` from `layout` arrange supplied `navigation`,
 optional `secondaryNavigation`, main `children`, and optional labelled `workspace` and

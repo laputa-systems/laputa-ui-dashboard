@@ -1077,6 +1077,47 @@ test("@S17-split-a handles vertical, local, and right-to-left resizing", async (
   await expect(horizontal).toHaveAttribute("aria-valuenow", "250");
 });
 
+test("nested split panes keep their own axes and resize independently", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1100 });
+  await page.goto("/nested-split.html");
+  const outerHorizontal = page.getByRole("separator", { name: "Outer horizontal" });
+  const innerVertical = page.getByRole("separator", { name: "Inner vertical" });
+  const outerVertical = page.getByRole("separator", { name: "Outer vertical" });
+  const innerHorizontal = page.getByRole("separator", { name: "Inner horizontal" });
+  await expect(innerVertical).toHaveCSS("cursor", "row-resize");
+  await expect(innerHorizontal).toHaveCSS("cursor", "col-resize");
+  for (const [separator, horizontal] of [[innerVertical, false], [innerHorizontal, true]] as const) {
+    const bounds = (await separator.boundingBox())!;
+    expect(horizontal ? bounds.height > bounds.width : bounds.width > bounds.height).toBe(true);
+  }
+  await innerVertical.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(innerVertical).toHaveAttribute("aria-valuenow", "160");
+  await expect(outerHorizontal).toHaveAttribute("aria-valuenow", "380");
+  await outerVertical.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(outerVertical).toHaveAttribute("aria-valuenow", "250");
+  await expect(innerHorizontal).toHaveAttribute("aria-valuenow", "250");
+  await innerHorizontal.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(innerHorizontal).toHaveAttribute("aria-valuenow", "260");
+  await expect(outerVertical).toHaveAttribute("aria-valuenow", "250");
+  const innerBounds = (await innerVertical.boundingBox())!;
+  await page.mouse.move(innerBounds.x + innerBounds.width / 2, innerBounds.y + innerBounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(innerBounds.x + innerBounds.width / 2, innerBounds.y + innerBounds.height / 2 + 30);
+  await page.mouse.up();
+  await expect(innerVertical).toHaveAttribute("aria-valuenow", "190");
+  await expect(outerHorizontal).toHaveAttribute("aria-valuenow", "380");
+  const outerBounds = (await outerHorizontal.boundingBox())!;
+  await page.mouse.move(outerBounds.x + outerBounds.width / 2, outerBounds.y + outerBounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(outerBounds.x + outerBounds.width / 2 + 30, outerBounds.y + outerBounds.height / 2);
+  await page.mouse.up();
+  await expect(outerHorizontal).toHaveAttribute("aria-valuenow", "410");
+  await expect(innerVertical).toHaveAttribute("aria-valuenow", "190");
+});
+
 test("@S17-split-a keeps static panes usable without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 800 } });
   const page = await context.newPage();
