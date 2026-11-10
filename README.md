@@ -76,6 +76,11 @@ import { TextField } from "@laputa-systems/ui-dashboard/forms";
 <TextField id="repository" label="Repository" name="repository" hint="Use a slug" required />
 ```
 
+`Checkbox` from the same entry uses a native checkbox and supports optional hint, error, card,
+and mixed presentations. Use `defaultChecked` for local state, or `checked` with
+`onCheckedChange` for parent-controlled state. Group related choices with `<fieldset>` and
+`<legend>`. The mixed presentation requires JavaScript to set the native indeterminate property.
+
 ## Progress
 
 Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load

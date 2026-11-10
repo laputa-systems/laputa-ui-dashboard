@@ -31,6 +31,17 @@ requires a unique `id` and a visible `label`. It forwards native input attribute
 resets with its form; use `value` and `onInput` for parent-controlled state. The control
 classes can also be used directly in static HTML as shown in the README.
 
+`Checkbox` and `CheckboxProps` from `forms` require `id` and `label`. Native name, value,
+required, disabled, form, and input attributes are forwarded. `hint` and `error` are associated
+with the input; `card` adds a padded label. `defaultChecked` initializes an uncontrolled
+checkbox once, and native form reset restores that initial value. `checked` with
+`onCheckedChange` is parent-controlled: each user request calls the handler once, and parent
+updates do not call it. Reset retains the current parent value unless the parent changes it. A
+controlled checkbox without a handler is disabled. `indeterminate` represents mixed selection;
+it sets the native property after hydration and exposes the mixed state in server markup.
+`class` applies to the label. Static HTML can use `ui-choice`, `ui-choice-card`, `ui-checkbox`,
+`ui-choice-content`, and the field classes with a native checkbox and label.
+
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
 native `<progress>` element. A missing `value` means indeterminate progress; zero is a measured

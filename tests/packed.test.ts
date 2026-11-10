@@ -47,7 +47,7 @@ describe("packed artifact contract", () => {
       writeFileSync(join(tmp, "package.json"), '{"name":"packed-consumer","type":"module","private":true}');
       const consumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
-import { TextField } from "@laputa-systems/ui-dashboard/forms";
+import { Checkbox, TextField } from "@laputa-systems/ui-dashboard/forms";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 if (typeof ActionMenu !== "function") throw new Error("action menu is missing");
@@ -56,6 +56,7 @@ if (typeof Disclosure !== "function" || !import.meta.resolve("@laputa-systems/ui
 if (typeof ActionStatus !== "function") throw new Error("action status is missing");
 if (typeof Progress !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/feedback").endsWith("/dist/feedback.js")) throw new Error("browser feedback entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard").endsWith("/dist/index.js")) throw new Error("browser root entry is not selected");
+if (typeof Checkbox !== "function") throw new Error("checkbox is missing");
 if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/forms.js")) throw new Error("browser forms entry is not usable");
 for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css"]) require.resolve(entry);
 `;
@@ -63,7 +64,7 @@ for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems
       const serverConsumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
 import { Badge } from "@laputa-systems/ui-dashboard";
-import { TextField } from "@laputa-systems/ui-dashboard/forms";
+import { Checkbox, TextField } from "@laputa-systems/ui-dashboard/forms";
 import { renderToString } from "@solidjs/web";
 if (!import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/ssr/forms.js")) throw new Error("server forms entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard").endsWith("/dist/ssr/index.js")) throw new Error("server root entry is not selected");
@@ -81,13 +82,15 @@ const progress = renderToString(() => Progress({ label: "Upload", value: 0, max:
 if (!progress.includes("Upload") || !progress.includes('value="0"')) throw new Error(progress);
 const badge = renderToString(() => Badge({ children: "Ready" }));
 if (!badge.includes("ui-badge") || !badge.includes("Ready")) throw new Error(badge);
+const checkbox = renderToString(() => Checkbox({ id: "all", label: "Select all", checked: false, indeterminate: true, onCheckedChange() {} }));
+if (!checkbox.includes('aria-checked="mixed"')) throw new Error(checkbox);
 const html = renderToString(() => TextField({ id: "name", label: "Name", hint: "Enter a name" }));
 const description = html.match(/aria-describedby="([^"]+)"/);
 if (!html.includes('for="name"') || !description || !html.includes('id="' + description[1] + '"')) throw new Error(html);
 `;
       execFileSync("node", ["--input-type=module", "-e", serverConsumer], { cwd: tmp, stdio: "inherit" });
       const consumerTypes = join(tmp, "consumer.ts");
-      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, ActionMenu, type ActionMenuProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst menu: ActionMenuProps = { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} };\nvoid ActionMenu; void menu;\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
+      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, ActionMenu, type ActionMenuProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { Checkbox, type CheckboxProps, TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst menu: ActionMenuProps = { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} };\nvoid ActionMenu; void menu;\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst checkbox: CheckboxProps = { id: "all", label: "Select all", defaultChecked: true };\nvoid Checkbox; void checkbox;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
       execFileSync(join(uiDir, "node_modules/.bin/tsrs"), ["--ignoreConfig", "--noEmit", "--strict", "--skipLibCheck", "--module", "esnext", "--moduleResolution", "bundler", "--target", "es2022", "--lib", "es2022,dom", consumerTypes], { cwd: tmp, stdio: "inherit" });
       const declarations = readFileSync(join(scope, "ui-dashboard/dist/forms/index.d.ts"), "utf8");
       assert.match(declarations, /TextField/u);

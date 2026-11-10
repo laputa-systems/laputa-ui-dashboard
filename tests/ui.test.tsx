@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { TextField } from "../src/forms";
+import { Checkbox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -53,6 +53,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain('max="10"');
     expect(() => renderToString(() => <Progress label="Upload" value={11} max={10} />)).toThrow(RangeError);
     expect(() => renderToString(() => <Progress label="Upload" max={0} />)).toThrow(RangeError);
+  });
+  it("renders a mixed checkbox with its native form contract", () => {
+    const html = renderToString(() => <Checkbox id="all" label="Select all" name="selection" checked={false} indeterminate onCheckedChange={() => {}} />);
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('aria-checked="mixed"');
+    expect(html).toContain('name="selection"');
+    expect(html).toContain("Select all");
   });
   it("namespaces field descriptions across independently rendered roots", () => {
     const first = renderToString(() => <TextField id="first" label="First" hint="Help" />, { renderId: "first" });

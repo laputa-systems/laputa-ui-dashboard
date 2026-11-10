@@ -1,4 +1,4 @@
-import type { TextFieldProps } from "../dist/forms/index";
+import type { CheckboxProps, TextFieldProps } from "../dist/forms/index";
 import type { ButtonProps, IconButtonProps, IconProps, ModalProps, CollapsiblePanelProps } from "../dist/index";
 
 type Assert<T extends true> = T;
@@ -17,8 +17,9 @@ type PanelInitial = Assert<Includes<CollapsiblePanelProps["defaultExpanded"], bo
 type PanelInitiallyCollapsed = Assert<Includes<CollapsiblePanelProps["defaultCollapsed"], boolean>>;
 type PanelLabel = Assert<Includes<CollapsiblePanelProps["label"], string>>;
 
+type CheckboxModes = Assert<Excludes<CheckboxProps, { id: string; label: string; checked: true; defaultChecked: true }>>;
 type TextFieldNeedsId = Assert<Excludes<TextFieldProps, { label: string }>>;
 type TextFieldNeedsLabel = Assert<Excludes<TextFieldProps, { id: string }>>;
 type TextFieldName = Assert<Includes<TextFieldProps["name"], string>>;
 
-export type TypeChecks = ButtonAppearances | ModalReturnFocus | TextFieldNeedsId | TextFieldNeedsLabel | TextFieldName | ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel | PanelInitial | PanelInitiallyCollapsed;
+export type TypeChecks = CheckboxModes | ButtonAppearances | ModalReturnFocus | TextFieldNeedsId | TextFieldNeedsLabel | TextFieldName | ButtonNativeName | ButtonNativeAria | ButtonNativeForm | ButtonVariants | IconButtonNeedsName | IconLabel | PanelLabel | PanelInitial | PanelInitiallyCollapsed;

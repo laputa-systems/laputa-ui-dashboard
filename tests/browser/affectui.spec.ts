@@ -35,6 +35,8 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByText("Static checkbox").click();
+  await expect(page.getByRole("checkbox", { name: "Static checkbox" })).toBeChecked();
   await page.getByText("Static first", { exact: true }).click();
   await expect(page.getByText("Static first content")).toBeVisible();
   await page.getByText("Static second", { exact: true }).click();
@@ -549,4 +551,79 @@ test("@C024 button appearance and decorative icons preserve size and names", asy
   await expect(page.getByRole("button", { name: "Delete" })).toHaveClass(/ui-button-danger/u);
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveClass(/ui-button-ghost/u);
   await expect(page.getByRole("button", { name: "More" })).toHaveClass(/ui-button-ghost/u);
+});
+
+test("@C027 checkbox uses native validation, submission and reset", async ({ page }) => {
+  await page.goto("/checkbox.html");
+  const group = page.getByRole("group", { name: "Notifications" });
+  const email = group.getByRole("checkbox", { name: "Email updates" });
+  const daily = group.getByRole("checkbox", { name: "Daily summary" });
+  await expect(email).toHaveAccessibleDescription("Receive updates by email Selection required");
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("required", "");
+  await expect(daily).toBeChecked();
+  await page.getByRole("button", { name: "Change daily default" }).click();
+  await expect(daily).toBeChecked();
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(email).toBeFocused();
+  await page.locator(".ui-choice-card").click({ position: { x: 2, y: 2 } });
+  await expect(email).toBeChecked();
+  await daily.uncheck();
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(page.getByTestId("checkbox-submitted")).toHaveText("email");
+  await page.getByRole("button", { name: "Reset preferences" }).click();
+  await expect(email).not.toBeChecked();
+  await expect(daily).toBeChecked();
+});
+
+test("@C027 mixed and controlled checkboxes notify only user requests", async ({ page }) => {
+  await page.goto("/checkbox.html");
+  const all = page.getByRole("checkbox", { name: "Select all" });
+  await expect(all).toHaveJSProperty("indeterminate", true);
+  await expect(all).toHaveAttribute("aria-checked", "mixed");
+  await all.focus();
+  await page.keyboard.press("Space");
+  await expect(all).toBeChecked();
+  await expect(all).toHaveJSProperty("indeterminate", false);
+  await expect(page.getByTestId("checkbox-changes")).toHaveText("1");
+  await page.getByRole("button", { name: "Reset controlled" }).click();
+  await expect(all).toBeChecked();
+  await expect(page.getByTestId("checkbox-changes")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent checkbox update" }).click();
+  await expect(all).not.toBeChecked();
+  await expect(page.getByTestId("checkbox-changes")).toHaveText("1");
+  const refused = page.getByRole("checkbox", { name: "Refused change" });
+  await refused.click();
+  await expect(refused).not.toBeChecked();
+  await expect(page.getByTestId("checkbox-rejected")).toHaveText("1");
+  const mixedHeld = page.getByRole("checkbox", { name: "Mixed held" });
+  await mixedHeld.click();
+  await expect(mixedHeld).toHaveJSProperty("checked", false);
+  await expect(mixedHeld).toHaveJSProperty("indeterminate", true);
+  await expect(page.getByTestId("mixed-rejected")).toHaveText("1");
+  await expect(page.getByRole("checkbox", { name: "Locked checkbox" })).toBeDisabled();
+});
+
+
+test("@C027 preserves mixed state and associations through hydration", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Checkbox } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Checkbox, { id: "all", label: "Select all", hint: "All records", checked: false, indeterminate: true, onCheckedChange() {} })));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/checkbox-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialCheckbox = document.getElementById("all");</script><script type="module" src="/hydrate-checkbox.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/checkbox-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const checkbox = page.getByRole("checkbox", { name: "Select all" });
+  await expect(checkbox).toHaveAccessibleDescription("All records");
+  await expect(checkbox).toHaveJSProperty("indeterminate", true);
+  await checkbox.click();
+  await expect(page.locator("html")).toHaveAttribute("data-requested", "true");
+  await expect(checkbox).toHaveJSProperty("checked", false);
+  await expect(checkbox).toHaveJSProperty("indeterminate", true);
 });
