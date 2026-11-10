@@ -308,6 +308,29 @@ test("@C039-table-a provides native static links and search", async ({ browser }
   await context.close();
 });
 
+test("table links take the accent only when the table opts in", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/data-table-static.html");
+  const table = page.getByRole("table", { name: "Projects" });
+  const link = table.getByRole("link", { name: "Alpha" });
+  const browserDefault = await link.evaluate(element => getComputedStyle(element).color);
+  await table.evaluate(element => element.classList.add("ui-table-links"));
+  const accent = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--ui-accent)";
+    document.body.append(probe);
+    return getComputedStyle(probe).color;
+  });
+  await expect(link).toHaveCSS("color", accent);
+  expect(accent).not.toBe(browserDefault);
+  await table.evaluate(element => { element.closest("main")!.style.setProperty("--ui-accent", "rgb(122, 63, 43)"); });
+  await expect(link).toHaveCSS("color", "rgb(122, 63, 43)");
+  await table.evaluate(element => element.classList.remove("ui-table-links"));
+  await expect(link).toHaveCSS("color", browserDefault);
+  await context.close();
+});
+
 test("@fixture-assets serves built CSS to static pages", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

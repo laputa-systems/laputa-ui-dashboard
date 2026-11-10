@@ -375,6 +375,8 @@ Static tables can use a native column header and an ordinary link or GET form to
 
 Static pages can use `ui-data-table-scroll` on a focusable named region around `ui-data-table`,
 with a native caption, column headers and row headers. Use real links and GET forms where appropriate.
+Add `ui-table-links` to the table to color its links with `--ui-accent` and give them the
+library focus ring; without it, links keep the host's or browser's link color.
 Generated IDs beginning with `ui-data-table-caption-` are reserved for the component.
 
 For a responsive description list, apply `ui-description-list` to a native `dl` and wrap each
