@@ -35,6 +35,28 @@ test("@P2-journey-a preserves settings failures while filtering a collection", a
   await expect(name).toHaveValue("Edited workspace");
 });
 
+test("@P2-journey-b retains composed form values through a failed save", async ({ page }) => {
+  await page.goto("/p2-journey.html");
+  await page.getByRole("textbox", { name: "Workspace name" }).fill("Edited workspace");
+  await page.getByRole("textbox", { name: "Workspace notes" }).fill("Keep this draft");
+  await page.getByRole("switch", { name: "Sync automatically" }).check();
+  await page.getByRole("radio", { name: "Weekly" }).check();
+  await page.getByLabel("Default project").selectOption("beta");
+  const tags = page.getByRole("textbox", { name: "Labels" });
+  await tags.fill("release candidate");
+  await tags.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove release candidate" })).toBeVisible();
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Save failed" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Workspace name" })).toHaveValue("Edited workspace");
+  await expect(page.getByRole("textbox", { name: "Workspace notes" })).toHaveValue("Keep this draft");
+  await expect(page.getByRole("switch", { name: "Sync automatically" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Weekly" })).toBeChecked();
+  await expect(page.getByLabel("Default project")).toHaveValue("beta");
+  await expect(page.getByRole("button", { name: "Remove release candidate" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Notifications" }).getByText("Settings could not be saved")).toBeVisible();
+});
+
 test("@P2-journey-a fits settings and filters at narrow widths", async ({ page }) => {
   await page.goto("/p2-journey.html");
   for (const width of [320, 390, 768, 1440]) {

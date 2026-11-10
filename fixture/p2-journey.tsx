@@ -4,12 +4,19 @@ import "@laputa-systems/ui-dashboard/styles/feedback.css";
 import "@laputa-systems/ui-dashboard/styles/layout.css";
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { render } from "@solidjs/web";
-import { ActionStatus, type ActionState } from "@laputa-systems/ui-dashboard/feedback";
-import { Checkbox, DateRangePicker, Dropzone, TextField, type DateRange } from "@laputa-systems/ui-dashboard/forms";
+import { ActionStatus, NotificationStack, type ActionState, type Notification } from "@laputa-systems/ui-dashboard/feedback";
+import { Checkbox, DateRangePicker, Dropzone, NativeSelect, RadioGroup, Switch, TagInput, TextArea, TextField, type DateRange, type Tag, type TagRequestState } from "@laputa-systems/ui-dashboard/forms";
 import { FilterMenu, type FilterSelection } from "@laputa-systems/ui-dashboard/layout";
 
 function Fixture() {
   const [name, setName] = createSignal("Workspace");
+  const [notes, setNotes] = createSignal("");
+  const [sync, setSync] = createSignal(false);
+  const [frequency, setFrequency] = createSignal<string | null>("daily");
+  const [project, setProject] = createSignal("alpha");
+  const [tags, setTags] = createSignal<readonly Tag[]>([]);
+  const [tagState, setTagState] = createSignal<TagRequestState>({ kind: "idle" });
+  const [notices, setNotices] = createSignal<readonly Notification[]>([]);
   const [save, setSave] = createSignal<ActionState>({ kind: "idle" });
   const [checked, setChecked] = createSignal(false);
   const [mixed, setMixed] = createSignal(true);
@@ -20,14 +27,20 @@ function Fixture() {
   const visible = createMemo(() => records.filter(record => record.name.toLowerCase().includes(query().toLowerCase()) && (!filters().length || filters().some(filter => filter.optionId === record.status))));
   return <main style={{ display: "grid", gap: "1rem", "max-width": "48rem", "min-width": "0" }}>
     <section aria-label="Workspace settings"><h1>Workspace settings</h1>
-      <form style={{ display: "grid", gap: "0.75rem" }} onSubmit={event => { event.preventDefault(); setSave({ kind: "failed", message: "Save failed. Try again." }); }}>
+      <form style={{ display: "grid", gap: "0.75rem" }} onSubmit={event => { event.preventDefault(); setSave({ kind: "failed", message: "Save failed. Try again." }); setNotices([{ id: "save", title: "Settings could not be saved" }]); }}>
         <TextField id="journey-name" label="Workspace name" name="name" value={name()} onInput={event => setName(event.currentTarget.value)} copyable />
+        <TextArea id="journey-notes" label="Workspace notes" value={notes()} onInput={event => setNotes(event.currentTarget.value)} autosize={{ minRows: 2, maxRows: 4 }} />
+        <Switch id="journey-sync" label="Sync automatically" checked={sync()} onCheckedChange={setSync} />
+        <RadioGroup label="Report frequency" name="frequency" value={frequency()} options={[{ id: "daily", label: "Daily" }, { id: "weekly", label: "Weekly" }]} onChange={setFrequency} />
+        <NativeSelect id="journey-project" label="Default project" options={[{ value: "alpha", label: "Alpha" }, { value: "beta", label: "Beta" }]} value={project()} onValueChange={setProject} />
+        <TagInput id="journey-labels" label="Labels" value={tags()} state={tagState()} onAdd={request => { setTags(current => [...current, ...request.labels.map((label, index) => ({ id: `${current.length + index}`, label }))]); setTagState({ kind: "accepted", id: request.id }); }} onRemove={id => setTags(current => current.filter(tag => tag.id !== id))} />
         <fieldset><legend>Notifications</legend><Checkbox id="journey-all" label="Select all notifications" checked={checked()} indeterminate={mixed()} onCheckedChange={value => { setChecked(value); setMixed(false); }} /></fieldset>
         <DateRangePicker label="Reporting period" value={range()} today="2024-03-01" onChange={setRange} />
         <Dropzone label="Attach files" files={[]} maxFiles={2} maxFileBytes={1024} />
         <button class="ui-btn" type="submit">Save settings</button>
         <ActionStatus state={save()} />
       </form>
+      <NotificationStack label="Notifications" notices={notices()} onDismiss={id => setNotices(current => current.filter(notice => notice.id !== id))} />
     </section>
     <section aria-label="Repositories"><h2>Repositories</h2>
       <div style={{ display: "flex", "flex-wrap": "wrap", gap: "0.5rem", "min-width": "0" }}>
