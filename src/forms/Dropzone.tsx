@@ -1,4 +1,4 @@
-import { createMemo, createSignal, createUniqueId, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, createUniqueId, For, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 
 export interface DropzoneFile {
@@ -21,6 +21,7 @@ export interface DropzoneProps {
   readonly maxFiles: number;
   readonly maxFileBytes: number;
   readonly accept?: readonly string[] | undefined;
+  readonly imagePreviews?: boolean | undefined;
   readonly onFiles?: ((files: readonly File[]) => void) | undefined;
   readonly onCancel?: ((id: string) => void) | undefined;
   readonly onRetry?: ((id: string) => void) | undefined;
@@ -32,7 +33,17 @@ function fileName(file: File): string {
   return file.name.length > 255 ? `${file.name.slice(0, 254)}…` : file.name;
 }
 
-function UploadRow(props: { readonly item: DropzoneFile; readonly onCancel?: ((id: string) => void) | undefined; readonly onRetry?: ((id: string) => void) | undefined; readonly onRemove?: ((id: string) => void) | undefined; readonly focusQueue: () => void }): JSX.Element {
+function ImagePreview(props: { readonly file: File }): JSX.Element {
+  const [url, setUrl] = createSignal<string>();
+  createEffect(() => props.file, file => {
+    const next = URL.createObjectURL(file);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  });
+  return <Show when={url()}>{source => <img class="ui-dropzone-preview" src={source()} alt="" />}</Show>;
+}
+
+function UploadRow(props: { readonly item: DropzoneFile; readonly preview: boolean; readonly onCancel?: ((id: string) => void) | undefined; readonly onRetry?: ((id: string) => void) | undefined; readonly onRemove?: ((id: string) => void) | undefined; readonly focusQueue: () => void }): JSX.Element {
   let row: HTMLDivElement | undefined;
   const state = () => props.item.state ?? { kind: "queued" as const };
   const uploading = () => { const current = state(); return current.kind === "uploading" ? current : undefined; };
@@ -49,6 +60,7 @@ function UploadRow(props: { readonly item: DropzoneFile; readonly onCancel?: ((i
   };
   const request = (callback: ((id: string) => void) | undefined) => { row?.focus(); callback?.(props.item.id); };
   return <li><div class="ui-dropzone-file" role="group" aria-label={fileName(props.item.file)} tabindex="-1" ref={element => { row = element; }}>
+    <Show when={props.preview}><ImagePreview file={props.item.file} /></Show>
     <span>{fileName(props.item.file)}</span>
     <span role="status" class="ui-field-hint">{status()}</span>
     <Show when={uploading()}>{upload => <progress class="ui-dropzone-progress" aria-label={`Uploading ${fileName(props.item.file)}`} value={upload().progress?.value} max={upload().progress?.max} />}</Show>
@@ -84,6 +96,7 @@ export function Dropzone(props: DropzoneProps): JSX.Element {
     return props.files;
   });
   const disabled = () => props.onFiles === undefined || files().length >= props.maxFiles;
+  const previewIds = createMemo(() => new Set(props.imagePreviews ? files().filter(item => item.file.size <= 5 * 1024 * 1024 && ["image/png", "image/jpeg", "image/gif", "image/webp"].includes(item.file.type.toLowerCase())).slice(0, 10).map(item => item.id) : []));
   const accepts = (file: File) => {
     const allowed = props.accept;
     if (!allowed || allowed.length === 0) return true;
@@ -117,6 +130,6 @@ export function Dropzone(props: DropzoneProps): JSX.Element {
     <Show when={props.onFiles !== undefined && files().length >= props.maxFiles}><div class="ui-field-hint">File limit reached</div></Show>
     <div role="status" class="ui-field-hint">{announcement()}</div>
     <Show when={rejections().length}><div role="alert" class="ui-field-error"><For each={rejections()}>{message => <div>{message}</div>}</For></div></Show>
-    <Show when={files().length}><ul class="ui-dropzone-files"><For each={files()} keyed={item => item.id}>{item => <UploadRow item={item()} onCancel={props.onCancel} onRetry={props.onRetry} onRemove={props.onRemove} focusQueue={() => zone?.focus()} />}</For></ul></Show>
+    <Show when={files().length}><ul class="ui-dropzone-files"><For each={files()} keyed={item => item.id}>{item => <UploadRow item={item()} preview={previewIds().has(item().id)} onCancel={props.onCancel} onRetry={props.onRetry} onRemove={props.onRemove} focusQueue={() => zone?.focus()} />}</For></ul></Show>
   </div>;
 }

@@ -98,7 +98,8 @@ to configure the calendar. Optional comparisons use the same date-only rules.
 `Dropzone` requests real files from a picker or drop and applies host-supplied count, size, and
 type restrictions. The host owns the queue and upload. Use a native file input in a static form.
 Host-supplied states present progress, failure, cancellation, and completion, with optional action
-callbacks for cancel, retry, and removal.
+callbacks for cancel, retry, and removal. Optional raster image previews are bounded and cleaned up
+when removed.
 
 ## Command menu
 

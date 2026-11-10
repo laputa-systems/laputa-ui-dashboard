@@ -89,8 +89,8 @@ selection. A batch may contain both accepted and rejected files. The component d
 rejection and refuses batches over 100 files. If the callback is absent or the queue is full,
 selection is unavailable. A callback is a request, not proof that a file was queued or uploaded.
 The host validates file contents and manages upload, authorization, and reconciliation. File names
-are rendered as text and truncated to 255 characters for display. The component does not read file
-contents or create object URLs. The native picker works with keyboard and touch. For a static form,
+are rendered as text and truncated to 255 characters for display. The native picker works with
+keyboard and touch. For a static form,
 use `ui-field ui-file-field` on a label containing a native file input, and validate submitted files
 on the server.
 
@@ -101,6 +101,12 @@ state requires a message, displayed up to 500 characters. `onCancel`, `onRetry`,
 receive the stable file ID. Missing callbacks disable their actions. The host updates the file
 state after each request. Retry and cancel focus the file row before calling the host; Remove
 focuses the queue. Background updates do not move focus. The component never starts an upload.
+
+Set `imagePreviews` to show decorative previews of up to the first ten PNG, JPEG, GIF, or WebP
+files at most 5 MiB each. Other files, including SVG, are not previewed. Preview eligibility uses
+the browser-supplied MIME type and size; the host must validate file contents independently. The
+component creates object URLs in the browser and revokes them when a file changes, its preview is
+removed, or the component unmounts. Server rendering creates no object URLs.
 
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.

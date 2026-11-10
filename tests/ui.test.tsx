@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
 import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
@@ -52,6 +52,17 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file }, { id: "a", file }]} maxFiles={2} maxFileBytes={1} />)).toThrow("Dropzone file IDs must be nonempty and unique");
     expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file, state: { kind: "uploading", progress: { value: 2, max: 1 } } }]} maxFiles={1} maxFileBytes={1} />)).toThrow(RangeError);
     expect(() => renderToString(() => <Dropzone label="Files" files={[{ id: "a", file, state: { kind: "failed", message: "" } }]} maxFiles={1} maxFileBytes={1} />)).toThrow("Dropzone failure requires a message");
+  });
+  it("does not create file preview URLs during server rendering", () => {
+    const create = vi.spyOn(URL, "createObjectURL");
+    try {
+      const file = new File(["x"], "image.png", { type: "image/png" });
+      const html = renderToString(() => <Dropzone label="Files" files={[{ id: "image", file }]} maxFiles={1} maxFileBytes={1} imagePreviews />);
+      expect(html).not.toContain("<img");
+      expect(create).not.toHaveBeenCalled();
+    } finally {
+      create.mockRestore();
+    }
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

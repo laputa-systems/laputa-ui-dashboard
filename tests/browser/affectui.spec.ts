@@ -297,6 +297,33 @@ test("@C045-b presents host upload states and requests actions without inventing
   await expect(queue).toBeFocused();
 });
 
+test("@C045-c bounds raster previews and releases object URLs", async ({ page }) => {
+  await page.addInitScript(() => {
+    const create = URL.createObjectURL.bind(URL);
+    const revoke = URL.revokeObjectURL.bind(URL);
+    const events: { created: string[]; revoked: string[] } = { created: [], revoked: [] };
+    Object.assign(window, { previewEvents: events });
+    URL.createObjectURL = blob => { const url = create(blob); events.created.push(url); return url; };
+    URL.revokeObjectURL = url => { events.revoked.push(url); revoke(url); };
+  });
+  await page.goto("/dropzone.html");
+  const zone = page.getByRole("group", { name: "Preview queue" });
+  await expect(zone.locator("img")).toHaveCount(2);
+  await expect.poll(() => zone.locator("img").first().evaluate(image => (image as HTMLImageElement).naturalWidth)).toBe(1);
+  const events = () => page.evaluate(() => (window as unknown as { previewEvents: { created: string[]; revoked: string[] } }).previewEvents);
+  const initial = await events();
+  expect(initial.created).toHaveLength(2);
+  await zone.getByRole("button", { name: "Remove one.png" }).click();
+  await expect.poll(async () => (await events()).revoked).toContain(initial.created[0]);
+  await page.getByRole("button", { name: "Replace preview" }).click();
+  await expect.poll(async () => (await events()).created.length).toBe(3);
+  await expect.poll(async () => (await events()).revoked).toContain(initial.created[1]);
+  await page.getByRole("button", { name: "Unmount previews" }).click();
+  await expect.poll(async () => (await events()).revoked.length).toBe(3);
+  await page.getByRole("button", { name: "Show many previews" }).click();
+  await expect(page.getByRole("group", { name: "Many previews" }).locator("img")).toHaveCount(10);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
