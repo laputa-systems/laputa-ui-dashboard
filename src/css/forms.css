@@ -45,3 +45,4 @@
 @container (max-width: 34rem) { .ui-date-range-months { grid-template-columns: minmax(0, 1fr); } .ui-date-range-month:nth-child(2) { display: none; } }
 .ui-date-range-fields .ui-field { flex: 1 1 10rem; min-width: 0; }
 .ui-date-range-actions { display: flex; justify-content: end; gap: var(--ui-space-sm); margin-top: var(--ui-space-md); }
+.ui-date-range-comparison { margin-top: var(--ui-space-sm); }

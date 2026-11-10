@@ -42,14 +42,20 @@ it sets the native property after hydration and exposes the mixed state in serve
 `class` applies to the label. Static HTML can use `ui-choice`, `ui-choice-card`, `ui-checkbox`,
 `ui-choice-content`, and the field classes with a native checkbox and label.
 
-`DateRangePicker`, `DateRangePickerProps`, and `DateRange` are exported from `forms`.
+`DateRangePicker`, `DateRangePickerProps`, `DateRange`, `DateRangeRequestState`, and
+`dateRangeComparison` are exported from `forms`.
 Supply a `label`, a controlled `value`, and `onChange`. A range has inclusive `start` and `end`
 dates in `YYYY-MM-DD` form. Dates are Gregorian calendar dates from `0001-01-01` through
 `9999-12-31`, not instants. No timezone conversion occurs. Optional `min` and `max` use the same
 format and are inclusive. Invalid bounds or values throw `RangeError`. Opening the dialog copies
 the current value into a draft. Apply requests one change; Cancel or Escape discards the draft.
-Parent updates do not call `onChange` or replace an open draft. The host decides whether to accept
-the request. The dialog requires JavaScript. For a static form, use labelled native date inputs
+Parent updates do not call `onChange` or replace an open draft. The dialog closes when the parent
+supplies the requested value. A rejected or delayed request leaves the draft open. Editing the
+draft supersedes the outstanding request, so its later acknowledgment does not close the dialog.
+The host correlates requests and rejects stale results before updating the value. Supply
+`requestState` as `idle`, `pending`, or `failed` with a message to present the host's operation
+state. Pending disables Apply. A failure leaves the draft available for retry. The dialog requires
+JavaScript. For a static form, use labelled native date inputs
 with matching `min` and `max` and validate their order on submission. Generated IDs reserve the
 `ui-date-range-` prefix.
 
@@ -65,6 +71,15 @@ Arrow keys move by day or week, Home and End move within the week, and Page Up a
 move by month. Hold Shift with Page Up or Page Down to move by year. Month movement clamps the
 day to the destination month. Calendar dates outside the bounds are disabled. Two months appear
 when the dialog has room; a narrow dialog shows one.
+
+Set `allowComparison` to offer previous-period and previous-year comparisons. The selected mode
+travels in `DateRange.comparison` with the primary range in the same Apply request. The previous
+period has the same inclusive day count and ends the day before the primary range. Previous year
+shifts each endpoint back one calendar year, clamping February 29 to February 28. Comparison dates
+may fall outside `min` and `max`, which constrain the primary range. Comparisons that would fall
+before `0001-01-01` cannot be applied. `dateRangeComparison(range)` returns the derived inclusive
+range, or `null` when no comparison is selected. Invalid or unrepresentable input throws
+`RangeError`.
 
 `Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
 from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.

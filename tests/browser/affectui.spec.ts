@@ -37,6 +37,9 @@ test("@C040-a edits a date-only range as a controlled draft", async ({ page }) =
   await start.fill("2024-03-11");
   await dialog.getByRole("button", { name: "Apply" }).click();
   await expect(page.getByTestId("range-requests")).toHaveText("2");
+  await expect(dialog).toBeVisible();
+  await expect(start).toHaveValue("2024-03-11");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
   await trigger.click();
   await expect(start).toHaveValue("2024-03-10");
   await start.fill("2024-01-31");
@@ -133,6 +136,66 @@ test("@C040-c localizes the calendar and clamps month navigation to leap day", a
   await expect(dialog.getByRole("button", { name: "jeudi 29 février 2024" })).toBeFocused();
   await page.keyboard.press("Home");
   await expect(dialog.getByRole("button", { name: "lundi 26 février 2024" })).toBeFocused();
+});
+
+test("@C040-d applies comparison with the range in one request", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  await dialog.getByLabel("Compare with").selectOption("previous");
+  await expect(dialog.getByText("2024-02-25 – 2024-02-27")).toBeVisible();
+  await expect(page.getByTestId("comparison")).toHaveText("none");
+  await dialog.getByLabel("Compare with").selectOption("year");
+  await expect(dialog.getByText("2023-02-28 – 2023-03-01")).toBeVisible();
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(page.getByTestId("comparison")).toHaveText("year: 2023-02-28 / 2023-03-01");
+  await expect(page.getByRole("button", { name: "Reporting dates" })).toHaveAccessibleDescription("2024-02-28 – 2024-03-01 (previous year)");
+  await expect(page.getByTestId("range-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  await expect(dialog.getByLabel("Compare with")).toHaveValue("year");
+  await dialog.getByLabel("Compare with").selectOption("");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("comparison")).toHaveText("year: 2023-02-28 / 2023-03-01");
+  await page.getByRole("button", { name: "Limited dates" }).click();
+  const limited = page.getByRole("dialog", { name: "Limited dates" });
+  await limited.getByLabel("Compare with").selectOption("previous");
+  await limited.getByRole("button", { name: "Apply" }).click();
+  await expect(limited.getByRole("alert")).toHaveText("Comparison is outside the supported date range.");
+  await limited.getByRole("button", { name: "Cancel" }).click();
+});
+
+test("@C040-d retains a newer draft when an earlier request is acknowledged", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Reject requests" }).click();
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  const start = dialog.getByLabel("Start date");
+  await start.fill("2024-02-29");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await start.fill("2024-02-27");
+  await page.getByRole("button", { name: "Accept last request", includeHidden: true }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(page.getByTestId("range")).toHaveText("2024-02-29 / 2024-03-01");
+  await expect(dialog).toBeVisible();
+  await expect(start).toHaveValue("2024-02-27");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await page.getByRole("button", { name: "Accept last request", includeHidden: true }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("button", { name: "Reporting dates" })).toBeFocused();
+});
+
+test("@C040-d shows pending and failed requests while preserving the draft", async ({ page }) => {
+  await page.goto("/date-range.html");
+  await page.getByRole("button", { name: "Track requests" }).click();
+  await page.getByRole("button", { name: "Reporting dates" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reporting dates" });
+  await dialog.getByLabel("Start date").fill("2024-02-29");
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(dialog.getByText("Applying date range…")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Apply" })).toBeDisabled();
+  await page.getByRole("button", { name: "Fail request", includeHidden: true }).evaluate(button => (button as HTMLButtonElement).click());
+  await expect(dialog.getByRole("alert")).toHaveText("Range update failed");
+  await expect(dialog.getByLabel("Start date")).toHaveValue("2024-02-29");
+  await expect(dialog.getByRole("button", { name: "Apply" })).toBeEnabled();
 });
 
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {

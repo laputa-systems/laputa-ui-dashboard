@@ -1,10 +1,16 @@
-import { createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
+import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 
 export interface DateRange {
   readonly start: string;
   readonly end: string;
+  readonly comparison?: "previous" | "year" | undefined;
 }
+
+export type DateRangeRequestState =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending" }
+  | { readonly kind: "failed"; readonly message: string };
 
 export interface DateRangePickerProps {
   readonly label: string;
@@ -14,6 +20,8 @@ export interface DateRangePickerProps {
   readonly today?: string | undefined;
   readonly locale?: string | undefined;
   readonly weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | undefined;
+  readonly allowComparison?: boolean | undefined;
+  readonly requestState?: DateRangeRequestState | undefined;
   readonly onChange: (range: DateRange) => void;
   readonly class?: string | undefined;
 }
@@ -57,6 +65,30 @@ function validDate(value: string): boolean {
   return year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= (days[month - 1] ?? 0);
 }
 
+function comparisonDates(range: DateRange): DateRange | undefined {
+  if (range.comparison === "year") {
+    const start = shiftDateMonth(range.start, -12);
+    const end = shiftDateMonth(range.end, -12);
+    return start && end ? { start, end } : undefined;
+  }
+  if (range.comparison === "previous") {
+    const days = (dateObject(range.end).getTime() - dateObject(range.start).getTime()) / 86_400_000 + 1;
+    const start = shiftDate(range.start, -days);
+    const end = shiftDate(range.start, -1);
+    return start && end ? { start, end } : undefined;
+  }
+  return undefined;
+}
+
+export function dateRangeComparison(range: DateRange): DateRange | null {
+  if (!validDate(range.start) || !validDate(range.end) || range.start > range.end) throw new RangeError("Invalid date range value");
+  if (range.comparison === undefined) return null;
+  if (range.comparison !== "previous" && range.comparison !== "year") throw new RangeError("Invalid date comparison");
+  const result = comparisonDates(range);
+  if (!result) throw new RangeError("Date comparison is outside the supported range");
+  return result;
+}
+
 export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
   const id = `ui-date-range-${createUniqueId()}`;
   const [open, setOpen] = createSignal(false);
@@ -66,6 +98,8 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
   const [month, setMonth] = createSignal("0001-01-01");
   const [cursor, setCursor] = createSignal("");
   const [choosingEnd, setChoosingEnd] = createSignal(false);
+  const [comparison, setComparison] = createSignal<"previous" | "year" | undefined>();
+  const [request, setRequest] = createSignal<DateRange>();
   let trigger: HTMLButtonElement | undefined;
   let dialog: HTMLDialogElement | undefined;
   let startInput: HTMLInputElement | undefined;
@@ -78,6 +112,7 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     if (props.weekStartsOn !== undefined && (!Number.isInteger(props.weekStartsOn) || props.weekStartsOn < 0 || props.weekStartsOn > 6)) throw new RangeError("Invalid first weekday");
     new Intl.DateTimeFormat(props.locale ?? "en-US");
     if (!validDate(range.start) || !validDate(range.end) || range.start > range.end || (min !== undefined && range.start < min) || (max !== undefined && range.end > max)) throw new RangeError("Invalid date range value");
+    dateRangeComparison(range);
     return range;
   });
   const close = () => {
@@ -88,12 +123,14 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
   };
   const show = () => {
     const range = value();
+    setRequest(undefined);
     setStart(range.start);
     setEnd(range.end);
     setError("");
     setMonth(`${range.start.slice(0, 7)}-01`);
     setCursor(range.start);
     setChoosingEnd(false);
+    setComparison(range.comparison);
     setOpen(true);
   };
   const present = (element: HTMLDialogElement) => {
@@ -112,8 +149,11 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     if (!validDate(first) || !validDate(last)) { setError("Enter both dates in the required format."); return; }
     if ((props.min && (first < props.min || last < props.min)) || (props.max && (first > props.max || last > props.max))) { setError("Dates must be between the allowed bounds."); return; }
     if (first > last) { setError("End date must be on or after start date."); return; }
-    close();
-    props.onChange({ start: first, end: last });
+    const selected = comparison();
+    const next: DateRange = selected === undefined ? { start: first, end: last } : { start: first, end: last, comparison: selected };
+    if (selected && !comparisonDates(next)) { setError("Comparison is outside the supported date range."); return; }
+    setRequest(next);
+    props.onChange(next);
   };
   const presetStart = (days: number) => props.today === undefined ? undefined : shiftDate(props.today, 1 - days);
   const presetAvailable = (days: number) => {
@@ -130,6 +170,7 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     setMonth(`${first.slice(0, 7)}-01`);
     setCursor(first);
     setChoosingEnd(false);
+    setRequest(undefined);
   };
   const formatter = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(props.locale ?? "en-US", { ...options, calendar: "gregory", timeZone: "UTC" });
   const monthLabel = (date: string) => formatter({ month: "long", year: "numeric" }).format(dateObject(date));
@@ -165,6 +206,7 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     queueMicrotask(() => { if (!disposed) dialog?.querySelector<HTMLButtonElement>(`[data-date="${date}"]`)?.focus(); });
   };
   const selectDay = (date: string) => {
+    setRequest(undefined);
     if (!choosingEnd()) { setStart(date); setEnd(date); setChoosingEnd(true); }
     else { const first = start(); setStart(date < first ? date : first); setEnd(date < first ? first : date); setChoosingEnd(false); }
     setError("");
@@ -183,15 +225,28 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
     focusDay(shiftDate(date, offset));
   };
   const editDate = (part: "start" | "end", date: string) => {
+    setRequest(undefined);
     if (part === "start") setStart(date); else setEnd(date);
     setChoosingEnd(false);
     setError("");
     if (validDate(date) && available(date)) { setMonth(`${date.slice(0, 7)}-01`); setCursor(date); }
   };
+  const comparisonPreview = () => {
+    const first = start();
+    const last = end();
+    const selected = comparison();
+    if (!selected || !validDate(first) || !validDate(last) || first > last) return undefined;
+    return comparisonDates({ start: first, end: last, comparison: selected });
+  };
+  createEffect(() => {
+    const pending = request();
+    const current = value();
+    return pending !== undefined && pending.start === current.start && pending.end === current.end && pending.comparison === current.comparison;
+  }, acknowledged => { if (acknowledged && untrack(open)) close(); });
   onCleanup(() => { disposed = true; if (frame !== undefined) cancelAnimationFrame(frame); });
   return <div class={["ui-date-range", props.class].filter(Boolean).join(" ")}>
     <button type="button" class="ui-btn" aria-label={props.label} aria-describedby={`${id}-value`} aria-haspopup="dialog" aria-expanded={open() ? "true" : "false"} aria-controls={`${id}-dialog`} ref={element => { trigger = element; }} onClick={show}>
-      <span id={`${id}-value`}>{value().start} – {value().end}</span>
+      <span id={`${id}-value`}>{value().start} – {value().end}<Show when={value().comparison}> ({value().comparison === "previous" ? "previous period" : "previous year"})</Show></span>
     </button>
     <Show when={open()}>
       <dialog id={`${id}-dialog`} class="ui-date-range-dialog" aria-label={props.label} ref={present} onCancel={event => { event.preventDefault(); close(); }}>
@@ -217,8 +272,14 @@ export function DateRangePicker(props: DateRangePickerProps): JSX.Element {
           <label class="ui-field" for={`${id}-start`}><span class="ui-field-label">Start date</span><input id={`${id}-start`} class="ui-text-field" type="date" min={props.min} max={props.max} value={start()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} ref={element => { startInput = element; }} onInput={event => editDate("start", event.currentTarget.value)} /></label>
           <label class="ui-field" for={`${id}-end`}><span class="ui-field-label">End date</span><input id={`${id}-end`} class="ui-text-field" type="date" min={props.min} max={props.max} value={end()} aria-invalid={error() ? "true" : undefined} aria-describedby={error() ? `${id}-error` : undefined} onInput={event => editDate("end", event.currentTarget.value)} /></label>
         </div>
+        <Show when={props.allowComparison}>
+          <label class="ui-field ui-date-range-comparison"><span class="ui-field-label">Compare with</span><select class="ui-text-field" value={comparison() ?? ""} onChange={event => { const selected = event.currentTarget.value; setRequest(undefined); setComparison(selected === "previous" || selected === "year" ? selected : undefined); setError(""); }}><option value="">No comparison</option><option value="previous">Previous period</option><option value="year">Previous year</option></select></label>
+          <Show when={comparisonPreview()}>{range => <div class="ui-field-hint">{range().start} – {range().end}</div>}</Show>
+        </Show>
         <Show when={error()}><div id={`${id}-error`} role="alert" class="ui-field-error">{error()}</div></Show>
-        <div class="ui-date-range-actions"><button type="button" class="ui-btn" onClick={close}>Cancel</button><button type="button" class="ui-btn" onClick={apply}>Apply</button></div>
+        <Show when={props.requestState?.kind === "pending"}><div role="status" class="ui-field-hint">Applying date range…</div></Show>
+        <Show when={props.requestState?.kind === "failed" ? props.requestState.message : undefined}>{message => <div role="alert" class="ui-field-error">{message()}</div>}</Show>
+        <div class="ui-date-range-actions"><button type="button" class="ui-btn" onClick={close}>Cancel</button><button type="button" class="ui-btn" disabled={props.requestState?.kind === "pending"} onClick={apply}>Apply</button></div>
       </dialog>
     </Show>
   </div>;

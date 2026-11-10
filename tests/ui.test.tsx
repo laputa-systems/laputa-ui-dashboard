@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, DateRangePicker, MultiCombobox, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, MultiCombobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -36,6 +36,13 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render("2024-02-01", "2024-02-02", "2024-02-02")).toThrow(RangeError);
     expect(() => render("2024-02-01", "2024-02-02", "2024-03-01", "2024-02-01")).toThrow(RangeError);
     expect(() => renderToString(() => <DateRangePicker label="Dates" value={{ start: "2024-01-01", end: "2024-01-01" }} today="2023-02-29" onChange={() => {}} />)).toThrow(RangeError);
+  });
+  it("derives inclusive date comparisons without a timezone or overflow", () => {
+    expect(dateRangeComparison({ start: "2024-03-09", end: "2024-03-11", comparison: "previous" })).toEqual({ start: "2024-03-06", end: "2024-03-08" });
+    expect(dateRangeComparison({ start: "2024-02-29", end: "2024-03-01", comparison: "year" })).toEqual({ start: "2023-02-28", end: "2023-03-01" });
+    expect(dateRangeComparison({ start: "2024-01-01", end: "2024-01-01" })).toBeNull();
+    expect(() => dateRangeComparison({ start: "0001-01-01", end: "0001-01-01", comparison: "previous" })).toThrow(RangeError);
+    expect(() => dateRangeComparison({ start: "0001-01-01", end: "0001-01-01", comparison: "year" })).toThrow(RangeError);
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);
