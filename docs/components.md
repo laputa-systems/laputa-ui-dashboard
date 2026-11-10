@@ -62,6 +62,15 @@ A controlled group without a callback is read-only. Arrow keys move between enab
 Home and End move to the first and last enabled summary. Duplicate item IDs throw. Static HTML
 can group `<details>` elements with the same unique `name` for single-open behavior.
 
+`ActionMenu` from the layout entry accepts a trigger `label`, an `items` array with unique IDs,
+labels and optional disabled states, and an `onSelect` callback. It owns its open state locally.
+Arrow keys, Home, End and single-character matching move among enabled actions. Escape closes the
+menu and returns focus to its trigger. Tab and outside clicks close the menu without taking
+focus back. When all actions become unavailable, the menu closes and its trigger remains
+focusable with `aria-disabled`. The menu requires JavaScript and the browser Popover API; use
+ordinary links or forms for no-JavaScript actions. Generated IDs reserve the `ui-action-menu-`
+prefix. Use distinct Solid `renderId` values when independently hydrating multiple roots.
+
 Choose placeholder dimensions to match the content they replace. Keep the loading status outside
 the busy region so assistive technology can announce it immediately.
 

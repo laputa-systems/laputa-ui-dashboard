@@ -107,6 +107,10 @@ import { Disclosure } from "@laputa-systems/ui-dashboard/layout";
 <Disclosure label="Details"><p>More information</p></Disclosure>
 ```
 
+`ActionMenu` in the layout entry displays locally managed action choices. It needs JavaScript
+and the browser Popover API; provide ordinary links or forms when actions must work without
+JavaScript. Menu IDs reserve the `ui-action-menu-` prefix.
+
 ## CSS-only usage
 
 `tokens.css` and `styles.css` need no JavaScript. Serve

@@ -346,3 +346,179 @@ test("@P1-focus keeps focus visible in forced colors and scroll containers", asy
   });
   expect(visible).toBe(true);
 });
+
+test("@P1-menu scopes keyboard navigation and restores focus", async ({ page }) => {
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  const open = page.getByRole("menuitem", { name: "Open" });
+  const rename = page.getByRole("menuitem", { name: "Rename" });
+  const remove = page.getByRole("menuitem", { name: "Remove" });
+  await expect(open).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(rename).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(remove).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(open).toBeFocused();
+  await page.keyboard.press("r");
+  await expect(rename).toBeFocused();
+  await rename.dispatchEvent("keydown", { key: "r", isComposing: true, bubbles: true });
+  await expect(rename).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByTestId("selection")).toHaveText("");
+});
+
+test("@P1-menu selects actions, escapes clipping, and does not steal outside focus", async ({ page }) => {
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.click();
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  const rects = await menu.evaluate(element => ({ menu: element.getBoundingClientRect().bottom, clip: element.parentElement?.getBoundingClientRect().bottom ?? 0 }));
+  expect(rects.menu).toBeGreaterThan(rects.clip);
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+  await expect(page.getByTestId("selection")).toHaveText("rename");
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  const search = page.getByRole("textbox", { name: "Search" });
+  await search.click();
+  await expect(menu).not.toBeVisible();
+  await expect(search).toBeFocused();
+  await search.fill("r");
+  await expect(search).toHaveValue("r");
+  await expect(page.getByTestId("selection")).toHaveText("rename");
+});
+
+
+test("@P1-menu closes before its parent modal on Escape", async ({ page }) => {
+  await page.goto("/overlays.html");
+  await page.getByRole("button", { name: "Open outer" }).click();
+  await page.getByRole("button", { name: "Open inner" }).click();
+  const inner = page.getByRole("dialog", { name: "Inner" });
+  const trigger = inner.getByRole("button", { name: "Inner actions" });
+  await trigger.click();
+  await expect(inner.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(inner.getByRole("menu")).not.toBeVisible();
+  await expect(inner).toBeVisible();
+  await expect(trigger).toBeFocused();
+  await expect(page.getByTestId("overlay-counts")).toHaveText("0:0");
+  await page.keyboard.press("Escape");
+  await expect(inner).toHaveCount(0);
+  await expect(page.getByTestId("overlay-counts")).toHaveText("0:1");
+});
+
+
+test("@P1-menu Tab leaves the menu without trapping focus", async ({ page }) => {
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.click();
+  await expect(page.getByRole("menuitem", { name: "Open" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  await expect.poll(() => page.evaluate(() => (document.activeElement?.textContent === "Disable all" || document.activeElement?.textContent === "Toggle menu mount") || (document.activeElement as HTMLInputElement | null)?.labels?.[0]?.textContent?.includes("Next input") === true)).toBe(true);
+  await trigger.click();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  const previous = await page.evaluate(() => document.activeElement?.getAttribute("aria-haspopup") === "menu" || (document.activeElement as HTMLInputElement | null)?.labels?.[0]?.textContent?.includes("Search") === true);
+  expect(previous).toBe(true);
+});
+
+
+test("@P1-menu closes safely when all actions become unavailable", async ({ page }) => {
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.getByRole("button", { name: "Disable all" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-disabled", "true");
+  await expect(trigger).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  await expect(page.getByTestId("selection")).toHaveText("");
+});
+
+test("@P1-menu trigger toggles an open menu closed", async ({ page }) => {
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await trigger.click();
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+});
+
+
+test("@P1-menu stays anchored when a container scrolls and fits near viewport edges", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 240 });
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  const clip = page.getByTestId("menu-clip");
+  await trigger.click();
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await clip.evaluate(element => { element.scrollTop = 10; });
+  await expect.poll(async () => {
+    const anchor = await trigger.boundingBox();
+    const popup = await menu.boundingBox();
+    return anchor !== null && popup !== null && Math.abs(popup.y - (anchor.y + anchor.height + 4)) < 1;
+  }).toBe(true);
+  await page.keyboard.press("Escape");
+  await clip.evaluate(element => { element.style.position = "fixed"; element.style.right = "4px"; element.style.bottom = "4px"; element.scrollTop = 0; });
+  await trigger.click();
+  const anchor = await trigger.boundingBox();
+  const popup = await menu.boundingBox();
+  expect(anchor).not.toBeNull();
+  expect(popup).not.toBeNull();
+  if (anchor === null || popup === null) throw new Error("menu geometry is missing");
+  expect(popup.y).toBeLessThan(anchor.y);
+  expect(popup.x + popup.width).toBeLessThanOrEqual(320);
+  expect(popup.y + popup.height).toBeLessThanOrEqual(240);
+});
+
+
+test("@P1-menu unmounts an open popover and permits a clean remount", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/menu.html");
+  const trigger = page.getByRole("button", { name: "Actions" });
+  await trigger.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.getByRole("button", { name: "Toggle menu mount" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await page.evaluate(() => { window.dispatchEvent(new Event("resize")); window.dispatchEvent(new Event("scroll")); });
+  await page.getByRole("button", { name: "Toggle menu mount" }).click();
+  await page.getByRole("button", { name: "Actions" }).click();
+  await expect(page.getByRole("menuitem", { name: "Open" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).not.toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("@P1-menu hydrates the built menu and retains its trigger", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { ActionMenu } from "./dist/ssr/layout.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(ActionMenu, { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} })));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/menu-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTrigger = document.querySelector('[aria-haspopup="menu"]');</script><script type="module" src="/hydrate-menu.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/menu-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await page.getByRole("button", { name: "Actions" }).click();
+  await page.getByRole("menuitem", { name: "Open" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-selected", "open");
+});

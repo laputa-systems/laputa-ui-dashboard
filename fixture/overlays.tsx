@@ -6,7 +6,7 @@ import { createSignal, Show } from "solid-js";
 import { render } from "@solidjs/web";
 import { Button, Modal } from "@laputa-systems/ui-dashboard";
 import { TextField } from "@laputa-systems/ui-dashboard/forms";
-import { Disclosure } from "@laputa-systems/ui-dashboard/layout";
+import { ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, type ActionState } from "@laputa-systems/ui-dashboard/feedback";
 
 function Fixture() {
@@ -30,6 +30,7 @@ function Fixture() {
           <Show when={inner()}>
             <Modal title="Inner" label="Inner" size="compact" returnFocus={innerOpener()} onClose={() => { setInnerCloses(value => value + 1); setInner(false); }}>
               <label>Notes <input /></label>
+              <ActionMenu label="Inner actions" items={[{ id: "refresh", label: "Refresh" }]} onSelect={() => {}} />
               <Disclosure label="Request details">
                 <TextField id="request" label="Request" value={draft()} onInput={event => setDraft(event.currentTarget.value)} />
                 <Button onClick={() => setAction({ kind: "failed", message: "Request rejected", retry })}>Submit request</Button>

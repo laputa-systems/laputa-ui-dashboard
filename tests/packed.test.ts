@@ -45,11 +45,12 @@ describe("packed artifact contract", () => {
       mkdirSync(scope, { recursive: true });
       renameSync(join(tmp, "package"), join(scope, "ui-dashboard"));
       writeFileSync(join(tmp, "package.json"), '{"name":"packed-consumer","type":"module","private":true}');
-      const consumer = `import { Accordion, Disclosure } from "@laputa-systems/ui-dashboard/layout";
+      const consumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
 import { TextField } from "@laputa-systems/ui-dashboard/forms";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
+if (typeof ActionMenu !== "function") throw new Error("action menu is missing");
 if (typeof Accordion !== "function") throw new Error("accordion is missing");
 if (typeof Disclosure !== "function" || !import.meta.resolve("@laputa-systems/ui-dashboard/layout").endsWith("/dist/layout.js")) throw new Error("browser layout entry is not selected");
 if (typeof ActionStatus !== "function") throw new Error("action status is missing");
@@ -59,7 +60,7 @@ if (typeof TextField !== "function" || !import.meta.resolve("@laputa-systems/ui-
 for (const entry of ["@laputa-systems/ui-dashboard/styles.css", "@laputa-systems/ui-dashboard/tokens.css", "@laputa-systems/ui-dashboard/styles/forms.css", "@laputa-systems/ui-dashboard/styles/feedback.css", "@laputa-systems/ui-dashboard/styles/layout.css"]) require.resolve(entry);
 `;
       execFileSync("node", ["--conditions=browser", "--input-type=module", "-e", consumer], { cwd: tmp });
-      const serverConsumer = `import { Accordion, Disclosure } from "@laputa-systems/ui-dashboard/layout";
+      const serverConsumer = `import { Accordion, ActionMenu, Disclosure } from "@laputa-systems/ui-dashboard/layout";
 import { ActionStatus, Progress } from "@laputa-systems/ui-dashboard/feedback";
 import { Badge } from "@laputa-systems/ui-dashboard";
 import { TextField } from "@laputa-systems/ui-dashboard/forms";
@@ -68,6 +69,8 @@ if (!import.meta.resolve("@laputa-systems/ui-dashboard/forms").endsWith("/dist/s
 if (!import.meta.resolve("@laputa-systems/ui-dashboard").endsWith("/dist/ssr/index.js")) throw new Error("server root entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard/feedback").endsWith("/dist/ssr/feedback.js")) throw new Error("server feedback entry is not selected");
 if (!import.meta.resolve("@laputa-systems/ui-dashboard/layout").endsWith("/dist/ssr/layout.js")) throw new Error("server layout entry is not selected");
+const actionMenu = renderToString(() => ActionMenu({ label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} }));
+if (!actionMenu.includes('role="menu"') || !actionMenu.includes("Open")) throw new Error(actionMenu);
 const accordion = renderToString(() => Accordion({ id: "sections", defaultOpenId: "one", items: [{ id: "one", label: "First", children: "Body" }] }));
 if (!accordion.includes('name="sections"') || !accordion.includes("First") || !accordion.includes("open")) throw new Error(accordion);
 const disclosure = renderToString(() => Disclosure({ label: "Details", defaultOpen: true, children: "Contents" }));
@@ -84,7 +87,7 @@ if (!html.includes('for="name"') || !description || !html.includes('id="' + desc
 `;
       execFileSync("node", ["--input-type=module", "-e", serverConsumer], { cwd: tmp, stdio: "inherit" });
       const consumerTypes = join(tmp, "consumer.ts");
-      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
+      writeFileSync(consumerTypes, 'import { Accordion, type AccordionProps, ActionMenu, type ActionMenuProps, Disclosure, type DisclosureProps } from "@laputa-systems/ui-dashboard/layout";\nimport { ActionStatus, type ActionState, Progress, type ProgressProps } from "@laputa-systems/ui-dashboard/feedback";\nimport { TextField, type TextFieldProps } from "@laputa-systems/ui-dashboard/forms";\nconst menu: ActionMenuProps = { label: "Actions", items: [{ id: "open", label: "Open" }], onSelect() {} };\nvoid ActionMenu; void menu;\nconst accordion: AccordionProps = { id: "sections", items: [{ id: "one", label: "First", children: "Body" }] };\nvoid Accordion; void accordion;\nconst disclosure: DisclosureProps = { label: "Details", children: "Contents" };\nvoid Disclosure; void disclosure;\nconst state: ActionState = { kind: "failed", message: "Save failed" };\nvoid ActionStatus; void state;\nconst progress: ProgressProps = { label: "Upload", value: 0 };\nvoid Progress; void progress;\nconst props: TextFieldProps = { id: "name", label: "Name", name: "name" };\nvoid TextField; void props;\n');
       execFileSync(join(uiDir, "node_modules/.bin/tsrs"), ["--ignoreConfig", "--noEmit", "--strict", "--skipLibCheck", "--module", "esnext", "--moduleResolution", "bundler", "--target", "es2022", "--lib", "es2022,dom", consumerTypes], { cwd: tmp, stdio: "inherit" });
       const declarations = readFileSync(join(scope, "ui-dashboard/dist/forms/index.d.ts"), "utf8");
       assert.match(declarations, /TextField/u);
