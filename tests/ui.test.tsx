@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, TextField } from "../src/forms";
+import { Checkbox, Combobox, TextField } from "../src/forms";
 import { ActionStatus, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure } from "../src/layout";
 import {
@@ -53,6 +53,17 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(html).toContain('max="10"');
     expect(() => renderToString(() => <Progress label="Upload" value={11} max={10} />)).toThrow(RangeError);
     expect(() => renderToString(() => <Progress label="Upload" max={0} />)).toThrow(RangeError);
+  });
+  it("rejects duplicate and oversized combobox option sets", () => {
+    const duplicate = [{ id: "same", label: "One" }, { id: "same", label: "Two" }];
+    expect(() => renderToString(() => <Combobox id="choice" label="Choice" options={duplicate} value={null} onChange={() => {}} />)).toThrow("Duplicate combobox option ID: same");
+    const many = Array.from({ length: 501 }, (_, index) => ({ id: String(index), label: String(index) }));
+    expect(() => renderToString(() => <Combobox id="choice" label="Choice" options={many} value={null} onChange={() => {}} />)).toThrow(RangeError);
+  });
+  it("renders combobox option IDs for arbitrary UTF-16 strings", () => {
+    const html = renderToString(() => <Combobox id="choice" label="Choice" options={[{ id: "\ud800", label: "Unpaired" }]} value={null} onChange={() => {}} />);
+    expect(html).toContain("option-d800");
+    expect(html).toContain("Unpaired");
   });
   it("renders a mixed checkbox with its native form contract", () => {
     const html = renderToString(() => <Checkbox id="all" label="Select all" name="selection" checked={false} indeterminate onCheckedChange={() => {}} />);

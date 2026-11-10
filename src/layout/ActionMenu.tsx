@@ -1,5 +1,6 @@
 import { createEffect, createSignal, createUniqueId, For, onCleanup, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { createAnchoredPopover } from "../internal/anchoredPopover";
 
 export interface ActionMenuItem {
   readonly id: string;
@@ -19,7 +20,6 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
   const [open, setOpen] = createSignal(false);
   let trigger: HTMLButtonElement | undefined;
   let menu: HTMLDivElement | undefined;
-  let listening = false;
   let disposed = false;
   let openOnPointerDown = false;
   const items = () => {
@@ -32,44 +32,25 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
   };
   const enabled = () => props.items.some(item => !item.disabled);
   const buttons = () => [...(menu?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? [])];
-  const position = () => {
-    if (trigger === undefined || menu === undefined || !menu.matches(":popover-open")) return;
-    const anchor = trigger.getBoundingClientRect();
-    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - menu.offsetWidth - 8));
-    const below = anchor.bottom + 4;
-    const top = below + menu.offsetHeight <= window.innerHeight - 8 ? below : Math.max(8, anchor.top - menu.offsetHeight - 4);
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
-  };
-  const stopListening = () => {
-    if (!listening) return;
-    window.removeEventListener("resize", position);
-    window.removeEventListener("scroll", position, true);
-    listening = false;
-  };
+  const positioner = createAnchoredPopover(() => trigger, () => menu);
   const close = (restore: boolean) => {
     if (menu?.matches(":popover-open")) menu.hidePopover();
     setOpen(false);
-    stopListening();
+    positioner.stop();
     if (restore && trigger?.isConnected) trigger.focus();
   };
   const show = (last = false) => {
     if (menu === undefined || !enabled()) return;
     if (!menu.matches(":popover-open")) menu.showPopover();
     setOpen(true);
-    position();
-    if (!listening) {
-      window.addEventListener("resize", position);
-      window.addEventListener("scroll", position, true);
-      listening = true;
-    }
+    positioner.start();
     const choices = buttons();
     choices[last ? choices.length - 1 : 0]?.focus();
   };
   createEffect(enabled, hasActions => {
     if (!hasActions && untrack(open)) close(true);
   });
-  onCleanup(() => { disposed = true; stopListening(); });
+  onCleanup(() => { disposed = true; });
   return (
     <span class={["ui-action-menu", props.class].filter(Boolean).join(" ")}>
       <button
@@ -94,13 +75,13 @@ export function ActionMenu(props: ActionMenuProps): JSX.Element {
         }}
       >{props.label}</button>
       <div
-        class="ui-action-menu-popup"
+        class="ui-popover ui-action-menu-popup"
         id={id}
         role="menu"
         aria-labelledby={`${id}-trigger`}
         popover="auto"
         ref={element => { menu = element; }}
-        onToggle={event => { if (event.newState === "closed") { setOpen(false); stopListening(); } }}
+        onToggle={event => { if (event.newState === "closed") { setOpen(false); positioner.stop(); } }}
         onFocusOut={event => {
           const next = event.relatedTarget;
           if (next instanceof Node && menu?.contains(next)) return;

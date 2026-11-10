@@ -81,6 +81,12 @@ and mixed presentations. Use `defaultChecked` for local state, or `checked` with
 `onCheckedChange` for parent-controlled state. Group related choices with `<fieldset>` and
 `<legend>`. The mixed presentation requires JavaScript to set the native indeterminate property.
 
+`Combobox` from `forms` provides a controlled, searchable single selection with optional
+option groups. Supply stable option IDs and at most 500 options. The host owns the selected ID;
+this slice does not provide multi-select, creation, or an async query contract. It needs
+JavaScript and the browser Popover API. Use a native `<select>` when JavaScript or native
+required-field validation is needed.
+
 ## Progress
 
 Import `Progress` from `@laputa-systems/ui-dashboard/feedback` and load

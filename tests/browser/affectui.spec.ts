@@ -35,6 +35,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
   await page.goto("/forms-static.html");
+  await page.getByLabel("Static choice").selectOption("gamma");
+  await page.getByRole("button", { name: "Choose" }).click();
+  await expect(page).toHaveURL(/\/choose\?project=gamma$/u);
+  await page.goto("/forms-static.html");
   await page.getByText("Static checkbox").click();
   await expect(page.getByRole("checkbox", { name: "Static checkbox" })).toBeChecked();
   await page.getByText("Static first", { exact: true }).click();
@@ -384,6 +388,15 @@ test("@P1-menu selects actions, escapes clipping, and does not steal outside foc
   await trigger.click();
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
+  const standalonePopupPosition = await page.evaluate(() => {
+    const element = document.createElement("div");
+    element.className = "ui-action-menu-popup";
+    document.body.append(element);
+    const position = getComputedStyle(element).position;
+    element.remove();
+    return position;
+  });
+  expect(standalonePopupPosition).toBe("fixed");
   const rects = await menu.evaluate(element => ({ menu: element.getBoundingClientRect().bottom, clip: element.parentElement?.getBoundingClientRect().bottom ?? 0 }));
   expect(rects.menu).toBeGreaterThan(rects.clip);
   await page.getByRole("menuitem", { name: "Rename" }).click();
@@ -626,4 +639,238 @@ process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString
   await expect(page.locator("html")).toHaveAttribute("data-requested", "true");
   await expect(checkbox).toHaveJSProperty("checked", false);
   await expect(checkbox).toHaveJSProperty("indeterminate", true);
+});
+
+test("@C030-a searches groups and selects stable IDs without losing input focus", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await expect(input).toHaveValue("Beta");
+  await expect(input).toHaveAccessibleDescription("Choose a project");
+  await input.click();
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("group", { name: "Group A" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Group A" }).getByText("Group A", { exact: true })).toBeVisible();
+  await expect(page.getByRole("option", { name: "Disabled" })).toHaveAttribute("aria-disabled", "true");
+  await input.fill("ga");
+  await expect(page.getByRole("option", { name: "Gamma" })).toBeVisible();
+  await expect(page.getByRole("option", { name: "Alpha" })).toHaveCount(0);
+  await input.dispatchEvent("keydown", { key: "Enter", isComposing: true, bubbles: true });
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await input.press("ArrowDown");
+  const active = await input.getAttribute("aria-activedescendant");
+  expect(active).not.toBeNull();
+  await expect(page.getByRole("option", { name: "Gamma" })).toHaveAttribute("id", active ?? "");
+  await input.press("Enter");
+  await expect(input).toHaveValue("Gamma");
+  await expect(input).toBeFocused();
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Submit choice" }).click();
+  await expect(page.getByTestId("combobox-submitted")).toHaveText("gamma space");
+  await page.getByRole("button", { name: "Remove Gamma" }).click();
+  await expect(input).toHaveValue("gamma space");
+  await expect(page.getByText("Selection is unavailable")).toBeVisible();
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+  await page.getByRole("button", { name: "Parent selects Alpha" }).click();
+  await expect(input).toHaveValue("Alpha");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+  await expect(page.getByRole("combobox", { name: "Locked choice" })).toBeDisabled();
+});
+
+test("@C030-a retains selection on empty searches, Escape and reset", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.fill("no match");
+  await expect(page.getByText("No matching options")).toBeVisible();
+  await input.press("Enter");
+  await expect(page.getByTestId("combobox-submitted")).toHaveText("");
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await input.press("Escape");
+  await expect(input).toHaveValue("Beta");
+  await expect(input).toBeFocused();
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await input.click();
+  await input.fill("alp");
+  await input.evaluate(element => {
+    const form = (element as HTMLInputElement).form;
+    form?.addEventListener("reset", event => event.preventDefault(), { once: true });
+    form?.reset();
+  });
+  await expect(input).toHaveValue("alp");
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await input.evaluate(element => (element as HTMLInputElement).form?.reset());
+  await expect(input).toHaveValue("Beta");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: "Reset choice" }).click();
+  await expect(input).toHaveValue("Beta");
+  await page.getByRole("button", { name: "Clear Project" }).click();
+  await expect(input).toHaveValue("");
+  await expect(input).toBeFocused();
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+});
+
+
+test("@C030-a keeps the query when editing an open combobox", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.fill("alp");
+  await input.click({ position: { x: 15, y: 10 } });
+  await expect(input).toHaveValue("alp");
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("option", { name: "Alpha" })).toBeVisible();
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+});
+
+
+test("@C030-a preserves controlled state when the parent rejects a selection", async ({ page }) => {
+  await page.goto("/combobox.html");
+  await page.getByRole("button", { name: "Reject selections" }).click();
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await page.getByRole("option", { name: "Disabled" }).dispatchEvent("click");
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await page.getByRole("option", { name: "Alpha" }).click();
+  await expect(input).toHaveValue("Beta");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+});
+
+test("@C030-a supports touch selection", async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.tap();
+  await page.getByRole("option", { name: "Gamma" }).tap();
+  await expect(input).toHaveValue("Gamma");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+  await context.close();
+});
+
+
+test("@C030-a ignores composition and skips disabled options", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.press("ArrowDown");
+  await input.press("ArrowDown");
+  await input.press("ArrowDown");
+  await input.press("ArrowDown");
+  await expect(page.getByRole("option", { name: "Gamma" })).toHaveAttribute("id", await input.getAttribute("aria-activedescendant") ?? "");
+  await input.dispatchEvent("compositionstart", { bubbles: true });
+  await input.dispatchEvent("keydown", { key: "Enter", bubbles: true });
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await input.dispatchEvent("compositionend", { bubbles: true });
+  await input.press("Enter");
+  await expect(input).toHaveValue("Gamma");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+});
+
+test("@C030-a does not select an option during a touch or pen drag", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  const option = page.getByRole("option", { name: "Gamma" });
+  for (const pointerType of ["touch", "pen"]) {
+    await option.dispatchEvent("pointerdown", { pointerType, pointerId: 9, clientX: 10, clientY: 10, bubbles: true });
+    await option.dispatchEvent("pointermove", { pointerType, pointerId: 9, clientX: 10, clientY: 40, bubbles: true });
+    await option.dispatchEvent("pointerup", { pointerType, pointerId: 9, clientX: 10, clientY: 40, bubbles: true });
+    await option.dispatchEvent("click");
+    await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+    await expect(input).toHaveAttribute("aria-expanded", "true");
+  }
+  await option.click();
+  await expect(input).toHaveValue("Gamma");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("1");
+});
+
+test("@C030-a keeps an in-progress query when the parent changes selection", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.fill("gam");
+  await page.getByRole("button", { name: "Parent selects Alpha" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(input).toHaveValue("gam");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await input.press("Escape");
+  await expect(input).toHaveValue("Alpha");
+});
+
+test("@C030-a closes before its parent modal on Escape", async ({ page }) => {
+  await page.goto("/overlays.html");
+  await page.getByRole("button", { name: "Open outer" }).click();
+  await page.getByRole("button", { name: "Open inner" }).click();
+  const inner = page.getByRole("dialog", { name: "Inner" });
+  const input = inner.getByRole("combobox", { name: "Inner choice" });
+  await input.click();
+  await expect(inner.getByRole("listbox")).toBeVisible();
+  await input.press("Escape");
+  await expect(inner.getByRole("listbox")).not.toBeVisible();
+  await expect(inner).toBeVisible();
+  await expect(input).toBeFocused();
+  await input.press("Escape");
+  await expect(inner).toHaveCount(0);
+});
+
+test("@C030-a hydrates the combobox without replacing its input", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { Combobox } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(Combobox, { id: "project", label: "Project", options: [{ id: "a", label: "Alpha" }, { id: "b", label: "Beta" }], value: "b", onChange() {} })));`;
+  const output = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" });
+  const [bootstrap, html] = output.split("<!--split-->");
+  await page.route("**/combobox-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialCombobox = document.getElementById("project");</script><script type="module" src="/hydrate-combobox.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/combobox-hydration");
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await expect(input).toHaveValue("Beta");
+  await input.click();
+  await page.getByRole("option", { name: "Alpha" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-selected", "a");
+  await expect(input).toHaveValue("Beta");
+});
+
+test("@C030-a Tab leaves the list after inspecting a disabled option", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  const disabled = await page.getByRole("option", { name: "Disabled" }).boundingBox();
+  if (disabled === null) throw new Error("disabled option is missing");
+  await page.mouse.click(disabled.x + disabled.width / 2, disabled.y + disabled.height / 2);
+  await expect(input).toBeFocused();
+  await input.press("Tab");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("listbox", { name: "Project" })).not.toBeVisible();
+});
+
+
+test("@C030-a drops a removed active option without submitting the old value", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const input = page.getByRole("combobox", { name: "Project" });
+  await input.click();
+  await input.fill("gam");
+  await input.press("ArrowDown");
+  await expect(input).toHaveAttribute("aria-activedescendant", /.+/u);
+  await page.getByRole("button", { name: "Remove Gamma" }).evaluate(element => (element as HTMLButtonElement).click());
+  await expect(input).not.toHaveAttribute("aria-activedescendant");
+  await input.press("Enter");
+  await expect(page.getByTestId("combobox-submitted")).toHaveText("");
+  await expect(page.getByTestId("combobox-calls")).toHaveText("0");
+  await expect(page.getByText("No matching options")).toBeVisible();
+});
+
+test("@C030-a keeps long options within a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/combobox.html");
+  await page.getByRole("combobox", { name: "Project" }).click();
+  const option = page.getByRole("option", { name: /LongProjectName/u });
+  await expect(option).toBeVisible();
+  const fits = await option.evaluate(element => element.scrollWidth <= element.clientWidth && document.documentElement.scrollWidth <= innerWidth);
+  expect(fits).toBe(true);
 });

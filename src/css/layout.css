@@ -5,7 +5,6 @@
 .ui-disclosure-body { padding-top: var(--ui-space-sm); }
 .ui-accordion { display: grid; gap: var(--ui-space-sm); }
 .ui-action-menu { display: inline-block; }
-.ui-action-menu-popup { position: fixed; inset: auto; margin: 0; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; padding: var(--ui-space-xs); border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-text); font: var(--ui-fs-body) var(--ui-font); box-shadow: var(--ui-shadow-pop); }
 .ui-action-menu-item { display: block; width: 100%; padding: var(--ui-space-sm); border: 0; border-radius: var(--ui-radius-sm); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
 .ui-action-menu-item:not(:disabled):is(:hover, :focus-visible) { background: var(--ui-hover); }
 .ui-action-menu-item:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }

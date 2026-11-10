@@ -42,6 +42,19 @@ it sets the native property after hydration and exposes the mixed state in serve
 `class` applies to the label. Static HTML can use `ui-choice`, `ui-choice-card`, `ui-checkbox`,
 `ui-choice-content`, and the field classes with a native checkbox and label.
 
+`Combobox`, `ComboboxProps`, `ComboboxOption`, `ComboboxGroup`, and `ComboboxEntry` are exported
+from `forms`. Supply `id`, `label`, `options`, a selected `value` ID or `null`, and `onChange`.
+Options can be individual items or labelled groups. Option IDs must be unique across the whole
+control, group IDs must be unique, and at most 500 options are accepted. Invalid collections
+throw. Search text is local; a user choice or Clear requests one change and parent updates never
+notify the callback. A selected ID missing from the current options remains selected and is
+shown as unavailable. An optional `name` submits the selected ID in a hidden input; a null
+selection and a disabled control submit nothing. Hidden inputs do not provide native required
+validation. Reset discards a search draft and retains the current parent value. The control
+requires JavaScript and the browser Popover API. Use a native `<select>` for a no-JavaScript or
+native-validation path. Multi-select, option creation, and async query/result coordination are
+not yet supported. Generated IDs reserve the `ui-combobox-` prefix.
+
 Import `Progress` and `ProgressProps` from `@laputa-systems/ui-dashboard/feedback`, and load
 `@laputa-systems/ui-dashboard/styles/feedback.css` after the base stylesheet. `label` names a
 native `<progress>` element. A missing `value` means indeterminate progress; zero is a measured
