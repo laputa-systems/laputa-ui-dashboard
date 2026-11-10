@@ -279,6 +279,11 @@ focus to the connected element that most recently preceded entry into the toaste
 not moved elsewhere. Background removal never restores focus. Static HTML can use `ui-toaster`,
 `ui-toast`, and `ui-toast-actions` to present a noninteractive notice.
 
+`ui-page-section` lays out a section's children with a consistent gap, while `ui-page-toolbar`
+wraps its heading and controls. `ui-dashboard-grid` arranges supplied content in columns of at
+least 18rem when space permits, falling back to one column in narrower containers. Use semantic
+headings, forms, links and articles appropriate to the content; these classes work without JavaScript.
+
 For settings and collection/detail pages, wrap `ui-page-frame` in `ui-page-frame-container`,
 then provide `ui-page-frame-sidebar` and `ui-page-frame-content` children in reading order. The
 frame places them side by side above 720 pixels of container width and stacks them below that.

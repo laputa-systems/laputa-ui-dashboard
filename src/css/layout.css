@@ -135,3 +135,8 @@
 .ui-page-frame-sidebar, .ui-page-frame-content { min-width: 0; overflow-wrap: anywhere; }
 .ui-reading-column { width: 100%; max-width: 48rem; margin-inline: auto; }
 @container (max-width: 720px) { .ui-page-frame { grid-template-columns: minmax(0, 1fr); } }
+.ui-page-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-lg); min-width: 0; }
+.ui-page-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ui-space-sm); min-width: 0; }
+.ui-page-toolbar > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.ui-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--ui-space-lg); min-width: 0; }
+.ui-dashboard-grid > * { min-width: 0; overflow-wrap: anywhere; }

@@ -11,6 +11,30 @@ test("@fixture-assets serves built CSS to static pages", async ({ browser }) => 
   await context.close();
 });
 
+test("@P3-page-grid-a adapts cards and keeps native search available", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/dashboard-grid-static.html");
+  const grid = page.getByTestId("dashboard");
+  let cards = await grid.locator("article").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+  expect(cards[1]!.left).toBeGreaterThan(cards[0]!.right);
+  await grid.evaluate(element => { (element as HTMLElement).style.width = "300px"; (element as HTMLElement).style.maxWidth = "100%"; });
+  cards = await grid.locator("article").evaluateAll(elements => elements.map(element => element.getBoundingClientRect().toJSON()));
+  expect(cards[1]!.top).toBeGreaterThanOrEqual(cards[0]!.bottom);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole("textbox", { name: "Search projects" }).fill("alpha");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/projects\?q=alpha$/);
+  await context.close();
+});
+
 test("@P3-page-frame-a lays out settings and collection details with native navigation", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
