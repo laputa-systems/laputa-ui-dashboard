@@ -73,6 +73,23 @@ one hidden value per tag label. Form reset discards the draft and retains host-o
 inputs do not provide native required validation. For a static form, use a labelled text field and
 parse the submitted tags on the server.
 
+`TextArea` and `TextAreaProps` from `forms` render a labelled native textarea. `hint`, `error`,
+and optional `showCount` are associated with the control. The count uses UTF-16 code units and
+shows `maxlength` when supplied. Native attributes and input, keyboard, and composition handlers
+are forwarded. `defaultValue` initializes an uncontrolled textarea once. `value` with `onInput`
+is parent-controlled; a rejected input restores the parent value outside composition. During IME
+composition the browser retains the draft until the final input event. Form reset
+restores the uncontrolled default or the current controlled value.
+
+Optional `autosize` specifies `minRows` and `maxRows` from 1 to 100. Height updates when content
+or container width changes. Autosize owns the textarea height and disables manual resizing while
+enabled. Optional `expandRows` must exceed `maxRows` and be at most 100; its button expands or
+collapses the control and restores the textarea selection. `submitShortcut` may be `ControlEnter`
+or `MetaEnter`. The shortcut requests native form submission outside composition and does not
+override a prevented key event. Plain Enter remains a newline. Read-only or disabled textareas do
+not submit through the shortcut. Static forms can use a native textarea with `ui-text-field` and
+`ui-textarea`.
+
 `DateRangePicker`, `DateRangePickerProps`, `DateRange`, `DateRangeRequestState`, and
 `dateRangeComparison` are exported from `forms`.
 Supply a `label`, a controlled `value`, and `onChange`. A range has inclusive `start` and `end`

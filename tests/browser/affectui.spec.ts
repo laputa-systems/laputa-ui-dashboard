@@ -1015,6 +1015,92 @@ test("@C079-b keeps the full pasted draft if the host rejects the request", asyn
   await expect(page.getByRole("alert")).toContainText("cannot contain #");
 });
 
+test("@C080-a preserves native editing, count, reset and submit shortcut", async ({ page }) => {
+  await page.goto("/textarea.html");
+  const notes = page.getByRole("textbox", { name: "Notes", exact: true });
+  await expect(page.getByRole("textbox", { name: "Disabled notes" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Expand Disabled notes" })).toBeDisabled();
+  await expect(notes).toHaveAccessibleDescription("Write notes Review notes 0 / 200");
+  await notes.fill("First line");
+  await notes.press("Enter");
+  await notes.pressSequentially("Second line");
+  await expect(notes).toHaveValue("First line\nSecond line");
+  await expect(page.getByTestId("note-submissions")).toHaveText("0");
+  await expect(notes).toHaveAccessibleDescription("Write notes Review notes 22 / 200");
+  await notes.press("Control+Enter");
+  await expect(page.getByTestId("note-submissions")).toHaveText("1");
+  const local = page.getByRole("textbox", { name: "Local notes" });
+  await local.fill("Changed");
+  await page.getByRole("button", { name: "Reset notes" }).click();
+  await expect(local).toHaveValue("Initial");
+  await expect(local).toHaveAccessibleDescription("7");
+  await expect(notes).toHaveValue("First line\nSecond line");
+  await notes.evaluate(element => element.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
+  await notes.press("Control+Enter");
+  await expect(page.getByTestId("note-submissions")).toHaveText("1");
+  await notes.evaluate(element => element.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true })));
+  await page.getByRole("textbox", { name: "Read-only notes" }).press("Control+Enter");
+  await expect(page.getByTestId("note-submissions")).toHaveText("1");
+  await page.getByRole("button", { name: "Block shortcut" }).click();
+  await notes.press("Control+Enter");
+  await expect(page.getByTestId("note-submissions")).toHaveText("1");
+  await page.getByRole("button", { name: "Reject text edits" }).click();
+  await notes.fill("Rejected");
+  await expect(notes).not.toHaveValue("Rejected");
+  const accepted = await notes.inputValue();
+  await notes.evaluate(element => { element.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })); (element as HTMLTextAreaElement).value = "Composing"; element.dispatchEvent(new InputEvent("input", { bubbles: true, isComposing: true })); });
+  await expect(notes).toHaveValue("Composing");
+  await notes.evaluate(element => { element.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true })); element.dispatchEvent(new InputEvent("input", { bubbles: true, isComposing: false })); });
+  await expect(notes).toHaveValue(accepted);
+});
+
+test("@C080-a resizes with content and width and preserves selection when expanded", async ({ page }) => {
+  await page.goto("/textarea.html");
+  const notes = page.getByRole("textbox", { name: "Notes", exact: true });
+  await notes.fill("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty");
+  const wide = await notes.evaluate(element => element.getBoundingClientRect().height);
+  await page.getByRole("button", { name: "Toggle width" }).click();
+  await expect.poll(() => notes.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThan(wide);
+  await notes.focus();
+  await notes.evaluate(element => (element as HTMLTextAreaElement).setSelectionRange(4, 8));
+  await page.getByRole("button", { name: "Expand Notes" }).click();
+  await expect(notes).toBeFocused();
+  await expect.poll(() => notes.evaluate(element => (element as HTMLTextAreaElement).selectionStart)).toBe(4);
+  await expect.poll(() => notes.evaluate(element => (element as HTMLTextAreaElement).selectionEnd)).toBe(8);
+  await expect(page.getByRole("button", { name: "Collapse Notes" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Collapse Notes" })).toHaveAttribute("aria-expanded", "true");
+  await notes.fill(Array.from({ length: 20 }, () => "long line").join("\n"));
+  await expect(notes).toHaveCSS("overflow-y", "auto");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.evaluate(() => { document.body.style.zoom = "2"; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole("button", { name: "Disable autosize" }).click();
+  await expect(notes).toHaveCSS("resize", "vertical");
+  await expect(notes).not.toHaveAttribute("data-autosize");
+  expect(await notes.evaluate(element => (element as HTMLElement).style.height)).toBe("");
+});
+
+test("@C080-a hydrates its native textarea and description", async ({ page }) => {
+  const script = `import { createComponent, generateHydrationScript, renderToString } from "@solidjs/web";
+import { TextArea } from "./dist/ssr/forms.js";
+process.stdout.write(generateHydrationScript() + "<!--split-->" + renderToString(() => createComponent(TextArea, { id: "notes", label: "Notes", hint: "Help", defaultValue: "Start", showCount: true, autosize: { minRows: 2, maxRows: 4 }, onInput() {} })));`;
+  const [bootstrap, html] = execFileSync("node", ["--input-type=module", "-e", script], { encoding: "utf8" }).split("<!--split-->");
+  await page.route("**/textarea-hydration", route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head>${bootstrap}</head><body><div id="root">${html}</div><script>window.initialTextArea = document.getElementById("notes");</script><script type="module" src="/hydrate-textarea.tsx"></script></body></html>` }));
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/textarea-hydration");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "yes");
+  await expect(page.locator("html")).toHaveAttribute("data-reused", "true");
+  await expect(page.getByRole("textbox", { name: "Notes" })).toHaveAccessibleDescription("Help 5");
+  await page.getByRole("textbox", { name: "Notes" }).fill("Edited");
+  await expect(page.locator("html")).toHaveAttribute("data-edited", "Edited");
+  expect(errors).toEqual([]);
+});
+
 test("@F01 labels fields, associates errors, and forwards form input", async ({ page }) => {
   await page.goto("/forms.html");
   const field = page.getByRole("textbox", { name: "Repository" });
@@ -1046,6 +1132,10 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
     if (!["styles.css", "tokens.css", "styles/forms.css", "styles/feedback.css", "styles/layout.css"].includes(path)) throw new Error(`Unexpected stylesheet: ${path}`);
     await route.fulfill({ contentType: "text/css", body: await readFile(resolve("dist", path)) });
   });
+  await page.goto("/forms-static.html");
+  await page.getByRole("textbox", { name: "Static notes" }).fill("hello");
+  await page.getByRole("button", { name: "Save static notes" }).click();
+  await expect(page).toHaveURL(/\/notes\?notes=hello$/u);
   await page.goto("/forms-static.html");
   await page.getByLabel("Static tags, separated by commas").fill("alpha,beta");
   await page.getByRole("button", { name: "Save static tags" }).click();

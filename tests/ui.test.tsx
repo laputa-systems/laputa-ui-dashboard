@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "@solidjs/web";
-import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextField } from "../src/forms";
+import { Checkbox, Combobox, dateRangeComparison, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField } from "../src/forms";
 import { ActionStatus, NotificationStack, Progress } from "../src/feedback";
 import { Accordion, ActionMenu, Disclosure, FilterMenu, Tabs } from "../src/layout";
 import { IntegrationPicker, ProfileMenu } from "../src/recipes";
@@ -137,6 +137,15 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[first, { id: "two", label: "  FIRST   TAG " }]} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow("Tag IDs and normalized labels must be nonempty and unique");
     expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[first]} maxLength={3} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow("Tag label exceeds maxLength");
     expect(() => renderToString(() => <TagInput id="tags" label="Tags" value={[]} maxTags={101} state={{ kind: "idle" }} onAdd={() => {}} />)).toThrow(RangeError);
+  });
+  it("validates text area sizing and renders native descriptions", () => {
+    expect(() => renderToString(() => <TextArea id="notes" label="Notes" autosize={{ minRows: 3, maxRows: 2 }} />)).toThrow(RangeError);
+    expect(() => renderToString(() => <TextArea id="notes" label="Notes" expandRows={8} />)).toThrow(RangeError);
+    const html = renderToString(() => <TextArea id="notes" label="Notes" name="notes" hint="Help" defaultValue="Draft" showCount />);
+    expect(html).toContain("<textarea");
+    expect(html).toContain('name="notes"');
+    expect(html).toContain("Draft");
+    expect(html).toContain("Help");
   });
   it("renders a retry only when the failed action provides one", () => {
     const withoutRetry = renderToString(() => <ActionStatus state={{ kind: "failed", message: "Save failed" }} />);

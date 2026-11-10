@@ -123,6 +123,8 @@ The existing `Segmented` button group retains its original behavior.
 `Select` pairs that native control with an enhanced browser for option descriptions and icons.
 `TagInput` requests host-owned additions and edits, accepts pasted lists, and retains rejected
 drafts until matching acknowledgments arrive.
+`TextArea` provides a native labelled textarea with optional bounded autosizing and a submit
+shortcut.
 
 `IntegrationPicker` from `@laputa-systems/ui-dashboard/recipes` opens a searchable service list
 and details. Load `styles/recipes.css` after the base stylesheet. The host supplies connection

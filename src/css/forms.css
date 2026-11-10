@@ -83,3 +83,6 @@
 .ui-tag-control { display: flex; flex-wrap: wrap; gap: var(--ui-space-xs); min-width: 0; }
 .ui-tag-control .ui-text-field { flex: 1 1 10rem; }
 .ui-tag-input .ui-multi-chip { max-width: 100%; min-width: 0; }
+.ui-textarea { line-height: 1.5; resize: vertical; }
+.ui-textarea[data-autosize] { resize: none; }
+.ui-textarea-expand { justify-self: start; }
