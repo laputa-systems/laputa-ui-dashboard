@@ -2,14 +2,18 @@ import "@laputa-systems/ui-dashboard/styles.css";
 import "@laputa-systems/ui-dashboard/styles/forms.css";
 import "@laputa-systems/ui-dashboard/styles/feedback.css";
 import "@laputa-systems/ui-dashboard/styles/layout.css";
+import "@laputa-systems/ui-dashboard/styles/recipes.css";
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { render } from "@solidjs/web";
 import { ActionStatus, createToastStore, NotificationStack, Toaster, type ActionState, type Notification } from "@laputa-systems/ui-dashboard/feedback";
-import { Checkbox, Combobox, DateRangePicker, Dropzone, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField, type DateRange, type Tag, type TagRequestState } from "@laputa-systems/ui-dashboard/forms";
-import { FilterMenu, Tabs, type FilterSelection } from "@laputa-systems/ui-dashboard/layout";
+import { Checkbox, Combobox, DateRangePicker, Dropzone, MultiCombobox, NativeSelect, RadioGroup, Select, Switch, TagInput, TextArea, TextField, type DateRange, type Tag, type TagRequestState } from "@laputa-systems/ui-dashboard/forms";
+import { CommandMenu, FilterMenu, Tabs, type FilterSelection } from "@laputa-systems/ui-dashboard/layout";
+import { IntegrationPicker, ProfileMenu, type IntegrationConnection } from "@laputa-systems/ui-dashboard/recipes";
 
 function Fixture() {
   const toasts = createToastStore();
+  const [watched, setWatched] = createSignal<readonly string[]>([]);
+  const [connection, setConnection] = createSignal<IntegrationConnection>({ kind: "disconnected" });
   const [owner, setOwner] = createSignal<string | null>(null);
   const [environment, setEnvironment] = createSignal("staging");
   const [view, setView] = createSignal("list");
@@ -30,6 +34,11 @@ function Fixture() {
   const records = [{ name: "Alpha", status: "open" }, { name: "Beta", status: "closed" }];
   const visible = createMemo(() => records.filter(record => record.name.toLowerCase().includes(query().toLowerCase()) && (!filters().length || filters().some(filter => filter.optionId === record.status))));
   return <main style={{ display: "grid", gap: "1rem", "max-width": "48rem", "min-width": "0" }}>
+    <header style={{ display: "flex", "flex-wrap": "wrap", gap: "0.5rem" }}>
+      <ProfileMenu label="Account menu" account={{ name: "Ada" }} items={[{ id: "account", label: "Account settings", href: "/account" }]} />
+      <CommandMenu label="Commands" groups={[{ id: "actions", label: "Actions", commands: [{ id: "clear", label: "Clear search" }] }]} onSelect={() => setQuery("")} />
+      <IntegrationPicker label="Add integration" integrations={[{ id: "metrics", label: "Metrics", description: "Connect metrics", connection: connection() }]} onConnect={() => setConnection({ kind: "failed", message: "Connection failed" })} />
+    </header>
     <section aria-label="Workspace settings"><h1>Workspace settings</h1>
       <form style={{ display: "grid", gap: "0.75rem" }} onSubmit={event => { event.preventDefault(); setSave({ kind: "failed", message: "Save failed. Try again." }); setNotices([{ id: "save", title: "Settings could not be saved" }]); if (toasts.toasts().some(toast => toast.id === "save")) toasts.update("save", { title: "Settings save failed" }); else toasts.add({ id: "save", title: "Settings save failed" }); }}>
         <TextField id="journey-name" label="Workspace name" name="name" value={name()} onInput={event => setName(event.currentTarget.value)} copyable />
@@ -38,6 +47,7 @@ function Fixture() {
         <RadioGroup label="Report frequency" name="frequency" value={frequency()} options={[{ id: "daily", label: "Daily" }, { id: "weekly", label: "Weekly" }]} onChange={setFrequency} />
         <NativeSelect id="journey-project" label="Default project" options={[{ value: "alpha", label: "Alpha" }, { value: "beta", label: "Beta" }]} value={project()} onValueChange={setProject} />
         <Combobox id="journey-owner" label="Owner" options={[{ id: "ada", label: "Ada" }, { id: "bea", label: "Beatrice" }]} value={owner()} onChange={setOwner} />
+        <MultiCombobox id="journey-watched" label="Projects to watch" options={[{ id: "alpha", label: "Alpha" }, { id: "beta", label: "Beta" }]} value={watched()} onChange={setWatched} />
         <Select id="journey-environment" label="Environment" options={[{ value: "staging", label: "Staging", description: "Test environment" }, { value: "production", label: "Production", description: "Live environment" }]} value={environment()} onValueChange={setEnvironment} />
         <TagInput id="journey-labels" label="Labels" value={tags()} state={tagState()} onAdd={request => { setTags(current => [...current, ...request.labels.map((label, index) => ({ id: `${current.length + index}`, label }))]); setTagState({ kind: "accepted", id: request.id }); }} onRemove={id => setTags(current => current.filter(tag => tag.id !== id))} />
         <fieldset><legend>Notifications</legend><Checkbox id="journey-all" label="Select all notifications" checked={checked()} indeterminate={mixed()} onCheckedChange={value => { setChecked(value); setMixed(false); }} /></fieldset>

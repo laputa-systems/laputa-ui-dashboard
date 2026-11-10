@@ -79,6 +79,31 @@ test("@P2-journey-c combines enhanced selection, tabs, and failure notices", asy
   await expect(page.getByRole("region", { name: "Transient notices" }).getByText("Settings save failed")).toBeVisible();
 });
 
+test("@P2-journey-d keeps settings through menu and integration failure", async ({ page }) => {
+  await page.goto("/p2-journey.html");
+  const name = page.getByRole("textbox", { name: "Workspace name" });
+  await name.fill("Draft name");
+  const projects = page.getByRole("combobox", { name: "Projects to watch" });
+  await projects.fill("Beta");
+  await page.getByRole("listbox", { name: "Projects to watch" }).getByRole("option", { name: "Beta" }).click();
+  await expect(page.getByRole("button", { name: "Remove Beta" })).toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByRole("menuitem", { name: "Account settings" })).toHaveAttribute("href", "/account");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Commands" }).click();
+  const commands = page.getByRole("dialog", { name: "Commands" });
+  await expect(commands).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Add integration" }).click();
+  const integration = page.getByRole("dialog", { name: "Add integration" });
+  await integration.getByRole("button", { name: "Metrics" }).click();
+  await integration.getByRole("button", { name: "Connect Metrics" }).click();
+  await expect(integration.getByText("Connection failed")).toBeVisible();
+  await integration.getByRole("button", { name: "Close" }).click();
+  await expect(name).toHaveValue("Draft name");
+  await expect(page.getByRole("button", { name: "Remove Beta" })).toBeVisible();
+});
+
 test("@P2-journey-a fits settings and filters at narrow widths", async ({ page }) => {
   await page.goto("/p2-journey.html");
   for (const width of [320, 390, 768, 1440]) {
