@@ -112,6 +112,7 @@ describe("@laputa-systems/ui-dashboard", () => {
     expect(() => render([{ id: "one", label: "First", content: "Body" }, { id: "one", label: "Second", content: "Body" }], "one")).toThrow("unique");
     expect(() => render([{ id: "one", label: "First", content: "Body" }], null)).toThrow("selectedId");
     expect(() => render([], "one")).toThrow("selectedId");
+    expect(() => renderToString(() => <WorkspaceTabs label="Artifacts" tabs={[{ id: "one", label: "First", content: "Body" }]} selectedId="one" onSelect={() => {}} returnFocus={() => null} closeState={{ kind: "failed", tabId: "one", message: " " }} />)).toThrow("Invalid workspace close state");
   });
   it("validates date-only range values and bounds", () => {
     const render = (start: string, end: string, min?: string, max?: string) => renderToString(() => <DateRangePicker label="Dates" value={{ start, end }} min={min} max={max} onChange={() => {}} />);

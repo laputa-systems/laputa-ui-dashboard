@@ -287,7 +287,11 @@ hidden, so switching preserves their contents. `dirty` adds a visible Unsaved ma
 owns drafts and their persistence. The tab strip scrolls horizontally without truncating names.
 After a requested close is acknowledged, focus moves to the selected tab or, after the final
 close, to the element returned by `returnFocus`; an unavailable target falls back to the region.
-Late acknowledgments do not move focus after the user has moved elsewhere. For static pages use
+Late acknowledgments do not move focus after the user has moved elsewhere. Optional host-owned
+`closeState` (`WorkspaceCloseState`) is `idle`, `pending` with `tabId`, or `failed` with `tabId`
+and a message. A pending close disables all close actions; a failure stays visible and permits a
+retry. Set pending before returning from `onClose`, and have the host correlate late results with
+its own requests. A state for a tab that is no longer open is ignored. For static pages use
 ordinary artifact links and a content region. Generated IDs reserve the `ui-workspace-tabs-` prefix.
 
 `SplitPane` and `SplitPaneProps` from `layout` accept a `label`, `primary` and `secondary` content,

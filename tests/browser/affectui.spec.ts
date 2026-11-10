@@ -113,6 +113,46 @@ test("@S17-tabs-a provides ordinary static artifact links", async ({ browser }) 
   await context.close();
 });
 
+test("@S17-tabs-b prevents duplicate close requests and presents failures", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Track close" }).click();
+  const close = page.getByRole("button", { name: "Close notes.txt" });
+  await close.click();
+  await expect(page.getByRole("status").filter({ hasText: "Closing notes.txt" })).toBeVisible();
+  await expect(close).toBeDisabled();
+  await expect(page.getByRole("tab", { name: /notes\.txt/u })).toBeFocused();
+  await expect(page.getByTestId("close-requests")).toHaveText("1");
+  await page.getByRole("button", { name: "Fail tracked close" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("alert")).toHaveText("Could not close artifact");
+  await expect(close).toBeEnabled();
+  await close.click();
+  await expect(close).toBeDisabled();
+  await expect(page.getByTestId("close-requests")).toHaveText("2");
+  await page.getByRole("button", { name: "Confirm close" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByRole("tab", { name: "very-long-artifact-filename-that-must-remain-fully-available.txt" })).toBeFocused();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("@S17-tabs-b moves focus if the host marks a focused close pending", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Track close" }).click();
+  const close = page.getByRole("button", { name: "Close notes.txt" });
+  await close.focus();
+  await page.getByRole("button", { name: "Force pending close" }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(close).toBeDisabled();
+  await expect(page.getByRole("tab", { name: /notes\.txt/u })).toBeFocused();
+});
+
+test("@S17-tabs-b prevents overlapping closes after changing tabs", async ({ page }) => {
+  await page.goto("/workspace-tabs.html");
+  await page.getByRole("button", { name: "Track close" }).click();
+  await page.getByRole("button", { name: "Close notes.txt" }).click();
+  await page.getByRole("tab", { name: /notes\.txt/u }).press("ArrowRight");
+  await expect(page.getByRole("button", { name: "Close very-long-artifact-filename-that-must-remain-fully-available.txt" })).toBeDisabled();
+  await expect(page.getByRole("status").filter({ hasText: "Closing notes.txt" })).toBeVisible();
+  await expect(page.getByTestId("close-requests")).toHaveText("1");
+});
+
 test("@S17-split-b previews a drag and requests its final size once", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 1000 });
   await page.goto("/split-pane.html");

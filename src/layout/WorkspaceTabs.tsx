@@ -9,12 +9,18 @@ export interface WorkspaceTab {
   readonly closable?: boolean | undefined;
 }
 
+export type WorkspaceCloseState =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly tabId: string }
+  | { readonly kind: "failed"; readonly tabId: string; readonly message: string };
+
 export interface WorkspaceTabsProps {
   readonly label: string;
   readonly tabs: readonly WorkspaceTab[];
   readonly selectedId: string | null;
   readonly onSelect: (id: string) => void;
   readonly onClose?: ((id: string) => void) | undefined;
+  readonly closeState?: WorkspaceCloseState | undefined;
   readonly returnFocus: () => HTMLElement | null;
   readonly class?: string | undefined;
 }
@@ -23,9 +29,10 @@ export function WorkspaceTabs(props: WorkspaceTabsProps): JSX.Element {
   const id = `ui-workspace-tabs-${createUniqueId()}`;
   const [focused, setFocused] = createSignal<string>();
   const [within, setWithin] = createSignal(false);
-  const [closing, setClosing] = createSignal<{ readonly id: string; readonly origin: HTMLButtonElement }>();
+  const [closing, setClosing] = createSignal<{ readonly id: string; readonly origin: HTMLElement }>();
   let root: HTMLElement | undefined;
   let list: HTMLDivElement | undefined;
+  let closeButton: HTMLButtonElement | undefined;
   let disposed = false;
   let touch: { readonly pointerId: number; readonly x: number; readonly y: number; moved: boolean } | undefined;
   let suppressClick = false;
@@ -40,7 +47,15 @@ export function WorkspaceTabs(props: WorkspaceTabsProps): JSX.Element {
     if (props.tabs.length === 0 ? props.selectedId !== null : props.selectedId === null || !ids.has(props.selectedId)) throw new Error("Workspace selectedId must identify an open tab, or be null when empty");
     return props.tabs;
   });
+  const state = createMemo(() => {
+    const current = props.closeState;
+    if (!current || current.kind === "idle") return { kind: "idle" } as const;
+    if (!current.tabId || (current.kind === "failed" && !current.message.trim())) throw new Error("Invalid workspace close state");
+    return tabs().some(tab => tab.id === current.tabId) ? current : { kind: "idle" } as const;
+  });
   const selected = () => tabs().find(tab => tab.id === props.selectedId);
+  const pendingLabel = () => { const current = state(); return current.kind === "pending" ? tabs().find(tab => tab.id === current.tabId)?.label : undefined; };
+  const failureMessage = () => { const current = state(); return current.kind === "failed" ? current.message : undefined; };
   const suffix = (value: string) => Array.from({ length: value.length }, (_, index) => value.charCodeAt(index).toString(16)).join("-");
   const tabId = (value: string) => `${id}-tab-${suffix(value)}`;
   const panelId = (value: string) => `${id}-panel-${suffix(value)}`;
@@ -61,11 +76,20 @@ export function WorkspaceTabs(props: WorkspaceTabsProps): JSX.Element {
   };
   const close = (origin: HTMLButtonElement) => {
     const tab = selected();
-    if (!tab || tab.closable === false || !props.onClose) return;
-    origin.focus();
-    setClosing({ id: tab.id, origin });
+    if (!tab || tab.closable === false || !props.onClose || state().kind === "pending") return;
+    let focusOrigin: HTMLElement = origin;
+    if (props.closeState !== undefined) {
+      const target = [...(list?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(button => button.dataset.workspaceTabId === tab.id);
+      if (target) focusOrigin = target;
+    }
+    focusOrigin.focus();
+    setClosing({ id: tab.id, origin: focusOrigin });
     props.onClose(tab.id);
   };
+  createEffect(() => [state().kind, props.selectedId] as const, ([kind, selectedId]) => {
+    if (kind !== "pending" || document.activeElement !== closeButton) return;
+    [...(list?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? [])].find(button => button.dataset.workspaceTabId === selectedId)?.focus();
+  });
   createEffect(() => {
     const pending = closing();
     return pending && !tabs().some(tab => tab.id === pending.id) ? pending : undefined;
@@ -87,7 +111,9 @@ export function WorkspaceTabs(props: WorkspaceTabsProps): JSX.Element {
     <Show when={tabs().length > 0} fallback={<p>No open artifacts.</p>}>
       <div class="ui-workspace-tabs-header"><div class="ui-workspace-tablist" role="tablist" aria-label={props.label} ref={element => { list = element; }} onKeyDown={move} onFocusOut={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setWithin(false); }} onPointerDown={event => { suppressClick = false; if (event.pointerType === "touch" || event.pointerType === "pen") touch = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false }; }} onPointerMove={event => { if (touch?.pointerId === event.pointerId && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 8) touch.moved = true; }} onPointerUp={event => { if (touch?.pointerId === event.pointerId) { suppressClick = touch.moved; touch = undefined; } }} onPointerCancel={() => { touch = undefined; suppressClick = false; }}>
         <For each={tabs()} keyed={tab => tab.id}>{tab => <button type="button" role="tab" class="ui-workspace-tab" id={tabId(tab().id)} data-workspace-tab-id={tab().id} aria-controls={panelId(tab().id)} aria-selected={props.selectedId === tab().id ? "true" : "false"} tabindex={roving() === tab().id ? 0 : -1} onFocus={() => { setWithin(true); setFocused(tab().id); }} onClick={event => { if (event.detail > 0 && suppressClick) { suppressClick = false; return; } choose(tab().id); }}>{tab().label}{tab().dirty && <span class="ui-workspace-dirty"> Unsaved</span>}</button>}</For>
-      </div><Show when={selected()?.closable !== false && props.onClose !== undefined}><button type="button" class="ui-btn ui-btn-small" aria-label={`Close ${selected()?.label ?? ""}`} onClick={event => close(event.currentTarget)}>Close</button></Show></div>
+      </div><Show when={selected()?.closable !== false && props.onClose !== undefined}><button type="button" class="ui-btn ui-btn-small" aria-label={`Close ${selected()?.label ?? ""}`} disabled={state().kind === "pending"} ref={element => { closeButton = element; }} onClick={event => close(event.currentTarget)}>Close</button></Show></div>
+      <Show when={pendingLabel()}>{label => <div role="status" class="ui-workspace-close-state">Closing {label()}…</div>}</Show>
+      <Show when={failureMessage()}>{message => <div role="alert" class="ui-workspace-close-error">{message()}</div>}</Show>
       <For each={tabs()} keyed={tab => tab.id}>{tab => <section role="tabpanel" class="ui-workspace-panel" id={panelId(tab().id)} aria-labelledby={tabId(tab().id)} hidden={props.selectedId !== tab().id} tabindex="0">{tab().content}</section>}</For>
     </Show>
   </section>;
