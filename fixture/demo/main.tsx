@@ -9,7 +9,7 @@ import "../../dist/styles/editorial.css";
 import "../../dist/themes/dark.css";
 import "./tour.css";
 
-import { createSignal, For, Show, onCleanup, type JSX } from "solid-js";
+import { createSignal, Show, onCleanup, type JSX } from "solid-js";
 import { render } from "@solidjs/web";
 import {
   Badge, Button, CollapsiblePanel, EmptyState, ErrorState, Icon, IconButton,
@@ -36,12 +36,15 @@ export type ChapterId = (typeof chapters)[number]["id"];
 export function isChapterId(value: string): value is ChapterId { return chapters.some(chapter => chapter.id === value); }
 
 export function Specimen(props: { readonly title: string; readonly id: string; readonly description: string; readonly children: JSX.Element; readonly wide?: boolean | undefined; readonly class?: string | undefined }): JSX.Element {
-  return <Panel class={["tour-specimen", props.wide && "tour-specimen-wide", props.class].filter(Boolean).join(" ")} id={`specimen-${props.id}`} title={props.title}>
-    <div class="tour-specimen-body">
-      {props.children}
-      <p class="tour-specimen-caption"><span class="tour-specimen-id">{props.id}.</span> {props.description}</p>
-    </div>
-  </Panel>;
+  return <article class={["tour-specimen", props.wide && "tour-specimen-wide", props.class].filter(Boolean).join(" ")} id={`specimen-${props.id}`}>
+    <header class="tour-specimen-head"><p class="tour-specimen-id">{props.id}</p><h3>{props.title}</h3></header>
+    <div class="tour-specimen-body">{props.children}</div>
+    <p class="tour-specimen-caption">{props.description}</p>
+  </article>;
+}
+
+export function ChapterLead(props: { readonly title: string; readonly detail: string; readonly editorial?: boolean | undefined }): JSX.Element {
+  return <header class={props.editorial === true ? "tour-lead tour-lead-editorial" : "tour-lead"}><h2 class={props.editorial === true ? "ui-reading-serif" : undefined}>{props.title}</h2><p>{props.detail}</p></header>;
 }
 
 function FoundationsScene(): JSX.Element {
@@ -106,6 +109,7 @@ function FeedbackScene(): JSX.Element {
     store.add({ id, title: kind === "success" ? "Changes saved" : "Connection interrupted", detail: kind === "success" ? "Your local specimen state was updated." : "This simulated operation can be retried.", durationMs: 6500, action: { label: "Dismiss", onSelect: () => store.dismiss(id) } });
   };
   return <div class="tour-scene">
+    <ChapterLead title="Feedback should explain what happened." detail="Every interaction has a distinct state. Success is not inferred from clicking a button. In this demo the local state is the acknowledgment." />
     <div class="tour-gallery-grid">
       <Specimen id="Progress" title="A job with known progress" description="Native progress semantics and a number users can inspect; omit a value when the amount is unknown.">
         <Progress label="Document ingestion" value={progress()} max={100} /><div class="tour-spread"><span>{progress()} of 100 complete</span><Button variant="small" onClick={() => setProgress(value => value >= 100 ? 0 : Math.min(100, value + 17))}>Advance</Button></div><Progress label="Waiting for worker" />
@@ -127,6 +131,7 @@ function RecipesScene(): JSX.Element {
   const [connected, setConnected] = createSignal<IntegrationConnection>({ kind: "disconnected" });
   const [status, setStatus] = createSignal("No profile action yet");
   return <div class="tour-scene">
+    <ChapterLead title="From controls to workflows." detail="Recipes combine established components without owning credentials, backend policy or application navigation." />
     <div class="tour-gallery-grid">
       <Specimen id="IntegrationPicker" title="Connect a workspace" description="Search a service directory, inspect its capability, and request a connection through a host-owned callback.">
         <div class="tour-stack"><IntegrationPicker label="Browse integrations" integrations={[{ id: "github", label: "GitHub", description: "Link repository activity and reviews", keywords: ["code"], connection: connected() }, { id: "calendar", label: "Calendar", description: "See upcoming events in context", connection: { kind: "connected" } }, { id: "storage", label: "Storage", description: "Archive artifacts and source documents", connection: { kind: "expired", message: "Reauthentication required" } }]} onConnect={() => setConnected({ kind: "connected" })}/><p class="tour-muted">Current example connection: {connected().kind}</p><Button variant="small" onClick={() => setConnected({kind:"disconnected"})}>Reset local connection</Button></div>
@@ -139,6 +144,7 @@ function RecipesScene(): JSX.Element {
 
 function EditorialScene(): JSX.Element {
   return <div class="tour-scene">
+    <ChapterLead editorial title="Objects, materials, and the evidence around them." detail="The same controls can support a very different information experience. Page composition, imagery and type supply the character." />
     <div class="tour-gallery-grid">
       <Specimen id="styles/editorial.css" title="A research article" description="These are opt-in CSS-only semantic classes. Their DOM remains meaningful without JavaScript." wide>
         <article class="ui-reading-column tour-editorial-article"><p class="tour-kicker">Archive study 042</p><h3 class="ui-reading-serif">A vocabulary of firing, ash, and time</h3><p class="ui-reading-serif tour-lede">The surface of a vessel records both the maker's intention and the kiln's unpredictable atmosphere. <sup class="ui-cite"><a href="#tour-reference-1" aria-label="Reference 1">[1]</a></sup></p>
@@ -158,7 +164,7 @@ function App(): JSX.Element {
   const fromHash = (): ChapterId => { const candidate = location.hash.slice(1); return isChapterId(candidate) ? candidate : "overview"; };
   const [current, setCurrent] = createSignal<ChapterId>(fromHash());
   const [theme, setTheme] = createSignal<"light" | "editorial" | "dark">("light");
-  const sync = () => setCurrent(fromHash());
+  const sync = () => { setCurrent(fromHash()); window.scrollTo({ top: 0, behavior: "instant" }); };
   window.addEventListener("hashchange", sync);
   onCleanup(() => window.removeEventListener("hashchange", sync));
   const navigate = (id: ChapterId) => { if (location.hash !== `#${id}`) location.hash = id; else setCurrent(id); window.scrollTo({ top: 0, behavior: "instant" }); };
@@ -166,15 +172,9 @@ function App(): JSX.Element {
   const position = () => chapters.findIndex(item => item.id === current());
   return <div class={["tour-shell", "ui-theme", theme() === "dark" && "ui-theme-dark"].filter(Boolean).join(" ")} data-theme={theme()}>
     <a class="tour-skip" href="#tour-content">Skip to chapter</a>
-    <header class="tour-topbar">
-      <div class="tour-topbar-start">
-        <a class="tour-brand" href="#overview">Laputa</a>
-        <nav class="tour-chapter-nav" aria-label="Demo chapters"><For each={chapters}>{chapter => <button type="button" aria-current={current() === chapter.id ? "page" : undefined} onClick={() => navigate(chapter.id)}>{chapter.label}</button>}</For></nav>
-      </div>
-      <Segmented label="Tour color theme" value={theme()} options={[["light", "Light"], ["editorial", "Paper"], ["dark", "Dark"]]} onChange={setTheme} />
-    </header>
-    <main id="tour-content" class="tour-main" tabindex="-1">
-      <div class="tour-main-inner"><PageHeader class="tour-chapter-head" title={active().label}><p class="tour-chapter-note">{active().subtitle}</p></PageHeader>
+    <Shell brand={{ href: "#overview", name: "Laputa", mark: <Icon name="host" size={16} /> }} nav={[{ label: "Demo chapters", items: chapters.map(chapter => ({ href: `#${chapter.id}`, label: chapter.label, current: current() === chapter.id })) }]} foot={<><p class="tour-side-note">55 components across six families.</p><a href="https://github.com/laputa-systems/laputa-ui-dashboard">Source</a></>} mainId="tour-content">
+      <div class="tour-main-bar"><span class="tour-basis">{active().count === 0 ? "CSS and themes" : `${active().count} components in this chapter`}</span><Segmented label="Tour color theme" value={theme()} options={[["light", "Light"], ["editorial", "Paper"], ["dark", "Dark"]]} onChange={setTheme} /></div>
+      <PageHeader class="tour-chapter-head" title={active().label}><p class="tour-chapter-note">{active().subtitle}</p></PageHeader>
         <Show when={current()==="overview"}><FoundationsScene /></Show>
         <Show when={current()==="forms"}><FormsScene /></Show>
         <Show when={current()==="navigation"}><NavigationScene navigate={navigate} /></Show>
@@ -183,9 +183,8 @@ function App(): JSX.Element {
         <Show when={current()==="feedback"}><FeedbackScene /></Show>
         <Show when={current()==="recipes"}><RecipesScene /></Show>
         <Show when={current()==="editorial"}><EditorialScene /></Show>
-        <footer class="tour-footer"><p>Local examples only. <a href="https://github.com/laputa-systems/laputa-ui-dashboard">Source</a></p><div class="tour-footer-actions"><Show when={position()>0}><Button appearance="ghost" onClick={() => navigate(chapters[position()-1]!.id)}>Previous</Button></Show><Show when={position()<chapters.length-1} fallback={<Button appearance="primary" onClick={() => navigate("overview")}>Back to Foundations</Button>}><Button appearance="primary" onClick={() => navigate(chapters[position()+1]!.id)}>Next</Button></Show></div></footer>
-      </div>
-    </main>
+        <footer class="tour-footer"><p>Local examples only.</p><div class="tour-footer-actions"><Show when={position()>0}><Button appearance="ghost" onClick={() => navigate(chapters[position()-1]!.id)}>Previous</Button></Show><Show when={position()<chapters.length-1} fallback={<Button appearance="primary" onClick={() => navigate("overview")}>Back to Foundations</Button>}><Button appearance="primary" onClick={() => navigate(chapters[position()+1]!.id)}>Next</Button></Show></div></footer>
+    </Shell>
   </div>;
 }
 

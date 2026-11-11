@@ -15,7 +15,7 @@ import {
   type WorkspaceTab, type SaveBarState,
 } from "../../dist/layout.js";
 import { BreakdownChart, ChangeSummary, DataTable, SortableHeader, type SortDirection } from "../../dist/data.js";
-import { Specimen, chapters, type ChapterId } from "./main";
+import { ChapterLead, Specimen, chapters, type ChapterId } from "./main";
 
 const subjects = [
   { id: "japan", label: "Japan" }, { id: "korea", label: "Korea" },
@@ -42,6 +42,7 @@ export function FormsScene(): JSX.Element {
     setTagState({ kind: "accepted", id });
   };
   return <div class="tour-scene">
+    <ChapterLead title="Capture precise intent, with no mystery state." detail="Fields are real HTML controls. Enhanced selection, date ranges, tags and uploads keep their changes visible in host-owned state." />
     <div class="tour-gallery-grid">
       <Specimen id="TextField / TextArea / NativeSelect / Checkbox" title="A research intake form" description="Labels, hints, reset, and validation live next to native fields; submit acknowledges only local demo state." wide>
         <form class="tour-form-grid" onSubmit={formSubmit}><TextField id="tour-maker" label="Subject" name="subject" placeholder="Artist, craft, or technique" hint="Use the full recorded name" required defaultValue="Ceramic traditions of Seto" />
@@ -88,6 +89,7 @@ export function NavigationScene(props: { readonly navigate: (id: ChapterId) => v
   const results = createMemo(() => chapters.filter(chapter => `${chapter.label} ${chapter.subtitle}`.toLowerCase().includes(query().toLowerCase())).map(chapter => ({id:chapter.id,href:`#${chapter.id}`})));
   const searchState = createMemo((): SearchDialogState => query().trim() ? { kind: "results", results: results() } : {kind:"idle"});
   return <div class="tour-scene">
+    <ChapterLead title="Get people where they meant to go." detail="Navigation distinguishes links from local state, remembers focus, and works without a mouse. Try the command menu and search dialog." />
     <div class="tour-gallery-grid">
       <Specimen id="Breadcrumbs / Tabs" title="Context before controls" description="Semantic ancestor links and an independent tab choice with arrow key navigation." wide>
         <Breadcrumbs ancestors={[{label:"Library",href:"#overview"},{label:"Components",href:"#navigation"}]} current="Navigation examples" />
@@ -133,6 +135,7 @@ export function DataScene(): JSX.Element {
     { id:"delivery",label:"Delivery",values:[{seriesId:"compute",value:45},{seriesId:"storage",value:37},{seriesId:"egress",value:60}] },
   ];
   return <div class="tour-scene">
+    <ChapterLead title="Dense, but not obscure." detail="Small, readable analytical views that preserve units, source context, and unknown values." />
     <div class="tour-gallery-grid">
       <Specimen id="ChangeSummary" title="At-a-glance measurements" description="Interpretation is supplied by the application—an increase isn't inherently good or bad." wide>
         <ChangeSummary label="Changes this week" period="Compared with the previous seven days" items={[{id:"latency",label:"P95 latency",value:"118 ms",change:{kind:"known",amount:"11%",direction:"decrease",interpretation:"good"}},{id:"availability",label:"Availability",value:"99.8%",change:{kind:"known",amount:"0.3 pp",direction:"increase",interpretation:"good"}},{id:"cost",label:"Projected compute",value:"$412",change:{kind:"known",amount:"4.2%",direction:"increase",interpretation:"bad"}},{id:"missing",label:"External storage",value:"Unavailable",change:{kind:"unavailable",message:"Meter not connected"}}]} />
@@ -163,6 +166,7 @@ export function WorkspacesScene(): JSX.Element {
   let nextArtifactId = 0;
   const close = (id:string) => {const t=tabs();const n=t.filter(tab=>tab.id!==id);setSelected(current=>current===id?n[0]?.id??null:current);setTabs(n);};
   return <div class="tour-scene">
+    <ChapterLead title="Every pane has a job." detail="Workbench navigation, shared artifact tabs, resizable regions and inspector details can be composed without an application router or backend." />
     <div class="tour-gallery-grid">
       <Specimen id="Workbench" title="A review workspace" description="An inset multi-pane shell with optional secondary navigation, a controlled inspector drawer and diagnostics." wide>
         <div class="tour-inline-row"><Button variant="small" onClick={() => setDrawer(true)}>Open inspector on small screens</Button><Button variant="small" onClick={() => setSecondary(open => !open)}>Toggle secondary nav</Button></div>

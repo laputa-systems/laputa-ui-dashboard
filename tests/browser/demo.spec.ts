@@ -4,7 +4,7 @@ const chapterPaths = { "Foundations": "overview", "Forms & inputs": "forms", "Na
 const chapters = Object.keys(chapterPaths) as (keyof typeof chapterPaths)[];
 
 async function chapter(page: Page, title: keyof typeof chapterPaths): Promise<void> {
-  await page.getByRole("navigation", { name: "Demo chapters" }).getByRole("button", { name: title }).click();
+  await page.getByRole("navigation", { name: "Demo chapters" }).getByRole("link", { name: title }).click();
   await expect(page.locator(".tour-chapter-head h1")).toHaveText(title);
   await expect(page).toHaveURL(new RegExp(`#${chapterPaths[title]}$`));
 }
