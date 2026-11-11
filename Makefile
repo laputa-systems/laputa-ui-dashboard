@@ -2,9 +2,10 @@
 
 STUFF ?= stuff
 PACK_DIR := $(CURDIR)/.work/tmp/pack
+DEMO_PORT ?= 4320
 TARBALL = $(PACK_DIR)/laputa-systems-ui-dashboard-$$(jaq -r .version package.json).tgz
 
-.PHONY: work-ready node-ready install build typecheck test test-browser check pack publish-dry-run publish
+.PHONY: work-ready node-ready install build typecheck test test-browser check pack publish-dry-run publish demo demo-coverage
 
 work-ready:
 	@set -eu; \
@@ -32,8 +33,14 @@ test: work-ready build
 	pnpm exec tsrs -p tests/tsconfig.json
 	TMPDIR='$(CURDIR)/.work/tmp' pnpm run test
 
-test-browser: work-ready build
+test-browser: work-ready build demo-coverage
 	TMPDIR='$(CURDIR)/.work/tmp' pnpm exec playwright test
+
+demo-coverage:
+	node scripts/check-demo-coverage.mjs
+
+demo: work-ready build
+	TMPDIR='$(CURDIR)/.work/tmp' pnpm exec vite --config fixture/vite.config.ts --port $(DEMO_PORT) --open /demo.html
 
 check: typecheck test test-browser
 

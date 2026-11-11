@@ -356,6 +356,10 @@ structure:
 (`groupId(index)`). `SideNav` renders one nav group on its own.
 
 
+## Visual tour
+
+Run `make demo` to build and open the [interactive component field guide](docs/demo.md) at `http://127.0.0.1:4320/demo.html`. Eight chapters demonstrate all 55 public component exports across the six entrypoints, including controlled forms, workspaces, data views, feedback, recipes, editorial CSS and scoped themes. It uses local sample data, with no credentials or backend. `make test-browser` includes an export coverage guard and browser journeys for the tour.
+
 ## Development
 
 Node and pnpm versions are pinned in `.node-version` and `packageManager`.
