@@ -1,8 +1,8 @@
 # The component field guide (`make demo`)
 
-Run `make demo` from the repository root. It builds the current package with the pinned Node/pnpm toolchain, starts the local Vite fixture server at <http://127.0.0.1:4320/demo.html>, and opens the tour. Stop with Ctrl+C. To use another port: `make demo DEMO_PORT=4321`.
+Run `make demo` from the repository root. It builds the current package with the pinned Node/pnpm toolchain, starts the local Vite server at <http://127.0.0.1:4320/>, and opens the tour. Stop with Ctrl+C. To use another port: `make demo DEMO_PORT=4321`. The same tour is also served at `/demo.html`. The geometry probe used by the alignment tests is at `/geometry.html`.
 
-The demo is separate from the test fixture index. Eight chapters present components in representative product layouts rather than a grid of disconnected variants. Chapters are reachable through the persistent navigation, Next/Previous controls, and URL hashes. No credentials, API keys, or backend are required. All interactions update local demonstration state; file attachments are never uploaded and service connections are simulations.
+Eight chapters present components in representative product layouts rather than a grid of disconnected variants. Chapters are reachable through the persistent navigation, Next/Previous controls, and URL hashes. No credentials, API keys, or backend are required. All interactions update local demonstration state; file attachments are never uploaded and service connections are simulations.
 
 | Chapter | What you can inspect |
 | --- | --- |

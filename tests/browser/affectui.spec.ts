@@ -3438,7 +3438,7 @@ test("@F01 static forms use the shipped styles and native validation", async ({ 
 test("@M06 loading placeholders respect reduced motion and expose a busy state", async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
-  await page.goto("/");
+  await page.goto("/geometry.html");
   await expect(page.getByRole("status").filter({ hasText: "Loading memory" })).toBeVisible();
   const placeholder = page.locator('[aria-busy="true"] .ui-skeleton');
   await expect(placeholder).toHaveAttribute("aria-hidden", "true");

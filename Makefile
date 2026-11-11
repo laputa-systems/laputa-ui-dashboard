@@ -40,7 +40,7 @@ demo-coverage:
 	node scripts/check-demo-coverage.mjs
 
 demo: work-ready build
-	TMPDIR='$(CURDIR)/.work/tmp' pnpm exec vite --config fixture/vite.config.ts --port $(DEMO_PORT) --open /demo.html
+	TMPDIR='$(CURDIR)/.work/tmp' pnpm exec vite --config fixture/vite.config.ts --port $(DEMO_PORT) --open /
 
 check: typecheck test test-browser
 

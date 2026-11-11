@@ -38,9 +38,9 @@ function Fixture() {
   };
   return (
     <Shell
-      brand={{ href: "/", name: "fixture", mark: <Icon name="activity" size={16} /> }}
+      brand={{ href: "/geometry.html", name: "fixture", mark: <Icon name="activity" size={16} /> }}
       nav={[
-        { label: "Main", items: [{ href: "/", label: "Overview", current: true }, { href: "/hosts", label: "Hosts" }] },
+        { label: "Main", items: [{ href: "/geometry.html", label: "Overview", current: true }, { href: "/hosts", label: "Hosts" }] },
         { label: "CI", heading: true, items: [{ href: "/runs", label: "Runs" }] }
       ]}
       foot={<button type="button">Sign out</button>}

@@ -28,7 +28,7 @@ async function pixels(page: Page, name: string): Promise<number> {
 for (const width of WIDTHS) {
   test(`nothing overflows horizontally at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("/geometry.html");
     await expect(page.locator(".ui-shell")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
@@ -37,7 +37,7 @@ for (const width of WIDTHS) {
 
 test("a dark operating-system scheme still renders the light tokens", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const light = { bg: await token(page, "--ui-bg"), surface: await token(page, "--ui-surface"), text: await token(page, "--ui-text") };
   await page.emulateMedia({ colorScheme: "dark" });
   expect({ bg: await token(page, "--ui-bg"), surface: await token(page, "--ui-surface"), text: await token(page, "--ui-text") }).toEqual(light);
@@ -46,7 +46,7 @@ test("a dark operating-system scheme still renders the light tokens", async ({ p
 
 test("collapsing a panel moves none of its header controls", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const panel = page.locator("#cpu");
   const expand = panel.locator(".ui-panel-expand");
   const collapse = panel.locator(".ui-panel-collapse");
@@ -59,7 +59,7 @@ test("collapsing a panel moves none of its header controls", async ({ page }) =>
 
 test("the rightmost header control shares one right edge across panels", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const cpu = await box(page.locator("#cpu .ui-panel-collapse"));
   const memory = await box(page.locator("#memory .ui-panel-collapse"));
   expect(cpu.x + cpu.width).toBe(memory.x + memory.width);
@@ -67,7 +67,7 @@ test("the rightmost header control shares one right edge across panels", async (
 
 test("a collapsed panel has equal space above and below its title", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   await page.locator("#memory .ui-panel-collapse").click();
   const panel = await box(page.locator("#memory"));
   const title = await box(page.locator("#memory .ui-panel-title"));
@@ -76,7 +76,7 @@ test("a collapsed panel has equal space above and below its title", async ({ pag
 
 test("sidebar groups are spaced by the side gap token", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const groups = page.locator(".ui-side-nav");
   const first = await box(groups.nth(0));
   const second = await box(groups.nth(1));
@@ -85,14 +85,14 @@ test("sidebar groups are spaced by the side gap token", async ({ page }) => {
 
 test("error state children are spaced by the md gap", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const icon = await box(page.locator(".ui-error-icon"));
   const content = await box(page.locator(".ui-error-content"));
   expect(content.x - (icon.x + icon.width)).toBeCloseTo(await pixels(page, "--ui-space-md"), 3);
 });
 
 test("ui-sr-only hides its text from layout without removing it", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const hidden = page.getByTestId("sr-only");
   await expect(hidden).toHaveText("hidden label");
   const size = await box(hidden);
@@ -101,7 +101,7 @@ test("ui-sr-only hides its text from layout without removing it", async ({ page 
 });
 
 test("dom ids are unique", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   await page.getByRole("button", { name: "Open modal" }).click();
   const ids = await page.locator("[id]").evaluateAll(elements => elements.map(element => element.id));
   expect(ids.length).toBeGreaterThan(3);
@@ -131,7 +131,7 @@ for (const width of WIDTHS) {
 }
 
 test("uncontrolled panel controls toggle and Escape closes expansion", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const panel = page.locator("#local");
   await expect(page.locator("#locked").getByRole("button", { name: "Expand Locked" })).toBeDisabled();
   await expect(page.locator("#locked").getByRole("button", { name: "Hide Locked" })).toBeDisabled();
@@ -151,7 +151,7 @@ test("uncontrolled panel controls toggle and Escape closes expansion", async ({ 
 });
 
 test("modal names itself, closes on Escape, and restores focus", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const trigger = page.getByRole("button", { name: "Open modal" });
   await expect(trigger).toHaveAttribute("name", "operation");
   await expect(trigger).toHaveAttribute("data-fixture", "open");
@@ -166,7 +166,7 @@ test("modal names itself, closes on Escape, and restores focus", async ({ page }
 });
 
 test("keyboard focus is visible on search and buttons", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   for (const element of [page.getByRole("searchbox", { name: "Search" }), page.getByRole("button", { name: "Open modal" })]) {
     await element.focus();
     expect(await element.evaluate(node => getComputedStyle(node).outlineStyle)).not.toBe("none");
@@ -175,7 +175,7 @@ test("keyboard focus is visible on search and buttons", async ({ page }) => {
 
 
 test("built module exports the public runtime surface", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const modulePath = `/@fs${resolve("dist/index.js")}`;
   const names = await page.evaluate(async path => Object.keys(await import(path)).sort(), modulePath);
   expect(names).toEqual(["Badge", "Button", "CollapsiblePanel", "EmptyState", "ErrorState", "Icon", "IconButton", "Meter", "Modal", "Notice", "PageHeader", "Pagination", "Panel", "Segmented", "Shell", "SideNav", "Skeleton", "groupId"].sort());
@@ -183,7 +183,7 @@ test("built module exports the public runtime surface", async ({ page }) => {
 
 
 test("initial local state and notifications remain predictable across repeated toggles", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const collapsed = page.locator("#initial-collapsed");
   await expect(collapsed.getByText("Initially hidden")).toHaveCount(0);
   await page.getByRole("button", { name: "Change default" }).click();
@@ -205,7 +205,7 @@ test("initial local state and notifications remain predictable across repeated t
 });
 
 test("controlled state follows the parent and callbacks only notify", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const panel = page.locator("#controlled");
   await panel.getByRole("button", { name: "Hide Controlled" }).click();
   await expect(panel.getByText("Controlled content")).toBeVisible();
@@ -222,7 +222,7 @@ test("controlled state follows the parent and callbacks only notify", async ({ p
 
 test("modal close, Escape and backdrop each notify exactly once", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
+  await page.goto("/geometry.html");
   const trigger = page.getByRole("button", { name: "Open modal" });
   await trigger.click();
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();

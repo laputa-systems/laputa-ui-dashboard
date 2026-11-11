@@ -12,7 +12,7 @@ async function chapter(page: Page, title: keyof typeof chapterPaths): Promise<vo
 test("eight coherent chapters expose the library in an interactive field guide", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("/demo.html");
+  await page.goto("/");
   await expect(page.locator(".tour-chapter-head h1")).toHaveText("Foundations");
   await expect(page.locator(".tour-specimen")).toHaveCount(5);
   for (const title of chapters.slice(1)) {
@@ -23,7 +23,7 @@ test("eight coherent chapters expose the library in an interactive field guide",
 });
 
 test("demo controls update locally and preserve keyboard access", async ({ page }) => {
-  await page.goto("/demo.html#feedback");
+  await page.goto("/#feedback");
   await page.getByRole("button", { name: "Advance" }).click();
   await expect(page.getByText("55 of 100 complete")).toBeVisible();
   await page.getByRole("button", { name: "Fail", exact: true }).click();
@@ -44,7 +44,7 @@ test("demo controls update locally and preserve keyboard access", async ({ page 
 });
 
 test("light, paper and dark are distinct scopes without changing chapter contents", async ({ page }) => {
-  await page.goto("/demo.html#editorial");
+  await page.goto("/#editorial");
   const root = page.locator(".tour-shell");
   const before = await root.evaluate(el => getComputedStyle(el).backgroundColor);
   await page.getByRole("button", { name: "Paper" }).click();
@@ -60,7 +60,7 @@ test("light, paper and dark are distinct scopes without changing chapter content
 
 test("mobile chapters and specimens do not induce document overflow", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/demo.html");
+  await page.goto("/");
   for (const title of chapters) {
     await chapter(page, title);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
