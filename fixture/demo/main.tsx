@@ -36,11 +36,12 @@ export type ChapterId = (typeof chapters)[number]["id"];
 export function isChapterId(value: string): value is ChapterId { return chapters.some(chapter => chapter.id === value); }
 
 export function Specimen(props: { readonly title: string; readonly id: string; readonly description: string; readonly children: JSX.Element; readonly wide?: boolean | undefined; readonly class?: string | undefined }): JSX.Element {
-  return <article class={["tour-specimen", props.wide && "tour-specimen-wide", props.class].filter(Boolean).join(" ")} id={`specimen-${props.id}`}>
-    <div class="tour-specimen-head"><div><span class="tour-specimen-id">{props.id}</span><h3>{props.title}</h3></div><span class="tour-specimen-asterisk" aria-hidden="true">&#10022;</span></div>
-    <div class="tour-specimen-body">{props.children}</div>
-    <p class="tour-specimen-caption">{props.description}</p>
-  </article>;
+  return <Panel class={["tour-specimen", props.wide && "tour-specimen-wide", props.class].filter(Boolean).join(" ")} id={`specimen-${props.id}`} title={props.title}>
+    <div class="tour-specimen-body">
+      {props.children}
+      <p class="tour-specimen-caption"><span class="tour-specimen-id">{props.id}.</span> {props.description}</p>
+    </div>
+  </Panel>;
 }
 
 function FoundationsScene(): JSX.Element {
@@ -50,20 +51,20 @@ function FoundationsScene(): JSX.Element {
   const [alert, setAlert] = createSignal(false);
   const [load, setLoad] = createSignal(false);
   const [retries, setRetries] = createSignal(0);
+  const windowLabel = () => range() === "week" ? "7 days" : range() === "today" ? "24 hours" : "30 days";
   return <div class="tour-scene">
-    <div class="tour-feature tour-feature-blue">
-      <div class="tour-feature-top"><span>FIELD NOTES / SYSTEM OVERVIEW</span><Badge tone="ok" dot>Operational</Badge></div>
-      <PageHeader title="Infrastructure overview" mark={<Icon name="activity" size={20} />} titleExtra={<Badge tone="accent">Live sample</Badge>}>
+    <div class="tour-sample">
+      <PageHeader title="Infrastructure overview" mark={<Icon name="activity" size={16} />} titleExtra={<Badge tone="ok" dot>Operational</Badge>}>
         <Segmented label="Time period" value={range()} options={[["today", "Today"], ["week", "7 days"], ["month", "30 days"]]} onChange={setRange} />
       </PageHeader>
-      <div class="tour-metrics">
-        <div><small>HEALTHY PROJECTS</small><strong>24<span> / 25</span></strong><p>Across 6 regions</p></div>
-        <div><small>MEDIAN LATENCY</small><strong>82<span> ms</span></strong><p>Down 12% vs. prior</p></div>
-        <div><small>SUCCESS RATE</small><strong>99.8<span>%</span></strong><p>Rolling {range() === "week" ? "7 days" : range() === "today" ? "24 hours" : "30 days"}</p></div>
+      <div class="tour-status-strip">
+        <div class="tour-strip-cell"><span class="tour-tile-label">Healthy projects <span class="tour-status-dot" role="img" aria-label="Operational" /></span><strong class="tour-tile-value">24<span class="tour-tile-unit">/ 25</span></strong><span class="tour-tile-detail">Across 6 regions</span></div>
+        <div class="tour-strip-cell"><span class="tour-tile-label">Median latency</span><strong class="tour-tile-value">82<span class="tour-tile-unit">ms</span></strong><span class="tour-tile-detail">Down 12% vs. prior</span></div>
+        <div class="tour-strip-cell"><span class="tour-tile-label">Success rate <span class="tour-status-dot" role="img" aria-label="Healthy" /></span><strong class="tour-tile-value">99.8<span class="tour-tile-unit">%</span></strong><span class="tour-tile-detail">Rolling {windowLabel()}</span></div>
       </div>
       <div class="tour-inline-row"><Button appearance="primary" leadingIcon={<Icon name="arrowRight" />} onClick={() => setOpen(true)}>Inspect activity</Button><Button appearance="ghost" onClick={() => setAlert(value => !value)}>Toggle advisory</Button><IconButton ariaLabel="Refresh overview" onClick={() => setLoad(value => !value)}><Icon name="refresh" /></IconButton></div>
       <Show when={alert()}><Notice tone="warn">One region is operating at reduced capacity. This is local demo data.</Notice></Show>
-      <Show when={load()}><div aria-busy="true" class="tour-loading"><Skeleton rows={2} chart /></div></Show>
+      <Show when={load()}><div aria-busy="true"><Skeleton rows={2} chart /></div></Show>
     </div>
     <div class="tour-gallery-grid">
       <Specimen id="Panel / CollapsiblePanel" title="A signal worth expanding" description="A compact panel that can collapse or expand without changing the surrounding page structure.">
@@ -104,7 +105,7 @@ function FeedbackScene(): JSX.Element {
     const id = `demo-toast-${++toastId}`;
     store.add({ id, title: kind === "success" ? "Changes saved" : "Connection interrupted", detail: kind === "success" ? "Your local specimen state was updated." : "This simulated operation can be retried.", durationMs: 6500, action: { label: "Dismiss", onSelect: () => store.dismiss(id) } });
   };
-  return <div class="tour-scene"><div class="tour-feature tour-feature-green"><span class="tour-eyebrow">SYSTEM MESSAGES / HUMAN RESPONSE</span><h2>Feedback should explain what happened.</h2><p>Every interaction has a distinct state. Success isn't inferred from clicking a button; in this demo the local state is the deliberate acknowledgment.</p></div>
+  return <div class="tour-scene">
     <div class="tour-gallery-grid">
       <Specimen id="Progress" title="A job with known progress" description="Native progress semantics and a number users can inspect; omit a value when the amount is unknown.">
         <Progress label="Document ingestion" value={progress()} max={100} /><div class="tour-spread"><span>{progress()} of 100 complete</span><Button variant="small" onClick={() => setProgress(value => value >= 100 ? 0 : Math.min(100, value + 17))}>Advance</Button></div><Progress label="Waiting for worker" />
@@ -125,7 +126,7 @@ function FeedbackScene(): JSX.Element {
 function RecipesScene(): JSX.Element {
   const [connected, setConnected] = createSignal<IntegrationConnection>({ kind: "disconnected" });
   const [status, setStatus] = createSignal("No profile action yet");
-  return <div class="tour-scene"><div class="tour-feature tour-feature-blue"><span class="tour-eyebrow">COMPOSITIONAL PATTERNS / PRODUCTION PRIMITIVES</span><h2>From controls to workflows.</h2><p>Recipes combine established components without owning credentials, backend policy or application navigation.</p></div>
+  return <div class="tour-scene">
     <div class="tour-gallery-grid">
       <Specimen id="IntegrationPicker" title="Connect a workspace" description="Search a service directory, inspect its capability, and request a connection through a host-owned callback.">
         <div class="tour-stack"><IntegrationPicker label="Browse integrations" integrations={[{ id: "github", label: "GitHub", description: "Link repository activity and reviews", keywords: ["code"], connection: connected() }, { id: "calendar", label: "Calendar", description: "See upcoming events in context", connection: { kind: "connected" } }, { id: "storage", label: "Storage", description: "Archive artifacts and source documents", connection: { kind: "expired", message: "Reauthentication required" } }]} onConnect={() => setConnected({ kind: "connected" })}/><p class="tour-muted">Current example connection: {connected().kind}</p><Button variant="small" onClick={() => setConnected({kind:"disconnected"})}>Reset local connection</Button></div>
@@ -138,10 +139,9 @@ function RecipesScene(): JSX.Element {
 
 function EditorialScene(): JSX.Element {
   return <div class="tour-scene">
-    <div class="tour-editorial-feature"><span class="tour-eyebrow">RESEARCH ARCHIVE / EDITORIAL SYSTEM</span><h2 class="ui-reading-serif">Objects, materials, and the evidence around them.</h2><p>The same controls can support a very different information experience. Here the page composition, imagery and type—not a new framework—supply the character.</p></div>
     <div class="tour-gallery-grid">
       <Specimen id="styles/editorial.css" title="A research article" description="These are opt-in CSS-only semantic classes. Their DOM remains meaningful without JavaScript." wide>
-        <article class="ui-reading-column tour-editorial-article"><p class="tour-kicker">ARCHIVE / STUDY 042</p><h3 class="ui-reading-serif">A vocabulary of firing, ash, and time</h3><p class="ui-reading-serif tour-lede">The surface of a vessel records both the maker's intention and the kiln's unpredictable atmosphere. <sup class="ui-cite"><a href="#tour-reference-1" aria-label="Reference 1">[1]</a></sup></p>
+        <article class="ui-reading-column tour-editorial-article"><p class="tour-kicker">Archive study 042</p><h3 class="ui-reading-serif">A vocabulary of firing, ash, and time</h3><p class="ui-reading-serif tour-lede">The surface of a vessel records both the maker's intention and the kiln's unpredictable atmosphere. <sup class="ui-cite"><a href="#tour-reference-1" aria-label="Reference 1">[1]</a></sup></p>
           <div class="ui-figure-grid"><figure class="ui-figure"><div class="tour-artwork tour-artwork-one ui-figure-media" role="img" aria-label="Abstract illustration of a dark ceramic vessel"><div class="tour-vessel" /></div><figcaption class="ui-figure-caption">An ash-glazed profile <span class="ui-figure-credit">Studio study · fictional exhibit</span></figcaption></figure><figure class="ui-figure"><div class="tour-artwork tour-artwork-two ui-figure-media" role="img" aria-label="Abstract illustration of a pale ceramic bowl"><div class="tour-vessel tour-vessel-wide" /></div><figcaption class="ui-figure-caption">Materials and landscape <span class="ui-figure-credit">Archive study · fictional exhibit</span></figcaption></figure></div>
           <p><span class="ui-native-name" lang="ja">自然釉</span> · Natural ash glaze. Connected vocabulary remains readable with ordinary links.</p><ul class="ui-term-list"><li><a class="ui-term" href="#editorial">Ceramics <span class="ui-term-count">24</span></a></li><li><a class="ui-term" href="#editorial">Wood firing <span class="ui-term-count">8</span></a></li><li><a class="ui-term" href="#editorial">Japan <span class="ui-term-count">12</span></a></li></ul>
           <h4 class="ui-reading-serif">References</h4><ol class="ui-references"><li id="tour-reference-1">Demonstration entry: workshop field notes, 2026. All material on this page is sample content.</li></ol>
@@ -166,12 +166,15 @@ function App(): JSX.Element {
   const position = () => chapters.findIndex(item => item.id === current());
   return <div class={["tour-shell", "ui-theme", theme() === "dark" && "ui-theme-dark"].filter(Boolean).join(" ")} data-theme={theme()}>
     <a class="tour-skip" href="#tour-content">Skip to chapter</a>
-    <aside class="tour-sidebar"><div class="tour-brand"><span class="tour-brand-mark" aria-hidden="true">L</span><span><strong>LAPUTA / UI</strong><small>Component field guide</small></span></div><p class="tour-sidebar-label">CHAPTERS / 08</p>
-      <nav class="tour-chapter-nav" aria-label="Demo chapters"><For each={chapters}>{chapter => <button type="button" class={current() === chapter.id ? "is-active" : ""} aria-current={current() === chapter.id ? "page" : undefined} onClick={() => navigate(chapter.id)}><span class="tour-nav-index">{chapter.index}</span><span>{chapter.label}</span><span class="tour-nav-arrow" aria-hidden="true">↗</span></button>}</For></nav>
-      <div class="tour-sidebar-bottom"><div class="tour-dot"/><p><strong>55 public components</strong><small>Six families, three looks, one library.</small></p><a href="https://github.com/laputa-systems/laputa-ui-dashboard" target="_blank" rel="noopener noreferrer">Source on GitHub ↗</a></div>
-    </aside>
-    <main id="tour-content" class="tour-main" tabindex="-1"><header class="tour-topbar"><span>LIVE CATALOG <span class="tour-top-separator">/</span> INTERACTIVE</span><div class="tour-theme-switch" role="group" aria-label="Tour color theme"><button aria-pressed={theme()==="light"} onClick={() => setTheme("light")}>Light</button><button aria-pressed={theme()==="editorial"} onClick={() => setTheme("editorial")}>Paper</button><button aria-pressed={theme()==="dark"} onClick={() => setTheme("dark")}>Dark</button></div></header>
-      <div class="tour-main-inner"><header class="tour-chapter-head"><div class="tour-chapter-serial">CHAPTER {active().index} <span> / 08</span></div><h1>{active().label}<span class="tour-period">.</span></h1><p>{active().subtitle}</p><div class="tour-chapter-rule"><span>INTERACTIVE / DETERMINISTIC EXAMPLES</span><span>{active().count === 0 ? "CSS & VISUAL LANGUAGE" : `${active().count} COMPONENT EXPORTS`}</span></div></header>
+    <header class="tour-topbar">
+      <div class="tour-topbar-start">
+        <a class="tour-brand" href="#overview">Laputa</a>
+        <nav class="tour-chapter-nav" aria-label="Demo chapters"><For each={chapters}>{chapter => <button type="button" aria-current={current() === chapter.id ? "page" : undefined} onClick={() => navigate(chapter.id)}>{chapter.label}</button>}</For></nav>
+      </div>
+      <Segmented label="Tour color theme" value={theme()} options={[["light", "Light"], ["editorial", "Paper"], ["dark", "Dark"]]} onChange={setTheme} />
+    </header>
+    <main id="tour-content" class="tour-main" tabindex="-1">
+      <div class="tour-main-inner"><PageHeader class="tour-chapter-head" title={active().label}><p class="tour-chapter-note">{active().subtitle}</p></PageHeader>
         <Show when={current()==="overview"}><FoundationsScene /></Show>
         <Show when={current()==="forms"}><FormsScene /></Show>
         <Show when={current()==="navigation"}><NavigationScene navigate={navigate} /></Show>
@@ -180,7 +183,7 @@ function App(): JSX.Element {
         <Show when={current()==="feedback"}><FeedbackScene /></Show>
         <Show when={current()==="recipes"}><RecipesScene /></Show>
         <Show when={current()==="editorial"}><EditorialScene /></Show>
-        <footer class="tour-footer"><div><small>END OF CHAPTER {active().index}</small><p>Designed for inspection. Change values, test controls, resize the page.</p></div><div class="tour-footer-actions"><Show when={position()>0}><Button appearance="ghost" onClick={() => navigate(chapters[position()-1]!.id)}>← Previous</Button></Show><Show when={position()<chapters.length-1} fallback={<Button appearance="primary" onClick={() => navigate("overview")}>Return to start ↗</Button>}><Button appearance="primary" onClick={() => navigate(chapters[position()+1]!.id)}>Next chapter ↗</Button></Show></div></footer>
+        <footer class="tour-footer"><p>Local examples only. <a href="https://github.com/laputa-systems/laputa-ui-dashboard">Source</a></p><div class="tour-footer-actions"><Show when={position()>0}><Button appearance="ghost" onClick={() => navigate(chapters[position()-1]!.id)}>Previous</Button></Show><Show when={position()<chapters.length-1} fallback={<Button appearance="primary" onClick={() => navigate("overview")}>Back to Foundations</Button>}><Button appearance="primary" onClick={() => navigate(chapters[position()+1]!.id)}>Next</Button></Show></div></footer>
       </div>
     </main>
   </div>;

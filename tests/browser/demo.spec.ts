@@ -5,7 +5,7 @@ const chapters = Object.keys(chapterPaths) as (keyof typeof chapterPaths)[];
 
 async function chapter(page: Page, title: keyof typeof chapterPaths): Promise<void> {
   await page.getByRole("navigation", { name: "Demo chapters" }).getByRole("button", { name: title }).click();
-  await expect(page.locator(".tour-chapter-head h1")).toHaveText(`${title}.`);
+  await expect(page.locator(".tour-chapter-head h1")).toHaveText(title);
   await expect(page).toHaveURL(new RegExp(`#${chapterPaths[title]}$`));
 }
 
@@ -13,7 +13,7 @@ test("eight coherent chapters expose the library in an interactive field guide",
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("/demo.html");
-  await expect(page.locator(".tour-chapter-head h1")).toHaveText("Foundations.");
+  await expect(page.locator(".tour-chapter-head h1")).toHaveText("Foundations");
   await expect(page.locator(".tour-specimen")).toHaveCount(5);
   for (const title of chapters.slice(1)) {
     await chapter(page, title);
@@ -26,7 +26,7 @@ test("demo controls update locally and preserve keyboard access", async ({ page 
   await page.goto("/demo.html#feedback");
   await page.getByRole("button", { name: "Advance" }).click();
   await expect(page.getByText("55 of 100 complete")).toBeVisible();
-  await page.getByRole("button", { name: "Fail" }).click();
+  await page.getByRole("button", { name: "Fail", exact: true }).click();
   await expect(page.getByText("Request rejected.")).toBeVisible();
   await chapter(page, "Navigation");
   await page.getByRole("button", { name: "Find a chapter" }).click();
@@ -36,6 +36,9 @@ test("demo controls update locally and preserve keyboard access", async ({ page 
   await expect(query).toBeFocused();
   await query.fill("forms");
   await expect(dialog.getByRole("option")).toHaveCount(1);
+  await query.press("Escape");
+  await expect(query).toHaveValue("");
+  await expect(dialog).toBeVisible();
   await query.press("Escape");
   await expect(dialog).toHaveCount(0);
 });
@@ -52,7 +55,7 @@ test("light, paper and dark are distinct scopes without changing chapter content
   await expect(root).toHaveClass(/ui-theme-dark/);
   const dark = await root.evaluate(el => getComputedStyle(el).backgroundColor);
   expect(dark).not.toBe(paper);
-  await expect(page.locator(".tour-chapter-head h1")).toHaveText("Editorial & themes.");
+  await expect(page.locator(".tour-chapter-head h1")).toHaveText("Editorial & themes");
 });
 
 test("mobile chapters and specimens do not induce document overflow", async ({ page }) => {
