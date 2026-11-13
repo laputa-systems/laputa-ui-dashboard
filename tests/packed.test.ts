@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { describe, it } from "vitest";
 
 describe("packed artifact contract", () => {
@@ -12,13 +12,11 @@ describe("packed artifact contract", () => {
     mkdirSync(join(uiDir, ".work/tmp"), { recursive: true });
     const tmp = mkdtempSync(join(uiDir, ".work/tmp/ui-pack-"));
     try {
-      const output = execFileSync("npm", ["pack", "--json", "--pack-destination", tmp], { cwd: uiDir, encoding: "utf8" });
+      const output = execFileSync("pnpm", ["pack", "--json", "--pack-destination", tmp], { cwd: uiDir, encoding: "utf8" });
       const jsonStart = output.indexOf("{");
       const jsonEnd = output.lastIndexOf("}") + 1;
-      const data = JSON.parse(output.slice(jsonStart, jsonEnd)) as Record<string, { filename: string; files: readonly { path: string }[] }>;
-      const tarballInfo = data["@laputa-systems/ui-dashboard"] ?? Object.values(data)[0];
-      assert.ok(tarballInfo !== undefined, "Expected tarball info in json output");
-      assert.equal(tarballInfo.filename, "laputa-systems-ui-dashboard-0.11.0.tgz");
+      const tarballInfo = JSON.parse(output.slice(jsonStart, jsonEnd)) as { filename: string; files: readonly { path: string }[] };
+      assert.equal(basename(tarballInfo.filename), "laputa-systems-ui-dashboard-0.11.0.tgz");
 
       const paths = tarballInfo.files.map(f => f.path);
       assert.ok(paths.includes("package.json"), "Missing package.json");
@@ -49,7 +47,7 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/recipes/index.d.ts"), "Missing recipes declarations");
       assert.ok(paths.includes("dist/styles/recipes.css"), "Missing recipes stylesheet");
       assert.ok(paths.includes("dist/styles/editorial.css"), "Missing editorial stylesheet");
-      execFileSync("tar", ["-xzf", join(tmp, tarballInfo.filename), "-C", tmp]);
+      execFileSync("tar", ["-xzf", tarballInfo.filename, "-C", tmp]);
       const scope = join(tmp, "node_modules/@laputa-systems");
       mkdirSync(scope, { recursive: true });
       renameSync(join(tmp, "package"), join(scope, "ui-dashboard"));
