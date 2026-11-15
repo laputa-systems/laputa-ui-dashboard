@@ -1,6 +1,6 @@
 .ui-panel { display: flex; flex-direction: column; min-width: 0; background: var(--ui-surface); border-radius: var(--ui-radius-xl); box-shadow: var(--ui-shadow-card); font-family: var(--ui-font); color: var(--ui-text); }
 .ui-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-md); min-height: var(--ui-head-height); padding: var(--ui-space-sm) var(--ui-inset); flex-wrap: wrap; }
-.ui-panel-title { display: flex; align-items: center; min-width: 0; flex: 1; }
+.ui-panel-title { display: flex; align-items: center; flex: 1; }
 .ui-panel-title h2 { margin: 0; font-size: var(--ui-fs-title); font-weight: var(--ui-weight-semibold); letter-spacing: var(--ui-tracking-tight); white-space: nowrap; flex: none; }
 .ui-panel-meta { display: flex; align-items: center; gap: var(--ui-space-sm); color: var(--ui-muted); font-size: var(--ui-fs-meta); white-space: nowrap; }
 .ui-panel-body { min-width: 0; padding: 0 var(--ui-inset) var(--ui-inset); }
