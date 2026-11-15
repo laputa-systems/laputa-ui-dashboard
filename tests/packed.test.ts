@@ -16,7 +16,7 @@ describe("packed artifact contract", () => {
       const jsonStart = output.indexOf("{");
       const jsonEnd = output.lastIndexOf("}") + 1;
       const tarballInfo = JSON.parse(output.slice(jsonStart, jsonEnd)) as { filename: string; files: readonly { path: string }[] };
-      assert.equal(basename(tarballInfo.filename), "laputa-systems-ui-dashboard-0.11.2.tgz");
+      assert.equal(basename(tarballInfo.filename), "laputa-systems-ui-dashboard-0.11.3.tgz");
 
       const paths = tarballInfo.files.map(f => f.path);
       assert.ok(paths.includes("package.json"), "Missing package.json");
