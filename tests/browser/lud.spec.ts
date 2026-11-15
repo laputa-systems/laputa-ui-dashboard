@@ -28,21 +28,23 @@ test("a td under the base and data stylesheets is one token row tall", async ({ 
   expect(await cell.evaluate(element => getComputedStyle(element).verticalAlign)).toBe("middle");
 });
 
-for (const width of [390, 720]) {
+for (const width of [390, 768, 1024, 1440]) {
   test(`panel title and meta do not intersect at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/lud-static.html");
-    const title = await box(page.locator(".ui-panel-title h2"));
-    const meta = await box(page.locator(".ui-panel-meta"));
-    expect(intersects(title, meta)).toBe(false);
+    for (const panel of await page.locator(".ui-panel").all()) {
+      const title = await box(panel.locator(".ui-panel-title h2"));
+      const meta = await box(panel.locator(".ui-panel-meta"));
+      expect(intersects(title, meta)).toBe(false);
+    }
   });
 }
 
 test("panel title and meta stay on one row at 1440px", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/lud-static.html");
-  const title = await box(page.locator(".ui-panel-title h2"));
-  const meta = await box(page.locator(".ui-panel-meta"));
+  const title = await box(page.locator(".ui-panel-title h2").first());
+  const meta = await box(page.locator(".ui-panel-meta").first());
   expect(intersects(title, meta)).toBe(false);
   expect(title.y).toBeLessThan(meta.y + meta.height);
   expect(meta.y).toBeLessThan(title.y + title.height);
