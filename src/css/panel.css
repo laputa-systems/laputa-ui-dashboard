@@ -15,8 +15,9 @@
 @media (--ui-narrow-xl) {
   .ui-panel-expanded { inset: var(--ui-space-sm); }
 }
-@media (--ui-narrow-xs) {
+@media (--ui-narrow-lg) {
   .ui-panel-head { flex-wrap: wrap; gap: var(--ui-space-sm); }
+  .ui-panel-title { flex-basis: 100%; }
   .ui-panel-title h2 { white-space: normal; overflow-wrap: anywhere; }
   .ui-panel-meta { flex-wrap: wrap; white-space: normal; }
 }
