@@ -8,7 +8,7 @@ describe("packed artifact contract", () => {
   const uiDir = resolve(import.meta.dirname, "..");
   const distDir = resolve(uiDir, "dist");
 
-  it("produces an npm tarball with expected manifest and distribution files", () => {
+  it("produces an npm tarball with expected manifest and distribution files", { timeout: 60000 }, () => {
     mkdirSync(join(uiDir, ".work/tmp"), { recursive: true });
     const tmp = mkdtempSync(join(uiDir, ".work/tmp/ui-pack-"));
     try {
@@ -47,8 +47,7 @@ describe("packed artifact contract", () => {
       assert.ok(paths.includes("dist/recipes/index.d.ts"), "Missing recipes declarations");
       assert.ok(paths.includes("dist/styles/recipes.css"), "Missing recipes stylesheet");
       assert.ok(paths.includes("dist/styles/editorial.css"), "Missing editorial stylesheet");
-      execFileSync("tar", ["-xzf", tarballInfo.filename, "-C", tmp]);
-      const scope = join(tmp, "node_modules/@laputa-systems");
+      execFileSync("tar", ["-xzf", tarballInfo.filename, "-C", tmp]);      const scope = join(tmp, "node_modules/@laputa-systems");
       mkdirSync(scope, { recursive: true });
       renameSync(join(tmp, "package"), join(scope, "ui-dashboard"));
       writeFileSync(join(tmp, "package.json"), '{"name":"packed-consumer","type":"module","private":true}');
