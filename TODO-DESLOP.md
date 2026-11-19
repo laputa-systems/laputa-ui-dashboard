@@ -1,5 +1,5 @@
 Prefix: DSLP
-Next: 6
+Next: 8
 
 Deslop campaign backlog ([plan](https://github.com/laputa-systems/stuff/blob/main/docs/campaigns/deslop.md), tier B). One agent works this file with the `deslop` skill: take the lowest-numbered open ticket whose area does not start with `Needs owner ·`. After DSLP-5, work the open P1 and P2 findings, then fill in `## Report` below.
 
@@ -24,18 +24,17 @@ all 68 unit and package cases and 338 Chromium cases in 18.88 s.
 The browser fixture emitted Solid runtime warnings. These are
 observed costs on the shared host.
 
+Diagnose reviewed package exports, build and release configuration, documentation,
+and sampled form, overlay, navigation, data and feedback components against their
+tests. The Chromium suite and packed tests passed. It did not exhaustively inspect
+every component, external consumer, browser engine, or assistive technology.
+No product defect was filed; the local lint gate and a portable documentation link
+remain as DSLP-6 and DSLP-7.
+
 
 ## Tickets
 
 
-### DSLP-2 · P2 · Diagnose: ultrareview into this backlog
-
-- **Area:** deslop · diagnose
-- **Where:** whole repository
-- **Problem:** No review has ranked this repository's risks for the deslop pass.
-- **Recommendation:** Run the deslop Diagnose step. Accept: the diff touches only docs, comments, and this file, and every finding names its Fix with.
-- **Fix with:** deslop
-- **Effort:** S
 
 ### DSLP-3 · P2 · Types: strict profile and typing findings
 
@@ -63,4 +62,24 @@ observed costs on the shared host.
 - **Recommendation:** Run the deslop Dead code step. Accept: tools clean or allowlisted with reasons; walk-backs filed as Needs owner tickets.
 - **Fix with:** deslop
 - **Effort:** M
+
+
+### DSLP-6 · P3 · Provide a local lint gate
+
+- **Area:** development checks
+- **Where:** Makefile:32-48; package.json:76-79; .github/workflows/ci.yml:35-36
+- **Problem:** make check and make test omit type-aware lint, and make lint has no target; contributors following the local check command can miss warnings or errors that make test-ci reports.
+- **Recommendation:** Expose a local lint target and include lint in the documented local check path, preserving the existing type-aware lint configuration.
+- **Fix with:** none
+- **Effort:** S
+
+
+### DSLP-7 · P4 · Replace machine-specific Stats report link
+
+- **Area:** documentation
+- **Where:** docs/affectui-plan.md:7
+- **Problem:** The paused plan links to an absolute path under a developer home directory, so readers without that checkout cannot open the referenced integration evidence; mdtool check reports L001.
+- **Recommendation:** Replace the local link with a stable repository URL for the referenced report if available, or describe where the evidence can be found.
+- **Fix with:** technical-writing
+- **Effort:** S
 
