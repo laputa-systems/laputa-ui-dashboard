@@ -19,5 +19,20 @@ The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted prompt
   packed JS, declarations, conditional exports, and CSS assets.
 - `tests/browser/` checks interaction, focus, geometry, themes, and
   CSS-only editorial usage. Demo coverage exercises the fixture inventory.
+- Edit: `pnpm exec playwright test tests/browser/geometry.spec.ts --grep
+  'modal confines' --workers=1` checks modal focus and inertness against
+  the built `dist`; rebuild after changing source (observed 0.99 s runner time).
+- Change: `make test` builds and checks TSX, server rendering and the packed
+  consumer. `make test-browser` builds and checks Chromium interactions.
+  Full: `make check` runs both plus typecheck (observed 20.20 s under load;
+  68 unit/package and 338 browser cases before the focus test).
+- Package exports and built files: `tests/packed.test.ts`; modal focus and
+  dismissal: `tests/browser/geometry.spec.ts`; popover and forms: `tests/browser/affectui.spec.ts`;
+  search: `tests/browser/search-dialog.spec.ts`; tables: `tests/ui.test.tsx`
+  and `tests/browser/affectui.spec.ts`; token and theme application:
+  `tests/browser/theme.spec.ts`, `themes.spec.ts`, and `theme-dark.spec.ts`.
+- Coverage is unmeasured: no `make coverage` target or declared Vitest coverage
+  provider. Stryker is not installed. Browser tests exercise built artifacts,
+  so rebuilding is essential before fault injection.
 - Performance workload is unspecified. The browser cases cover behavior
   and layout. In-scope consumers include Stats, Stuff, and bctl.

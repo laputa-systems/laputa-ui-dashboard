@@ -165,6 +165,22 @@ test("modal names itself, closes on Escape, and restores focus", async ({ page }
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
+test("modal confines keyboard focus and makes outside controls inert", async ({ page }) => {
+  await page.goto("/geometry.html");
+  const trigger = page.getByRole("button", { name: "Open modal" });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Trace" });
+  const back = dialog.getByRole("button", { name: "Back" });
+  const close = dialog.getByRole("button", { name: "Close" });
+  await expect(back).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(back).toBeFocused();
+  await trigger.evaluate(element => element.focus());
+  await expect(back).toBeFocused();
+});
+
 test("keyboard focus is visible on search and buttons", async ({ page }) => {
   await page.goto("/geometry.html");
   for (const element of [page.getByRole("searchbox", { name: "Search" }), page.getByRole("button", { name: "Open modal" })]) {
