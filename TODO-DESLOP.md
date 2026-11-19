@@ -5,6 +5,33 @@ Deslop campaign backlog ([plan](https://github.com/laputa-systems/stuff/blob/mai
 
 ## Report
 
+Dead code (DSLP-5): tsrs with `--noUnusedLocals --noUnusedParameters`
+reported no source findings; Oxlint `--deny no-unused-vars` over `src`,
+`tests`, `fixture`, and `scripts` found three unused imports in the tour.
+Removed `Show`, `Notice`, and `Panel` from `fixture/demo/scenes.tsx`: no
+references existed in that module. The registered entry is `fixture/demo.html`
+through `fixture/demo/main.tsx`, which imports the four scenes; the demo
+coverage script reads both modules, and `tests/browser/demo.spec.ts` exercises
+the tour. The fixture is not in the package `files` list. No public export,
+class, token, or runtime behavior was removed. `make check` passed on macOS
+ARM64 with Node 26.13.1 and pnpm 12.21.0: 68 unit/package and 339 Chromium
+cases, including the demo. External consumers and other browser engines were
+not run; this fixture-only import cleanup does not alter the built package.
+
+The source declaration search found no exported declaration with only one
+source occurrence. The six Vite entries map to the package exports, and
+internal forwarding, ID, popover, swipe, field-description and combobox
+helpers have source callers. A CSS class comparison found 202 of 278 `ui-`
+names absent from the component reference; published styles also support
+CSS-only consumers, so this is not evidence of dead CSS. All eight dev
+dependencies have imports or script/config uses. The scans are clean with no
+allowlist; lexical export and CSS searches cannot prove external usage. Knip
+was not installed because this task forbids new dependencies. A debloat review
+of the entry points, shared helpers, demo, build scripts and test configuration
+found no further proven behavior-preserving cut; a complete structural review
+of every component was not performed. The helper layers retain shared browser,
+SSR, accessibility and interaction behavior. No walk-back was proposed.
+
 Tests (DSLP-4): the critical contracts map to existing tests: the package
 exports and built `dist` files (`tests/packed.test.ts`), popover, table and
 form behavior (`tests/browser/affectui.spec.ts`), search navigation
@@ -89,14 +116,6 @@ and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
 
 
 
-### DSLP-5 · P2 · Dead code: tools and debloat
-
-- **Area:** deslop · dead code
-- **Where:** whole repository
-- **Problem:** No dead-code scan has run.
-- **Recommendation:** Run the deslop Dead code step. Accept: tools clean or allowlisted with reasons; walk-backs filed as Needs owner tickets.
-- **Fix with:** deslop
-- **Effort:** M
 
 
 ### DSLP-6 · P3 · Provide a local lint gate

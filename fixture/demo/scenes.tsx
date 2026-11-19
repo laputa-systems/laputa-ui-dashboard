@@ -1,6 +1,6 @@
-import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
+import { createMemo, createSignal, For, type JSX } from "solid-js";
 import {
-  Badge, Button, Icon, Notice, Panel,
+  Badge, Button, Icon,
 } from "../../dist/index.js";
 import {
   Checkbox, Combobox, DateRangePicker, Dropzone, MultiCombobox, NativeSelect,
