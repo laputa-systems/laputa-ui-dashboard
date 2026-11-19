@@ -33,4 +33,4 @@ jobs:
           install: false
       - run: pnpm install --frozen-lockfile
       - name: lint, typecheck, and unit tests
-        run: pnpm run check
+        run: make test-ci
