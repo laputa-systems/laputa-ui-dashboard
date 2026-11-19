@@ -1,9 +1,40 @@
 Prefix: DSLP
-Next: 9
+Next: 11
 
 Deslop campaign backlog ([plan](https://github.com/laputa-systems/stuff/blob/main/docs/campaigns/deslop.md), tier B). One agent works this file with the `deslop` skill: take the lowest-numbered open ticket whose area does not start with `Needs owner ·`. After DSLP-5, work the open P1 and P2 findings, then fill in `## Report` below.
 
 ## Report
+
+Bench audit at `a59cfa7c` (2026-11-19): no runnable performance workload or
+size budget was found in this worktree, so no bench entrypoint or tiers were
+added. The build scripts produce CSS and check demo inventory; packed tests
+check exports and rendering, and Chromium tests check behavior and geometry.
+Vite prints gzip sizes for build chunks, but does not compare them against a
+budget. Test timeouts and runner durations are not performance measurements.
+`docs/affectui-plan.md` records historical gzip snapshots and refers to Stats
+benchmark scripts; `docs/multi-product-plan.md` records a past Stats timing
+and a proposed Discover reader budget. These are not local runnable gates or
+current comparisons. No regression is demonstrated by this audit.
+
+Ranked outcomes without local performance evidence:
+
+1. **Dashboard rendering and interaction** (DSLP-10, P3): representative
+   Solid and CSS-only pages, large tables and interactive controls have no
+   measured completion latency, layout/CPU cost or memory footprint. Existing
+   functional assertions provide correctness examples, not a representative
+   completed-work benchmark. A browser performance trace and allocation
+   profile can attribute a future slowdown; instrumented runs should be
+   separate from timed comparisons.
+2. **Delivered CSS and JavaScript** (DSLP-9, P3): stylesheet transfers and
+   selective consumer bundles have no current compressed-size comparison.
+   Packed tests verify presence and entry resolution, not byte budgets. A
+   bundle graph and compressed per-entry byte counts can attribute growth.
+
+There are no local samples, host gates, reference comparisons, regression
+thresholds or benchmark result records to assess for these outcomes. The
+smallest next action is to define representative consumer fixtures and their
+correctness/completion oracles, then establish reviewed baselines before
+building a tiered runner. No Full performance run was made.
 
 Dead code (DSLP-5): tsrs with `--noUnusedLocals --noUnusedParameters`
 reported no source findings; Oxlint `--deny no-unused-vars` over `src`,
@@ -126,6 +157,26 @@ and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
 - **Recommendation:** Expose a local lint target and include lint in the documented local check path, preserving the existing type-aware lint configuration.
 - **Fix with:** none
 - **Effort:** S
+
+
+### DSLP-9 · P3 · Detect shipped dashboard payload growth
+
+- **Area:** performance · payload
+- **Where:** package.json:15-71; scripts/build-css.mjs:19-50; tests/packed.test.ts:11-26; docs/affectui-plan.md:44
+- **Problem:** Packed tests check that CSS and JavaScript entries exist but impose no size comparison; growth in shipped styles or consumer bundles can slow page loads without a local check noticing. Historical gzip figures are snapshots, not a current gate.
+- **Recommendation:** Measure compressed CSS and representative packed consumer bundles against an appropriate reviewed baseline, including CSS-only and selective imports; report attribution and scope.
+- **Fix with:** bench-pyramid
+- **Effort:** M
+
+
+### DSLP-10 · P3 · Measure representative dashboard rendering and interaction
+
+- **Area:** performance · runtime
+- **Where:** tests/browser/geometry.spec.ts:31-56; tests/packed.test.ts:95-108; playwright.config.ts:5-13; docs/multi-product-plan.md:13
+- **Problem:** Browser and SSR tests assert behavior with small fixtures but do not measure rendering, layout, interaction latency or resource cost on representative dashboards. A user-visible slowdown can pass these checks; the historical Stats timing is not a local repeatable workload.
+- **Recommendation:** Define representative consumer journeys and completed-work checks, then add repeatable timing and resource measurements with a valid baseline and browser profiling for attribution.
+- **Fix with:** bench-pyramid
+- **Effort:** M
 
 
 ### DSLP-7 · P4 · Replace machine-specific Stats report link
