@@ -32,18 +32,49 @@ No product defect was filed; the local lint gate and a portable documentation li
 remain as DSLP-6 and DSLP-7.
 
 
+Types at `952d0524`: measured with tsrs 0.25.0-ts7.1.0-beta and
+Oxlint 1.93.0. Compiler diagnostics count source under `tsconfig.json`;
+lint counts below cover `src`, `tests`, `scripts`, and `fixture` (source-only
+counts are shown alongside them). Each compiler candidate was enabled separately
+against the existing profile. Retained settings were already enabled, so zero
+new diagnostics does not measure what they caught when originally introduced.
+
+| Candidate | Diagnostics | Decision |
+| --- | ---: | --- |
+| `strict` | 0 | Retained existing profile; includes catch variables as unknown. |
+| `noUncheckedIndexedAccess` | 0 | Retained existing profile. |
+| `exactOptionalPropertyTypes` | 0 | Retained existing profile. |
+| `noImplicitOverride` | 0 | Retained existing profile. |
+| `verbatimModuleSyntax` | 0 | Retained existing profile. |
+| `useUnknownInCatchVariables` | 0 | Already implied by strict; no new witness. |
+| `noPropertyAccessFromIndexSignature` | 7 | Rejected: all seven demand bracket spelling for dynamic `ref` or dataset keys, not a defect. |
+| `noUncheckedSideEffectImports` | 0 | Rejected: no defect or escape hatch identified. |
+| `no-explicit-any` | 7 (src 0) | Rejected: browser test doubles use seven `any` annotations; no source finding. |
+| `no-unsafe-argument` | 36 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
+| `no-unsafe-assignment` | 319 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
+| `no-unsafe-call` | 406 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
+| `no-unsafe-member-access` | 368 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
+| `no-unsafe-return` | 364 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
+| `no-non-null-assertion` | 137 (src 18) | Rejected as a blanket rule: fixture and test invariants produce many findings; source assertions require individual contract review. |
+| `no-floating-promises` | 0 | Rejected: no defect or escape hatch identified. |
+| `switch-exhaustiveness-check` | 1 | Rejected: Notice's default intentionally handles `info`. |
+
+No new setting met the adoption threshold and no contract was changed; witnesses
+for changed contracts therefore do not apply. The Toaster timer assertion follows
+initialization in the same effect; its reactive lookup assertion and other source
+assertions remain leads for individual review rather than demonstrated defects.
+Escape-hatch baseline and result are identical: Oxlint reports 7 explicit `any`
+and 137 non-null assertions; `rg` finds 8 `as unknown`/`as any` occurrences
+(including the seven `as any`) and 0 TypeScript suppression directives. The
+deslop reference's broader line-based expression reports 162 matching lines,
+including ordinary assertions and a string literal. Scope: first-party TypeScript
+and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
+
+
 ## Tickets
 
 
 
-### DSLP-3 · P2 · Types: strict profile and typing findings
-
-- **Area:** deslop · types
-- **Where:** type checker and lint configuration; TypeScript sources
-- **Problem:** The strict-profile candidates in the deslop skill's tools reference have not been measured here.
-- **Recommendation:** Run the deslop Types step. Accept: clean at the adopted profile, escape hatches not increased, witnesses recorded.
-- **Fix with:** deslop
-- **Effort:** M
 
 ### DSLP-4 · P2 · Tests: coverage, boundary gaps, mutation
 
