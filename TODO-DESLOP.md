@@ -1,9 +1,21 @@
 Prefix: DSLP
-Next: 8
+Next: 9
 
 Deslop campaign backlog ([plan](https://github.com/laputa-systems/stuff/blob/main/docs/campaigns/deslop.md), tier B). One agent works this file with the `deslop` skill: take the lowest-numbered open ticket whose area does not start with `Needs owner ·`. After DSLP-5, work the open P1 and P2 findings, then fill in `## Report` below.
 
 ## Report
+
+Tests (DSLP-4): the critical contracts map to existing tests: the package
+exports and built `dist` files (`tests/packed.test.ts`), popover, table and
+form behavior (`tests/browser/affectui.spec.ts`), search navigation
+(`tests/browser/search-dialog.spec.ts`) and scoped theme tokens
+(`tests/browser/theme.spec.ts`). Modal focus confinement had no test; the new
+`geometry.spec.ts` case checks Tab and Shift+Tab stay inside the dialog and
+outside controls are inert. Replacing `showModal()` with `show()` fails it at
+the outside-focus assertion (0.17 runner-minutes). No mutation tool or
+coverage provider is declared, so coverage is not measured; DSLP-8 tracks
+that owner decision. `make check` passed 68 unit and package cases and 339
+Chromium cases.
 
 Ground at `0e7e9937`, 2026-11-19. The hosted workflow ran
 `make test-ci` with Node 26.13.1 and pnpm 12.21.0. All 68 unit
@@ -76,14 +88,6 @@ and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
 
 
 
-### DSLP-4 · P2 · Tests: coverage, boundary gaps, mutation
-
-- **Area:** deslop · tests
-- **Where:** test suites and CI
-- **Problem:** Coverage and mutation results are unmeasured; no deslop mutation lane exists.
-- **Recommendation:** Run the deslop Tests step. Accept: no undispositioned survivor in critical code, the test cost budget holds, and the lane is green where the tools are mirrored.
-- **Fix with:** deslop
-- **Effort:** M
 
 ### DSLP-5 · P2 · Dead code: tools and debloat
 
@@ -112,5 +116,15 @@ and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
 - **Problem:** The paused plan links to an absolute path under a developer home directory, so readers without that checkout cannot open the referenced integration evidence; mdtool check reports L001.
 - **Recommendation:** Replace the local link with a stable repository URL for the referenced report if available, or describe where the evidence can be found.
 - **Fix with:** technical-writing
+- **Effort:** S
+
+
+### DSLP-8 · P4 · Decide whether to add a coverage provider for make coverage
+
+- **Area:** Needs owner · tests
+- **Where:** package.json devDependencies; Makefile
+- **Problem:** No Vitest coverage provider or mutation tool is declared, so the deslop Tests step cannot measure line or branch coverage; adding one is a new dependency.
+- **Recommendation:** Decide whether to add a pinned coverage provider served by the stuff registries and a make coverage target, or record coverage as out of scope.
+- **Fix with:** deslop
 - **Effort:** S
 
