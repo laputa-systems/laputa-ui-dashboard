@@ -5,141 +5,78 @@ Deslop campaign backlog ([plan](https://github.com/laputa-systems/stuff/blob/mai
 
 ## Report
 
-Bench audit at `a59cfa7c` (2026-11-19): no runnable performance workload or
-size budget was found in this worktree, so no bench entrypoint or tiers were
-added. The build scripts produce CSS and check demo inventory; packed tests
-check exports and rendering, and Chromium tests check behavior and geometry.
-Vite prints gzip sizes for build chunks, but does not compare them against a
-budget. Test timeouts and runner durations are not performance measurements.
-`docs/affectui-plan.md` records historical gzip snapshots and refers to Stats
-benchmark scripts; `docs/multi-product-plan.md` records a past Stats timing
-and a proposed Discover reader budget. These are not local runnable gates or
-current comparisons. No regression is demonstrated by this audit.
+DSLP-1 base: `0e7e993726137d56c83b07b28bbfd0c21dd16733` (ancestor of
+`40fee16a24aa09535dad0ac0ee62d82b34be2dc4`). The cumulative review covered
+all six merged changes #14–#19, including the lock metadata, dark-theme docs,
+demo entry and modal implementation and fixture. No new demonstrated defect or
+supported deferred finding was found. The review did not exercise external
+consumers, other browsers, or assistive technology.
 
-Ranked outcomes without local performance evidence:
+**Scorecard**
 
-1. **Dashboard rendering and interaction** (DSLP-10, P3): representative
-   Solid and CSS-only pages, large tables and interactive controls have no
-   measured completion latency, layout/CPU cost or memory footprint. Existing
-   functional assertions provide correctness examples, not a representative
-   completed-work benchmark. A browser performance trace and allocation
-   profile can attribute a future slowdown; instrumented runs should be
-   separate from timed comparisons.
-2. **Delivered CSS and JavaScript** (DSLP-9, P3): stylesheet transfers and
-   selective consumer bundles have no current compressed-size comparison.
-   Packed tests verify presence and entry resolution, not byte budgets. A
-   bundle graph and compressed per-entry byte counts can attribute growth.
+| Measure | Before | After |
+| --- | --- | --- |
+| Tracked lines, `src/` | 5,342 | 5,342 |
+| Tracked lines, `tests/` | 7,512 | 7,528 |
+| Warm `make check` | 18.88 s, 68 unit/package + 338 Chromium | 24.13 s, 68 unit/package + 339 Chromium |
+| Warm `make test` | Not recorded separately | Not recorded separately |
+| Line and branch coverage | Not measured | Not measured; DSLP-8 |
+| Mutation | Not measured | One injected fault proves one modal focus behavior; 0.17 runner-minutes. No systematic caught/missed/timeout/unviable counts. |
+| Escape hatches | 7 `any`, 137 non-null assertions, 8 `as unknown`/`as any` casts | Unchanged; 0 suppressions. Scope: first-party TS/JS in `src`, `tests`, `scripts`, `fixture`. |
+| Dead code | Three unused demo imports | Removed three imports, zero net lines and zero dependencies (#18). |
+| Findings | Campaign started | Filed P1: 0, P2: 0, P3: 3 (DSLP-6, 9, 10), P4: 2 (DSLP-7, 8); fixed P1: 0, P2: 0, P3: 0, P4: 0. One broken dark-theme documentation anchor was repaired without a ticket; no product defects fixed. |
+| Performance | No defined workload or budget | No regression established; #19 audit filed DSLP-9 and DSLP-10. |
+| Escaped regressions | Unknown | None observed in the checks; untested consumers and browsers remain unknown. |
 
-There are no local samples, host gates, reference comparisons, regression
-thresholds or benchmark result records to assess for these outcomes. The
-smallest next action is to define representative consumer fixtures and their
-correctness/completion oracles, then establish reviewed baselines before
-building a tiered runner. No Full performance run was made.
+Line counts include all tracked files under the named directories, counting newline
+characters. Check durations are single observations on a shared macOS ARM64 host,
+not comparable performance gates. The focus test protects keyboard confinement and
+background inertness; no product defect was found by the injected fault.
 
-Dead code (DSLP-5): tsrs with `--noUnusedLocals --noUnusedParameters`
-reported no source findings; Oxlint `--deny no-unused-vars` over `src`,
-`tests`, `fixture`, and `scripts` found three unused imports in the tour.
-Removed `Show`, `Notice`, and `Panel` from `fixture/demo/scenes.tsx`: no
-references existed in that module. The registered entry is `fixture/demo.html`
-through `fixture/demo/main.tsx`, which imports the four scenes; the demo
-coverage script reads both modules, and `tests/browser/demo.spec.ts` exercises
-the tour. The fixture is not in the package `files` list. No public export,
-class, token, or runtime behavior was removed. `make check` passed on macOS
-ARM64 with Node 26.13.1 and pnpm 12.21.0: 68 unit/package and 339 Chromium
-cases, including the demo. External consumers and other browser engines were
-not run; this fixture-only import cleanup does not alter the built package.
+**Steps and cost**
 
-The source declaration search found no exported declaration with only one
-source occurrence. The six Vite entries map to the package exports, and
-internal forwarding, ID, popover, swipe, field-description and combobox
-helpers have source callers. A CSS class comparison found 202 of 278 `ui-`
-names absent from the component reference; published styles also support
-CSS-only consumers, so this is not evidence of dead CSS. All eight dev
-dependencies have imports or script/config uses. The scans are clean with no
-allowlist; lexical export and CSS searches cannot prove external usage. Knip
-was not installed because this task forbids new dependencies. A debloat review
-of the entry points, shared helpers, demo, build scripts and test configuration
-found no further proven behavior-preserving cut; a complete structural review
-of every component was not performed. The helper layers retain shared browser,
-SSR, accessibility and interaction behavior. No walk-back was proposed.
+- **Ground #14:** aligned generated pnpm metadata to the existing pin; frozen
+  install retained application dependencies. `make test-ci` took 4.47 s after
+  installation and 3.38 s warm; lint took 0.31 s with 49 warnings; `make check`
+  took 18.88 s. Hosted test passed 68 cases. Total step wall and CI minutes were
+  not recorded.
+- **Diagnose #15:** sampled package boundaries, build, themes and components;
+  repaired the dark-theme anchor and filed DSLP-6 and DSLP-7. No product defect
+  found. Full check passed; step wall and CI minutes not recorded.
+- **Types #16:** retained the existing strict profile; no candidate met the
+  defect/escape-hatch threshold. Seven index-signature diagnostics were spelling
+  changes; type-aware unsafe rules flagged test dependency types, not source.
+  Escape hatches were unchanged. Full check passed; step wall and CI minutes not
+  recorded.
+- **Tests #17:** added one modal focus/inertness behavior test. Replacing
+  `showModal()` with `show()` made it fail; the proof cost 0.17 runner-minutes.
+  No coverage or systematic mutation run was available (DSLP-8). Full check
+  passed; total step wall and CI minutes not recorded.
+- **Dead code #18:** compiler unused checks found no source findings; Oxlint
+  found `Show`, `Notice`, and `Panel` unused in the demo scene. Checked its
+  registered entry and demo consumers; removed only those imports. Knip was not
+  installed under the no-new-dependency constraint. Full check passed; step wall
+  and CI minutes not recorded.
+- **Bench #19:** no runnable workload, size budget, baseline or threshold;
+  functional checks and historical snapshots are not benchmarks. Filed P3
+  DSLP-9 for payload and DSLP-10 for representative runtime. No Full performance
+  run. Full check passed; step wall and CI minutes not recorded.
 
-Tests (DSLP-4): the critical contracts map to existing tests: the package
-exports and built `dist` files (`tests/packed.test.ts`), popover, table and
-form behavior (`tests/browser/affectui.spec.ts`), search navigation
-(`tests/browser/search-dialog.spec.ts`) and scoped theme tokens
-(`tests/browser/theme.spec.ts`). Modal focus confinement had no test; the new
-`geometry.spec.ts` case checks Tab and Shift+Tab stay inside the dialog and
-outside controls are inert. Replacing `showModal()` with `show()` fails it at
-the outside-focus assertion (0.17 runner-minutes). No mutation tool or
-coverage provider is declared, so coverage is not measured; DSLP-8 tracks
-that owner decision. `make check` passed 68 unit and package cases and 339
-Chromium cases.
+**Method feedback**
 
-Ground at `0e7e9937`, 2026-11-19. The hosted workflow ran
-`make test-ci` with Node 26.13.1 and pnpm 12.21.0. All 68 unit
-and package cases passed. [Hosted default](https://github.com/laputa-systems/laputa-ui-dashboard/actions/runs/44477817928)
+A boundary checklist that explicitly includes modal focus confinement would have
+caught the missing assertion earlier; the injected fault verified the new test.
+Type-aware unsafe lint misfired on error-typed test dependencies. Types found no
+candidate worth adopting, and the dead-code search could not infer external CSS
+usage. The review found no new defect. A single fault proof is not a mutation audit.
 
-The local npm mirror lacked the pinned pnpm package. On macOS
-ARM64, the exact native executable came from
-`npm pack @pnpm/exe.darwin-arm64@12.21.0 --registry=https://registry.npmjs.org --ignore-scripts`.
-The project then installed through its configured registry. Its
-package manager metadata now matches the existing manifest pin.
-The application dependency document is identical after YAML
-normalization. A second frozen install preserved the full lock.
+**Shared-file gaps**
 
-With the pinned tools, `make test-ci` took 4.47 s after
-installation and 3.38 s on repeat. `pnpm run lint` exited
-successfully with 49 warnings in 0.31 s. `make check` passed
-all 68 unit and package cases and 338 Chromium cases in 18.88 s.
-The browser fixture emitted Solid runtime warnings. These are
-observed costs on the shared host.
-
-Diagnose reviewed package exports, build and release configuration, documentation,
-and sampled form, overlay, navigation, data and feedback components against their
-tests. The Chromium suite and packed tests passed. It did not exhaustively inspect
-every component, external consumer, browser engine, or assistive technology.
-No product defect was filed; the local lint gate and a portable documentation link
-remain as DSLP-6 and DSLP-7.
-
-
-Types at `952d0524`: measured with tsrs 0.25.0-ts7.1.0-beta and
-Oxlint 1.93.0. Compiler diagnostics count source under `tsconfig.json`;
-lint counts below cover `src`, `tests`, `scripts`, and `fixture` (source-only
-counts are shown alongside them). Each compiler candidate was enabled separately
-against the existing profile. Retained settings were already enabled, so zero
-new diagnostics does not measure what they caught when originally introduced.
-
-| Candidate | Diagnostics | Decision |
-| --- | ---: | --- |
-| `strict` | 0 | Retained existing profile; includes catch variables as unknown. |
-| `noUncheckedIndexedAccess` | 0 | Retained existing profile. |
-| `exactOptionalPropertyTypes` | 0 | Retained existing profile. |
-| `noImplicitOverride` | 0 | Retained existing profile. |
-| `verbatimModuleSyntax` | 0 | Retained existing profile. |
-| `useUnknownInCatchVariables` | 0 | Already implied by strict; no new witness. |
-| `noPropertyAccessFromIndexSignature` | 7 | Rejected: all seven demand bracket spelling for dynamic `ref` or dataset keys, not a defect. |
-| `noUncheckedSideEffectImports` | 0 | Rejected: no defect or escape hatch identified. |
-| `no-explicit-any` | 7 (src 0) | Rejected: browser test doubles use seven `any` annotations; no source finding. |
-| `no-unsafe-argument` | 36 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
-| `no-unsafe-assignment` | 319 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
-| `no-unsafe-call` | 406 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
-| `no-unsafe-member-access` | 368 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
-| `no-unsafe-return` | 364 (src 0) | Rejected: test configuration produces error-typed dependency values; no source finding. |
-| `no-non-null-assertion` | 137 (src 18) | Rejected as a blanket rule: fixture and test invariants produce many findings; source assertions require individual contract review. |
-| `no-floating-promises` | 0 | Rejected: no defect or escape hatch identified. |
-| `switch-exhaustiveness-check` | 1 | Rejected: Notice's default intentionally handles `info`. |
-
-No new setting met the adoption threshold and no contract was changed; witnesses
-for changed contracts therefore do not apply. The Toaster timer assertion follows
-initialization in the same effect; its reactive lookup assertion and other source
-assertions remain leads for individual review rather than demonstrated defects.
-Escape-hatch baseline and result are identical: Oxlint reports 7 explicit `any`
-and 137 non-null assertions; `rg` finds 8 `as unknown`/`as any` occurrences
-(including the seven `as any`) and 0 TypeScript suppression directives. The
-deslop reference's broader line-based expression reports 162 matching lines,
-including ordinary assertions and a string literal. Scope: first-party TypeScript
-and JavaScript in `src`, `tests`, `scripts`, and `fixture`.
-
+The shared deslop recipe asks for coverage and mutation dependencies and a
+qualified CI lane, but this task forbade new dependencies and CI changes; DSLP-8
+holds the coverage decision. The shared report format assumes mutation outcome
+counts and performance workloads exist; allow explicit unmeasured outcomes and
+record per-step wall and CI cost as each step runs. No shared files were changed.
 
 ## Tickets
 
