@@ -47,6 +47,12 @@ selector in the base contract; `styles/editorial.css` adds only `ui-*` classes, 
 dark theme adds `.ui-theme-dark`, documented below. `dist/styles.css` and `dist/tokens.css` do not
 include the dark theme, and the default light appearance does not change.
 
+## Dark theme
+
+Load `@laputa-systems/ui-dashboard/themes/dark.css` after the base and family stylesheets.
+Add `ui-theme-dark` to `:root` for the whole page, or combine it with `ui-theme` on a region.
+The theme sets dark input tokens and `color-scheme: dark` for that scope.
+
 ## Cascade order
 
 The base and family sheets stay unlayered so existing consumers keep their current cascade. A consumer that wants its own styles to win can import the library into the `ui` layer and declare its layers in order:
