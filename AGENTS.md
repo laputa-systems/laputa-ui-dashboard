@@ -8,6 +8,8 @@ The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted prompt
 
 ## Verification
 
+`make clean` removes the generated directories `dist`. It preserves the installed environment and refuses symlinked outputs.
+
 - `make test-ci` runs type-aware lint, type checks, and 68 unit and
   package tests. On macOS ARM64 it took 4.47 s after installation and
   3.38 s on repeat. `pnpm run lint` took 0.31 s and reported 49 warnings.

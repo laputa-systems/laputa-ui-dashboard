@@ -57,3 +57,12 @@ publish-dry-run: pack
 
 publish: pack
 	$(STUFF) publish npm --tarball "$(TARBALL)"
+
+.PHONY: clean
+clean:
+	@for artifact in ./dist; do \
+	  if test -L "$$artifact" || { test -e "$$artifact" && ! test -d "$$artifact"; }; then \
+	    printf 'make clean: %s must be a local build directory\n' "$$artifact" >&2; exit 1; \
+	  fi; \
+	done
+	rm -rf -- ./dist
