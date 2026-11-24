@@ -6,6 +6,8 @@ and both Solid and CSS-only use. Keep documentation and behavioral tests with co
 Run `make check` locally. Do not run formatters.
 The [agent evaluation scenarios](docs/agent-evaluation.md) are unexecuted prompts, not results.
 
+The roadmap, [docs/roadmap.md](docs/roadmap.md), holds all current and future work; its Status is the resume point.
+
 ## Verification
 
 `make clean` removes the generated directories `dist`. It preserves the installed environment and refuses symlinked outputs.
